@@ -1,0 +1,7 @@
+#crownconstruction-toolbarbutton {
+  list-style-image: url("toolbarbutton_24.png");
+}
+[iconsize="small"] #crownconstruction-toolbarbutton
+{
+  list-style-image: url("toolbarbutton_16.png");
+}

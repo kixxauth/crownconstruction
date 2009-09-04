@@ -1,0 +1,16 @@
+1. Edit install.rdf
+        - update the version number
+        - make sure the update url points to the correct https:// url
+        - make sure the correct version of Firefox is used
+
+2. Edit updates.rdf
+        - add the new version to the version list <seq>
+        - add the new version meta info
+
+3. crownconstruction-git/firefox/$> zip -r /path/to/GAE/fireworks-website/mozilla-downloads/crownconstruction_version.xpi ./*
+
+4. crownconstruction-git/$> cp updates.rdf /path/to/GAE/fireworks-website/mozilla-downloads/crownconstruction-updates.rdf
+
+5. git commit -a
+
+6. git tag release_#
