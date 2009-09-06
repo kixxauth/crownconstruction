@@ -17,15 +17,13 @@
   <div id="header">
     <h1>Job Scheduling Form</h1>
     <div id="blame-names">
-      <select id="salesperson">
-        <option>choose a salesperson</option>
-      </select>
-      <select id="estimator">
-        <option>estimated by</option>
-      </select>
-      <select id="production">
-        <option>production</option>
-      </select>
+      <p>
+        Salesperson: <input id="salesperson" type="text" />
+      </p><p>
+        Estimator: <input id="estimator" type="text" />
+      </p><p>
+        Production: <input id="production" type="text" />
+      </p>
     </div><!-- blame-names -->
   </div><!-- header -->
   <div id="contract-info">
@@ -36,13 +34,16 @@
     </p>
     <h5>Customer Info:</h5>
     <div>
-      <p id="customer-name">
+      <p id="customer-people">
+        <!-- dynamic content -->
       </p>
       <p id="customer-addresss">
+        <!-- dynamic content -->
       </p>
     </div>
     <div>
       <p id="customer-contacts">
+        <!-- dynamic content -->
       </p>
     </div>
     <div>
@@ -50,13 +51,15 @@
         Cost of Contract: <input id="contractCost" type="text" />
         Labor Cost: <input id="contractCost" type="text" />
         Estimated GP: <input id="estimatedGP" type="text" />
+        Tax Labor: <input type="checkbox" />
       </p>
-      <ul id="payment-schedule">
-        <h5>Payment Schedule</h5><span> add 1</span>
-        <!--
-        <li>memo: <input type="text" /> amount: <input type="text" /></li>
-        -->
-      </ul>
+      <h5>Payment Schedule</h5><span> add 1</span>
+      <table id="payment-schedule">
+        <th>
+          <td>memo</td><td>amount</td>
+        </th>
+        <!-- dynamic content -->
+      </table>
     </div>
     <div>
       Contract Description:<br /><textarea id="contract-description" />
@@ -74,8 +77,8 @@
         <td>Man Days</td>
       </th>
     </table>
-  </div>
-  <div>
+  </div><!-- job-info -->
+  <div id="events">
     <p>
       <span>Hand Off:</span>
       Scheduled: <input id="handoffScheduled" type="text" />
@@ -86,7 +89,7 @@
       Scheduled: <input id="handoffScheduled" type="text" />
       Completed: <input id="handoffCompleted" type="text" />
     </p>
-  </div>
+  </div><!-- events -->
   <div id="special-orders">
     <h5>Special Orders</h5>
     <span>add 1</span>
@@ -99,7 +102,7 @@
         <td>Delivery Date</td>
       </th>
     </table>
-  </div>
+  </div><!-- special orders -->
   <div id="sub-contractors">
     <h5>Sub Contractors</h5>
     <span>add 1</span>
@@ -112,62 +115,61 @@
         <td>Start Date</td>
       </th>
     </table>
-  </div>
-  <div>
-    <h5>Siding</h5>
-    <p>
-      Squares: <input id="siding-squares" type="text" />
-    </p>
-    <p>
-      Type: <input id="siding-type" type="text" />
-    </p>
-    <p>
-      Style: <input id="siding-style" type="text" />
-    </p>
-    <p>
-      Brand: <input id="siding-brand" type="text" />
-    </p>
-    <p>
-      Color: <input id="siding-color" type="text" />
-    </p>
-    <p>
-      Trim: <input id="siding-trim" type="text" />
-    </p>
-  </div>
-  <div>
-    <h5>Roofing</h5>
-    <p>
-      Squares: <input id="roofing-squares" type="text" />
-    </p>
-    <p>
-      Type: <input id="roofing-type" type="text" />
-    </p>
-    <p>
-      Style: <input id="roofing-style" type="text" />
-    </p>
-    <p>
-      Brand: <input id="roofing-brand" type="text" />
-    </p>
-    <p>
-      Color: <input id="roofing-color" type="text" />
-    </p>
-  </div>
-  <div>
+  </div><!-- sub-contractors -->
+  <div id="descriptions">
+    <div>
+      <h5>Siding</h5>
+      <p>
+        Squares: <input id="siding-squares" type="text" />
+      </p>
+      <p>
+        Type: <input id="siding-type" type="text" />
+      </p>
+      <p>
+        Style: <input id="siding-style" type="text" />
+      </p>
+      <p>
+        Brand: <input id="siding-brand" type="text" />
+      </p>
+      <p>
+        Color: <input id="siding-color" type="text" />
+      </p>
+      <p>
+        Trim: <input id="siding-trim" type="text" />
+      </p>
+    </div>
+    <div>
+      <h5>Roofing</h5>
+      <p>
+        Squares: <input id="roofing-squares" type="text" />
+      </p>
+      <p>
+        Type: <input id="roofing-type" type="text" />
+      </p>
+      <p>
+        Style: <input id="roofing-style" type="text" />
+      </p>
+      <p>
+        Brand: <input id="roofing-brand" type="text" />
+      </p>
+      <p>
+        Color: <input id="roofing-color" type="text" />
+      </p>
+    </div>
+  </div><!-- descriptions -->
+  <div id="permits">
     <h5>Permits Needed:</h5>
     T/O: <input type="checkbox" />
     UFPO: <input type="checkbox" />
     Building: <input type="checkbox" />
     Electrical: <input type="checkbox" />
     Plumbing: <input type="checkbox" />
-  </div>
-  <div>
+  </div><!-- permits -->
+  <div id="estimate-info">
     Date Completed: <input id="estimateDateCompleted" type="text" />
     Round Trip Miles: <input id="estimateRoundTripMiles" type="text" />
     Total Allotted Miles: <input id="estimateAllottedMiles" type="text" />
-  </div>
-  <div>
-    Tax Labor: <input type="checkbox" />
-  </div>
+  </div><!-- estimate-info -->
 </div>
 </body>
 </html>
