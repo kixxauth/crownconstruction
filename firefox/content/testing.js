@@ -200,6 +200,135 @@ function onReadFromCache(q)
   printCheckPoint(cp);
 }
 
+function onSetupJoin()
+{
+  let cp = setCheckPoint();
+  
+  let cxn = getConnection();
+
+  cxn.executeSimpleSQL(PERSON_SCHEMA);
+  cxn.executeSimpleSQL(PERSON_TAG);
+  cxn.executeSimpleSQL(PERSON_CAR);
+  cxn.executeSimpleSQL(CAR_SCHEMA);
+
+  let insertPerson = cxn.createStatement("INSERT INTO person "+
+      "VALUES (:uri, :name)");
+  let insertTag = cxn.createStatement("INSERT INTO person_tag "+
+      "VALUES (:person, :tag)");
+  let insPersonCar = cxn.createStatement("INSERT INTO person_car "+
+      "VALUES (:person, :car)");
+  let insertCar = cxn.createStatement("INSERT INTO car "+
+      "VALUES (:uri, :model, :color)");
+
+  let people = [
+      {uri:"x", name:"foo"},
+      {uri:"y", name:"bar"},
+      {uri:"z", name:"bear"}
+    ];
+  let tags = [
+      {person:"x", tag:"a"},
+      {person:"y", tag:"b"},
+      {person:"y", tag:"c"},
+      {person:"z", tag:"a"},
+      {person:"z", tag:"b"},
+      {person:"z", tag:"c"}
+    ];
+  let person_cars = [
+      {person:"x", car:"ca"},
+      {person:"x", car:"cb"},
+      {person:"x", car:"cd"},
+      {person:"y", car:"ce"},
+      {person:"y", car:"cf"},
+      {person:"z", car:"cg"}
+    ];
+  let cars = [
+      {uri:"ca", model:"prias", color:"red"},
+      {uri:"cb", model:"civic", color:"white"},
+      {uri:"cd", model:"tundra", color:"blue"},
+      {uri:"ce", model:"tacoma", color:"green"},
+      {uri:"cf", model:"focus", color:"yellow"},
+      {uri:"cg", model:"camry", color:"red"}
+    ];
+
+  cxn.beginTransaction();
+
+  people.forEach(function(person) {
+        this.params.uri = person.uri;
+        this.params.name = person.name;
+        this.execute();
+        this.reset();
+      }, insertPerson);
+  insertPerson.finalize();
+
+  tags.forEach(function(tag) {
+        this.params.person = tag.person;
+        this.params.tag = tag.tag;
+        this.execute();
+        this.reset();
+      }, insertTag);
+  insertTag.finalize();
+
+  person_cars.forEach(function(pc) {
+        this.params.person = pc.person;
+        this.params.car = pc.car;
+        this.execute();
+        this.reset();
+      }, insPersonCar);
+  insPersonCar.finalize();
+
+  cars.forEach(function(car) {
+        this.params.uri = car.uri;
+        this.params.model = car.model;
+        this.params.color = car.color;
+        this.execute();
+        this.reset();
+      }, insertCar);
+  insertCar.finalize();
+
+  cxn.commitTransaction();
+
+  cxn.close();
+
+  printCheckPoint(cp);
+}
+
+function onTryJoin()
+{
+  let cp = setCheckPoint();
+
+  let cxn = getConnection();
+
+  let sql = "SELECT "+
+    "person.name as name, "+
+    "person_tag.tag as tag, "+
+    "person_car.car as car "+
+    "FROM person "+
+    "INNER JOIN person_tag ON person.uri=person_tag.person "+
+    "INNER JOIN person_car ON person.uri=person_car.person";
+
+  let s = cxn.createStatement(sql);
+
+  dump("\nExecuting\n");
+  while(s.executeStep()) {
+    dump("name:"+s.row.name+", tag:"+s.row.tag+", carURI:"+s.row.car+"\n");
+  }
+
+  let sql = "SELECT "+
+    "car.model as model, "+
+    "person_car.person as personURI "+
+    "FROM car "+
+    "INNER JOIN person_car ON car.uri=person_car.car";
+
+  let s = cxn.createStatement(sql);
+
+  dump("\nExecuting\n");
+  while(s.executeStep()) {
+    dump("model:"+s.row.model+",  owner:"+s.row.personURI+"\n");
+  }
+
+  printCheckPoint(cp);
+}
+
 function readEntitiesFromSQLite(q)
 {
   let len = parseInt(q);
@@ -256,9 +385,28 @@ const TRIPLES_SCHEMA =
   " predicate STRING," +
   " target STRING)";
 
-const ENTITIES_SCHEMA = 
-  "CREATE TABLE entities("+
-  " uri STRING,"
+const PERSON_SCHEMA = 
+  "CREATE TABLE person("+
+  " uri STRING,"+
+  " name STRING,"+
+  " PRIMARY KEY (uri))";
+
+const PERSON_TAG =
+  "CREATE TABLE person_tag("+
+  " person STRING,"+
+  " tag STRING)";
+
+const PERSON_CAR =
+  "CREATE TABLE person_car("+
+  " person STRING,"+
+  " car STRING)";
+
+const CAR_SCHEMA = 
+  "CREATE TABLE car("+
+  " uri STRING,"+
+  " model STRING,"+
+  " color STRING,"+
+  " PRIMARY KEY (uri))";
 
 function openConnection(f)
 {
