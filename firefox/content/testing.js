@@ -256,6 +256,10 @@ const TRIPLES_SCHEMA =
   " predicate STRING," +
   " target STRING)";
 
+const ENTITIES_SCHEMA = 
+  "CREATE TABLE entities("+
+  " uri STRING,"
+
 function openConnection(f)
 {
   let ss = Cc["@mozilla.org/storage/service;1"]
