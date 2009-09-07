@@ -1,5 +1,16 @@
-let toolkit =
+let EXPORTED_SYMBOLS = ["tk"];
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+let tk =
 {
+  dump: function(name, msg)
+  {
+    dump("-dump- "+ name +": "+ msg +"\n");
+  },
+
   dumpObject: function(obj, indent)
   {
     var result = "";

@@ -1,37 +1,39 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-function runTest(aTest)
+Cu.import("resource://crownconstruction/modules/launch.js");
+Cu.import("resource://crownconstruction/modules/configs.js");
+Cu.import("resource://crownconstruction/modules/log.js");
+
+function onWindowLoad()
 {
-  switch(aTest)
-  {
-    default:
-      alert('invalid test');
-  }
+  launch();
 }
 
-function appendResult(aCtn, aResult)
+function printResult(aResult)
 {
-  let ctn = $(aCtn);
-  if(!ctn)
-  {
-    ctn = DIV({id:aCtn});
-    $("result-ctn").appendChild(ctn);
-  }
-  ctn.appendChild(P(aResult));
+  let ctn = $("result-ctn");
+  ctn.innerHTML = aResult;
 }
 
-function clearResults(aCtn)
+function testLogging()
 {
-  let ctn = $(aCtn);
-  if(!ctn)
-  {
-    try {
-    ctn = DIV({id:aCtn});
-    } catch(e) { Components.utils.reportError(e); }
-    $("result-ctn").appendChild(ctn);
-  }
-  ctn.innerHTML = "<p>results cleared</p>";
+  let r = "<p>";
+  r += "debug:"+ configs.get("debug") +"<br />";
+  r += "loglevel:"+ configs.get("log-level") +"<br />";
+  r += "</p>";
+  printResult(r);
+
+  let logger = log.getLogger("testing");
+  logger.fatal("this is fatal");
+  logger.error("this is error");
+  logger.warn("this is warn");
+  logger.info("this is info");
+  logger.config("this is config");
+  logger.debug("this is debug");
+  logger.trace("this is trace");
+  return true;
 }
 
 function onArrayAssignment()
@@ -392,3 +394,5 @@ function printCheckPoint(cp)
   let time = now - cp;
   $("sqlite-results").innerHTML = "time: "+ time.toString() + " milliseconds";
 }
+
+window.addEventListener("load", onWindowLoad, false);
