@@ -430,8 +430,13 @@ function ConsoleAppender(formatter) {
 ConsoleAppender.prototype = {
   __proto__: Appender.prototype,
 
-  doAppend: function CApp_doAppend(message) {
-    if (message.level > Log4Moz.Level.Warn) {
+  append: function App_append(message) {
+    if(this._level <= message.level)
+      this.doAppend(this._formatter.format(message), message.level);
+  },
+
+  doAppend: function CApp_doAppend(message, level) {
+    if(level > Log4Moz.Level.Warn) {
       Cu.reportError(message);
       return;
     }
