@@ -8,15 +8,12 @@ let tk =
 {
   isarray: function(a)
   {
-    if(!a || a == null || typeof(a) != "object")
+    if (typeof val != "object")
       return false;
-
-    if(typeof(a.length) != "number" ||
-        typeof(a.push) != "function" ||
-        typeof(a.pop) != "function")
-    {
+    if (val == null)
       return false;
-    }
+    if (!val.constructor || val.constructor.name != "Array")
+      return false;
     return true;
   },
 
