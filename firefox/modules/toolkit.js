@@ -6,6 +6,20 @@ const Cu = Components.utils;
 
 let tk =
 {
+  isarray: function(a)
+  {
+    if(!a || a == null || typeof(a) != "object")
+      return false;
+
+    if(typeof(a.length) != "number" ||
+        typeof(a.push) != "function" ||
+        typeof(a.pop) != "function")
+    {
+      return false;
+    }
+    return true;
+  },
+
   dump: function(name, msg)
   {
     dump("-dump- "+ name +": "+ msg +"\n");

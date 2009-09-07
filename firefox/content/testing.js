@@ -3,6 +3,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://crownconstruction/modules/lib.js");
+Cu.import("resource://crownconstruction/modules/toolkit.js");
 Cu.import("resource://crownconstruction/modules/launch.js");
 Cu.import("resource://crownconstruction/modules/configs.js");
 Cu.import("resource://crownconstruction/modules/log.js");
@@ -42,6 +43,28 @@ function testAssert()
   printResult("<p>check the console</p>");
   assert(false, "this is a test asssertion.");
   return true;
+}
+
+function testIsArray()
+{
+  let r = "<p>";
+  r += "object:"+ tk.isarray(new Date()) +"<br />";
+  r += "bool:"+ tk.isarray(true) +"<br />";
+  r += "string:"+ tk.isarray("log-level") +"<br />";
+  r += "null:"+ tk.isarray(null) +"<br />";
+  r += "array:"+ tk.isarray(new Array()) +"<br />";
+  r += "</p>";
+  printResult(r);
+}
+
+function testIterator()
+{
+  let r = "<p>";
+  let it = Iterator([4,5,6,7]);
+  for(let i in it)
+    r += "index:"+ i +"<br />";
+  r += "</p>";
+  printResult(r);
 }
 
 function onArrayAssignment()
