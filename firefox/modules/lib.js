@@ -30,7 +30,7 @@ function assert(condition, message)
     for(let i = 0; i < caller.arguments.length; ++i) {
       let arg = caller.arguments[i];
       stackText += arg;
-      if (i < caller.arguments.length - 1)
+      if(i < caller.arguments.length - 1)
         stackText += ",";
     }
     stackText += ")\n";
@@ -44,4 +44,6 @@ function assert(condition, message)
            getService(Ci.nsIPromptService);
   ps.alert(source, "Assertion Failed", message);
   dump("\n! ASSERTION FAILED:\n"+ stackText +"\n");
+
+  throw new Error("ASSERTION FAILED: "+ message);
 }
