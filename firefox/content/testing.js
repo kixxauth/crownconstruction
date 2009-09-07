@@ -2,6 +2,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://crownconstruction/modules/lib.js");
 Cu.import("resource://crownconstruction/modules/launch.js");
 Cu.import("resource://crownconstruction/modules/configs.js");
 Cu.import("resource://crownconstruction/modules/log.js");
@@ -33,6 +34,13 @@ function testLogging()
   logger.config("this is config");
   logger.debug("this is debug");
   logger.trace("this is trace");
+  return true;
+}
+
+function testAssert()
+{
+  printResult("<p>check the console</p>");
+  assert(false, "this is a test asssertion.");
   return true;
 }
 
