@@ -8,7 +8,7 @@ Cu.import("resource://crownconstruction/modules/ubiquity_utils.js");
 
 let tk =
 {
-  isarray: function TK_isarray(a)
+  isarray: function TK_isarray(val)
   {
     if (typeof val != "object")
       return false;
