@@ -6,7 +6,7 @@ const Cu = Components.utils;
 
 let tk =
 {
-  isarray: function(a)
+  isarray: function TK_isarray(a)
   {
     if (typeof val != "object")
       return false;
@@ -17,12 +17,17 @@ let tk =
     return true;
   },
 
-  dump: function(name, msg)
+  dump: function TK_dump(name, msg)
   {
     dump("-dump- "+ name +": "+ msg +"\n");
   },
 
-  dumpObject: function(obj, indent)
+  dumpObject: function TK_dumpObject(obj)
+  {
+    return "\n" + tk.probeObject(obj) +"\n";
+  },
+
+  probeObject: function TK_probeObject(obj, indent)
   {
     var result = "";
     if (indent == null) indent = "";
