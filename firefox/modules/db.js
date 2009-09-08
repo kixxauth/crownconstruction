@@ -73,7 +73,7 @@ db.launch = function DB_launch()
 };
 
 /** create an new entity instance by class */
-db.createNewEntity = function DB_createNewEntity(kind)
+db.createNew = function DB_createNewEntity(kind)
 {
   let props = model.hasKind(kind);
   assert(props, "A model for kind '"+ kind +"' could not be found.");
