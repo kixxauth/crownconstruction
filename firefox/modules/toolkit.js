@@ -4,6 +4,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://crownconstruction/modules/ubiquity_utils.js");
+
 let tk =
 {
   isarray: function TK_isarray(a)
@@ -15,6 +17,12 @@ let tk =
     if (!val.constructor || val.constructor.name != "Array")
       return false;
     return true;
+  },
+
+  openNewTab: function TK_openNewTab(url)
+  {
+    let browser = Utils.currentChromeWindow.gBrowser;
+    browser.selectedTab = browser.addTab(url);
   },
 
   dump: function TK_dump(name, msg)
