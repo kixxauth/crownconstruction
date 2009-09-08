@@ -1,5 +1,6 @@
 let EXPORTED_SYMBOLS = [
     "assert",
+    "getUUID"
   ];
 
 const Cc = Components.classes;
@@ -46,4 +47,11 @@ function assert(condition, message)
   dump("\n! ASSERTION FAILED:\n"+ stackText +"\n");
 
   throw new Error("ASSERTION FAILED: "+ message);
+}
+
+function getUUID()
+{
+  let gen = Cc["@mozilla.org/uuid-generator;1"]
+      .getService(Ci.nsIUUIDGenerator);
+  return gen.generateUUID().toString();
 }
