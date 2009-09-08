@@ -60,9 +60,32 @@ function testIsArray()
 function testIterator()
 {
   let r = "<p>";
+
   let it = Iterator([4,5,6,7]);
   for(let i in it)
-    r += "index:"+ i +"<br />";
+    r += "pair:"+ i +"<br />";
+
+  let it = Iterator([4,5,6,7]);
+  for(let [i, val] in it)
+    r += "index:"+ i +", value:"+ val +"<br />";
+
+  r += "</p>";
+  printResult(r);
+}
+
+function testArrayComp()
+{
+  let r = "<p>";
+
+  var a = [1,7,3,7,7,6];
+  var newa = [i for each(i in a) if(i == 7)];
+  r += newa.toString() +'<br />';
+
+  var a = [1,7,3,7,7,6];
+  function f(x) { return x * 2; };
+  var newa = [f(i) for each(i in a) if(i == 7)];
+  r += newa.toString() +'<br />';
+
   r += "</p>";
   printResult(r);
 }
