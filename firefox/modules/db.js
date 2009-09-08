@@ -24,11 +24,16 @@ function Entity(key, props)
 /** Key */
 function Key()
 {
-  let parts = arguments.length = 1 ? arguments[0].split(" ") ? arguments;
+  let parts = arguments.length == 1 ? arguments[0].split(" ") : arguments;
   this.realm = parts[0];
+  assert((typeof(this.realm) == "string"), "invalid key.realm "+ this.realm);
+  assert((typeof(parts[1]) == "string"), "invalid kind "+ parts[1]);
   this.class = model.getClassForKind(parts[1]);
+  assert((typeof(this.class) == "string"), "invalid key.class "+ this.class);
   this.kind = parts[1];
+  assert((typeof(this.kind) == "string"), "invalid key.kind "+ this.kind);
   this.uri = parts[2];
+  assert((typeof(this.uri) == "string"), "invalid key.uri "+ this.uri);
 }
 
 /**
@@ -70,7 +75,7 @@ db.launch = function DB_launch()
 /** create an new entity instance by class */
 db.createNewEntity = function DB_createNewEntity(kind)
 {
-  let props = model.getProperties(kind);
+  let props = model.hasKind(kind);
   assert(props, "A model for kind '"+ kind +"' could not be found.");
   if(!props) {
     throw new TypeError("A model for kind '"+ kind
@@ -182,13 +187,13 @@ db.TRANSACTION_STATE =
 
   /** transaction has been committed remotely,
    * but caused and error loally */
-  localError: 4
+  localError: 4,
 
   /** transaction is committed locally and remotely, but not confirmed */
   remoteConfirm: 5,
 
   /** transaction is completed locally and remotely and confirmed */
-  complete: 7,
+  complete: 7
 };
 
 db.executeStatement = function DB_executeStatement(stmt, sql)
@@ -263,8 +268,7 @@ db.normalizeEntity = function DB_normalizeEntity(aEntity)
   if(!ops.length)
     return null;
 
-  return 
-  {
+  return {
     uri: aEntity.key().uri,
     class: aEntity.key().class,
     operations: ops
@@ -407,7 +411,7 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
 
         if(!index && (method == "update" || method == "remove")) {
           db.logger.warn(method +" a property on a non-existing entity '"+
-              ent.uri"'");
+              ent.uri +"'");
           rollback = true;
           db.connection.rollbackTransaction();
           assert(false,
@@ -671,4 +675,8 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
     stmt.finalize();
     return rv;
   }
-}
+};
+
+db.getConnection = function DB_getConnection()
+{
+};

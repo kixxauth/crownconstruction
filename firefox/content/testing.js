@@ -7,6 +7,7 @@ Cu.import("resource://crownconstruction/modules/toolkit.js");
 Cu.import("resource://crownconstruction/modules/launch.js");
 Cu.import("resource://crownconstruction/modules/configs.js");
 Cu.import("resource://crownconstruction/modules/log.js");
+Cu.import("resource://crownconstruction/modules/db.js");
 
 function onWindowLoad()
 {
@@ -88,6 +89,25 @@ function testArrayComp()
 
   r += "</p>";
   printResult(r);
+}
+
+function testCreateNewEntity()
+{
+  /*
+  try {
+    tk.dump("invalid entity",
+        "\n"+ tk.dumpObject(db.createNewEntity("Car")));
+  } catch(e) {}
+  */
+  tk.dump("valid entity",
+      tk.dumpObject(db.createNewEntity("Customer")));
+  tk.dump("db.cache", tk.dumpObject(db.cache));
+  printResult("<p>Check Console Dump</p>");
+}
+
+function dumpCache()
+{
+  tk.dump("db.cache", tk.dumpObject(db.cache));
 }
 
 function onArrayAssignment()
