@@ -89,6 +89,40 @@ db.createNewEntity = function DB_createNewEntity(kind)
   return key;
 };
 
+db.setattr = function DB_setattr(key, property, value)
+{
+  assert(db.cache[key.uri],
+      "expected to find entity" + key.uri +" in the cache");
+  if(!db.cache[key.uri]) {
+    throw new Error("Entity '"+ key.uri +"' does not exist in the cache.");
+  }
+  
+  let val = null;
+  try {
+    val = model.validateProperty(key.kind, property, value);
+  } catch(e) {
+    return {success: false, message: e.message};
+  }
+
+  db.cache[key.uri][property] = val;
+};
+
+db.getattr = function DB_getattr(key, property)
+{
+  assert(db.cache[key.uri],
+      "expected to find entity" + key.uri +" in the cache");
+  if(!db.cache[key.uri]) {
+    throw new Error("Entity '"+ key.uri +"' does not exist in the cache.");
+  }
+
+  if(!model.hasProperty(key.kind, property)) {
+    throw new Error("Kind '"+ key.kind +"' does not have property '"+
+        property +"'");
+  }
+
+  return db.cache[key.uri][property] || null;
+};
+
 db.all = function DB_all(kind)
 {
   let schema = db.buildSchema(kind);
