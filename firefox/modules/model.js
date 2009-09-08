@@ -9,8 +9,8 @@ let model = {};
 model.getClassForKind = function M_getClassForKind(kind)
 {
   if(!(kind in model.kinds)) {
-    assert(false, "Kind '"+ kind "' does not exist.");
-    throw new Error("Kind '"+ kind "' does not exist.");
+    assert(false, "Kind '"+ kind +"' does not exist.");
+    throw new Error("Kind '"+ kind +"' does not exist.");
   }
 
   if(!model.kinds[kind])
@@ -24,8 +24,8 @@ model.hasKind = function M_hasKind(kind) {
 
 model.hasProperty = function M_hasProperty(kind, property) {
   if(!(kind in model.kinds)) {
-    assert(false, "Kind '"+ kind "' does not exist.");
-    throw new Error("Kind '"+ kind "' does not exist.");
+    assert(false, "Kind '"+ kind +"' does not exist.");
+    throw new Error("Kind '"+ kind +"' does not exist.");
   }
   return (property in model.kinds[kind].properties);
 }
@@ -33,8 +33,8 @@ model.hasProperty = function M_hasProperty(kind, property) {
 model.getProperties = function M_getProperties(kind)
 {
   if(!(kind in model.kinds)) {
-    assert(false, "Kind '"+ kind "' does not exist.");
-    throw new Error("Kind '"+ kind "' does not exist.");
+    assert(false, "Kind '"+ kind +"' does not exist.");
+    throw new Error("Kind '"+ kind +"' does not exist.");
   }
 
   if(!model.kinds[kind])
