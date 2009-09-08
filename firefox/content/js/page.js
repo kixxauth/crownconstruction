@@ -9,3 +9,8 @@ page.createRepURL = function P_createRepURL(url, resource)
 {
   return url + Utils.paramsToString({uri:resource});
 };
+
+page.uriFromURL = function P_uriFromURL(url)
+{
+  return Utils.urlToParams(url);
+};
