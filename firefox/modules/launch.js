@@ -7,6 +7,7 @@ const Cu = Components.utils;
 Cu.import("resource://crownconstruction/modules/toolkit.js");
 Cu.import("resource://crownconstruction/modules/log.js");
 Cu.import("resource://crownconstruction/modules/configs.js");
+Cu.import("resource://crownconstruction/modules/db.js");
 
 let _burning = false;
 
@@ -16,4 +17,5 @@ function launch()
     return;
 
   log.initLogging();
+  db.launch();
 }
