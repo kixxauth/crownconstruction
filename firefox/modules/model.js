@@ -93,17 +93,17 @@ let predicates =
     },
     'http://www.fireworksproject.com/rdf#hasAddress':
     {
-      range:'http://www.fireworksproject.com/rdf#Address',
+      range:'http://www.crownconstructioninc.com/rdf#Address',
       cardinal:"*"
     },
     'http://www.fireworksproject.com/rdf#hasPhone':
     {
-      range:'http://www.fireworksproject.com/rdf#Phone',
+      range:'http://www.crownconstructioninc.com/rdf#Phone',
       cardinal:"*"
     },
     'http://www.fireworksproject.com/rdf#hasEmail':
     {
-      range:'http://www.fireworksproject.com/rdf#Email',
+      range:'http://www.crownconstructioninc.com/rdf#Email',
       cardinal:"*"
     },
     'http://www.fireworksproject.com/rdf#hasEmailLink':

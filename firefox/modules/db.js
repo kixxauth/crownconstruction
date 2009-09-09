@@ -39,14 +39,19 @@ function Key()
 {
   let parts = arguments.length == 1 ? arguments[0].split(" ") : arguments;
   this.realm = parts[0];
-  assert((typeof(this.realm) == "string"), "invalid key.realm "+ this.realm);
-  assert((typeof(parts[1]) == "string"), "invalid kind "+ parts[1]);
+  assert((typeof(this.realm) == "string"), "invalid key.realm "
+      + this.realm +" in Key() constructor.");
+  assert((typeof(parts[1]) == "string"), "invalid kind "+ parts[1]
+      +" in Key() constructor.");
   this.class = model.getClassForKind(parts[1]);
-  assert((typeof(this.class) == "string"), "invalid key.class "+ this.class);
+  assert((typeof(this.class) == "string"), "invalid key.class "+
+      this.class+" in Key() constructor.");
   this.kind = parts[1];
-  assert((typeof(this.kind) == "string"), "invalid key.kind "+ this.kind);
+  assert((typeof(this.kind) == "string"), "invalid key.kind "+ this.kind
+      +" in Key() constructor.");
   this.uri = parts[2];
-  assert((typeof(this.uri) == "string"), "invalid key.uri "+ this.uri);
+  assert((typeof(this.uri) == "string"), "invalid key.uri "+ this.uri
+      +" in Key() constructor.");
 }
 
 /**
@@ -100,6 +105,175 @@ db.lockCache = function DB_lockCache() {
 
 db.releaseCache = function DB_releaseCache() {
   _cache_locked = false;
+};
+
+db.loadCache = function DB_loadCache()
+{
+  let tables = db.schema();
+  //tk.dump("schema", tk.dumpObject(tables));
+  
+  for(let kind in model.kinds)
+  {
+    if(!(kind in tables)) {
+      db.cache = {};
+      tk.dump("tables", dumpObject(tables));
+      throw new Error("loadCache(): 1:"+ kind +" not in table list.");
+    }
+
+    let cols = tables[kind];
+
+    let sql = "SELECT "+ cols.join(",") +" FROM "+ kind;
+    //tk.dump("sql", sql);
+    let stmt = db.connection.createStatement(sql);
+
+    try {
+      while(stmt.executeStep())
+      {
+        try {
+          db.buildEntity(stmt.row, kind);
+        } catch(e) {
+          db.cache = {};
+          Cu.reportError("loadCache(): 1.5: "+ e);
+          throw e;
+        }
+      }
+    } catch(e) {
+      db.cache = {};
+      Cu.reportError("loadCache(): 2:last SQL error: "
+          + db.connection.lastErrorString +" in "+ sql);
+      throw e;
+    }
+    stmt.finalize();
+  }
+
+  for(let kind in model.kinds)
+  {
+    let props = model.getProperties(kind);
+    for(let p in props)
+    {
+      // we're only dealing with 1 to many relationships here.
+      if(model.getCardinal(kind, p) == 1)
+        continue;
+
+      let table = kind +"_"+ p;
+      let range = model.getRange(kind, p);
+      let isresource = (range != "literal");
+
+      if(!db.connection.tableExists(table)) {
+        db.cache = {};
+        throw new Error("loadCache(): 3:table "+ table
+            +" does not exist.");
+      }
+      
+      let sql = "SELECT "+ kind +","+ p +" FROM "+ table;
+      //tk.dump("sql", sql);
+      let stmt = db.connection.createStatement(sql);
+      try {
+        while(stmt.executeStep())
+        {
+          if(!db.cache[stmt.row[kind]]) {
+            db.cache = {};
+            throw new Error("loadCache(): 4: uri "+stmt.row[kind]
+                +" does not exist in the cache.");
+          }
+
+          if(isresource) {
+            var newkind = model.getKindForClass(range);
+            if(!newkind) {
+              db.cache = {};
+              throw new Error("loadCache(): 5: kind does not exist "+
+                  " for range "+ range +".");
+            }
+            var newkey = new Key(
+                configs.get("realm"), newkind, stmt.row[p]);
+
+            if(!db.cache[stmt.row[kind]].persistedProperties[p])
+              db.cache[stmt.row[kind]].persistedProperties[p] = [];
+            if(!db.cache[stmt.row[kind]][p])
+              db.cache[stmt.row[kind]][p] = [];
+
+            db.cache[stmt.row[kind]].persistedProperties[p].push(newkey);
+            db.cache[stmt.row[kind]][p].push(newkey);
+          }
+          else {
+            if(!db.cache[stmt.row[kind]].persistedProperties[p])
+              db.cache[stmt.row[kind]].persistedProperties[p] = [];
+            if(!db.cache[stmt.row[kind]][p])
+              db.cache[stmt.row[kind]][p] = [];
+
+            db.cache[stmt.row[kind]].persistedProperties[p].push(stmt.row[p]);
+            db.cache[stmt.row[kind]][p].push(stmt.row[p]);
+          }
+        }
+      } catch(e) {
+        db.cache = {};
+        Cu.reportError("loadCache(): 6:last SQL error: "
+            + db.connection.lastErrorString +" in "+ sql);
+        throw e;
+      }
+      stmt.finalize();
+    }
+  }
+
+  tk.dump("cache", tk.dumpObject(db.cache));
+};
+
+db.buildEntity = function DB_buildEntity(row, kind)
+{
+  if(!row || typeof(row.uri) != "string") {
+    db.cache = {};
+    throw new Error("db.buildEntity(): 1: invalid row "+ row
+        +" or uri "+ row.uri);
+  }
+  if(db.cache[row.uri]) {
+    db.cache = {};
+    throw new Error("db.buildEntity(): 2: entity "+ row.uri
+        +" already exists.");
+  }
+
+  let key = new Key(configs.get("realm"), kind, row.uri);
+  let ent = new Entity(key, {});
+  db.cache[key.uri] = ent;
+
+  let props = model.getProperties(kind);
+  for(p in props)
+  {
+    // this must be the first check we do, for our own sanity
+    if(model.getCardinal(kind, p) != 1)
+      continue;
+
+    let value = null;
+    try {
+      value = row[p];
+    } catch(e) {
+      db.logger.error("db.buildEntity(): 3: Property "+ p
+          +" does not exist in results for kind "+ kind +".");
+      Cu.reportError("db.buildEntity(): 3: Property "+ p
+          +" does not exist in results for kind "+ kind +".");
+      throw e;
+    }
+
+    let range = model.getRange(kind, p);
+    let isresource = (range != "literal");
+
+    try
+    {
+      if(isresource) {
+        var newkind = model.getKindForClass(range);
+        var newkey = new Key(configs.get("realm"), newkind, value);
+        ent.persistedProperties[p] = newkey;
+        ent[p] = newkey;
+      }
+      else {
+        ent.persistedProperties[p] = value;
+        ent[p] = value;
+      }
+    } catch(e) {
+      Cu.reportError("db.buildEntity(): 4:"+ e);
+      db.cache = {};
+      throw e;
+    }
+  }
 };
 
 /** create an new entity instance by class */
@@ -1075,7 +1249,8 @@ db.getConnection = function DB_getConnection()
   {
     if(!cxn.tableExists(table))
     {
-      missingTables = true;
+      missingTables = missingTables || [];
+      missingTables.push(table);
 
       let scheme = schema[table].map(function(col) {
           return col + " STRING";
@@ -1098,7 +1273,7 @@ db.getConnection = function DB_getConnection()
   if(!missingTables)
     db.logger.info("Schema in place.");
   else
-    db.logger.info("New Schema created.");
+    db.logger.info("New Schema created: "+ missingTables.join(","));
 
   return cxn;
 };
