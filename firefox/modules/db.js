@@ -601,8 +601,11 @@ db.updateCache = function DB_updateCache()
   {
     for(let p in db.cache[uri])
     {
-      if(p != "persistedProperties" && p != "key")
+      if(p != "persistedProperties" && p != "key" && db.cache[uri][p])
         db.cache[uri].persistedProperties[p] = db.cache[uri][p];
+
+      if(!db.cache[uri][p])
+        delete db.cache[uri][p];
     }
   }
 
