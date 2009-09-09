@@ -147,8 +147,16 @@ db.get = function DB_getattrs(key)
 
 db.setattr = function DB_setattr(key, property, value)
 {
+  //tk.dump("key", key);
+  //tk.dump("property", property);
+  //tk.dump("value", value);
+
   if(db.cacheLocked()) {
     throw new Error(db.CACHE_LOCKED_ERROR);
+  }
+  
+  if(!key || key.constructor != Key) {
+    throw new TypeError("Invalid key object passed to db.setattr()");
   }
 
   assert(db.cache[key.uri],
