@@ -17,5 +17,13 @@ function launch()
     return;
 
   log.initLogging();
-  db.launch();
+
+  let logger = log.getLogger("launch");
+
+  try {
+    db.launch();
+  } catch(e) {
+    logger.error(e);
+    throw e;
+  }
 }
