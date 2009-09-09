@@ -6,6 +6,18 @@ const Cu = Components.utils;
 
 Cu.import("resource://crownconstruction/modules/lib.js");
 
+let kind_Employee =
+{
+  uri:'http://www.crownconstructioninc.com/rdf#Employee',
+
+  properties:
+  {
+    firstname:'http://www.fireworksproject.com/rdf#hasFirstName',
+    lastname:'http://www.fireworksproject.com/rdf#hasLastName',
+    category:'http://www.fireworksproject.com/rdf#hasStringTag'
+  }
+};
+
 let kind_Customer =
 {
   uri:'http://www.crownconstructioninc.com/rdf#Customer',
@@ -69,6 +81,11 @@ let kind_Email =
 
 let predicates =
 {
+    'http://www.fireworksproject.com/rdf#hasStringTag':
+    {
+      range:'literal',
+      cardinal:"*"
+    },
     'http://www.fireworksproject.com/rdf#hasPerson':
     {
       range:'http://www.fireworksproject.com/rdf#Person',
@@ -146,6 +163,7 @@ let model = {};
 
 model.kinds =
 {
+  Employee: kind_Employee,
   Customer: kind_Customer,
   Person: kind_Person,
   Address: kind_Address,
