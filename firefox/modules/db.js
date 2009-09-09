@@ -10,7 +10,7 @@ Cu.import("resource://crownconstruction/modules/log.js");
 Cu.import("resource://crownconstruction/modules/configs.js");
 Cu.import("resource://crownconstruction/modules/model.js");
 
-const DATASTORE_FILE = "crownconstruction_data.sqlite";
+let DATASTORE_FILE = "crownconstruction_stub.sqlite";
 
 const TRANSACTION_RECORD_SCHEMA =
   "CREATE TABLE transaction_record(" +
@@ -81,6 +81,7 @@ db.launch = function DB_launch()
   if(_burning)
     return;
 
+  DATASTORE_FILE = configs.get("realm") + "_data.sqlite";
   db.logger = log.getLogger("db");
   db.connection = db.getConnection();
 
