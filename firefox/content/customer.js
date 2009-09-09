@@ -28,7 +28,7 @@ function onWindowLoad(e)
   let uri = page.uriFromURL(window.location.href).uri;
 
   Customer = db.getKey(uri);
-  customer = db.get(Customer);
+  let customer = db.get(Customer);
   addPeople(customer.Person);
   if(customer.Address)
     addAddresses(customer.Address);
