@@ -7,6 +7,7 @@ function onWindowLoad(e)
   // global init
   launch();
   $("new-customer").onclick = onNewCustomer;
+  $("new-employee").onclick = onNewEmployee;
 }
 
 function onNewCustomer(e)
@@ -15,6 +16,15 @@ function onNewCustomer(e)
 
   let customer = db.createNew("Customer");
   let url = page.createRepURL(e.target.href, customer.uri);
+  tk.openNewTab(url);
+}
+
+function onNewEmployee(e)
+{
+  e.preventDefault();
+
+  let employee = db.createNew("Employee");
+  let url = page.createRepURL(e.target.href, employee.uri);
   tk.openNewTab(url);
 }
 
