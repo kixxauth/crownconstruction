@@ -1,6 +1,7 @@
 let EXPORTED_SYMBOLS = [
     "assert",
-    "getUUID"
+    "getUUID",
+    "getUTCDateTime"
   ];
 
 const Cc = Components.classes;
@@ -54,4 +55,16 @@ function getUUID()
   let gen = Cc["@mozilla.org/uuid-generator;1"]
       .getService(Ci.nsIUUIDGenerator);
   return gen.generateUUID().toString();
+}
+
+function getUTCDateTime()
+{
+  let d = new Date();
+  let dt = [d.getUTCFullYear(),
+      (d.getUTCMonth()+1).toString(),
+      d.getUTCDate(),
+      d.getUTCHours(),
+      d.getUTCMinutes(),
+      d.getUTCSeconds()];
+  return dt.join(":");
 }
