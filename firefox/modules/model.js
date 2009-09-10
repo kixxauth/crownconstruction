@@ -238,6 +238,15 @@ model.getRange = function M_getRange(kind, prop)
 
 model.getCardinal = function M_getCardinal(kind, prop)
 {
+  assert(model.kinds[kind],
+      "expected kind for "+kind+"."+prop+" is "+
+      model.kinds[kind]);
+  assert(model.kinds[kind].properties[prop],
+      "expected predicate ref for "+kind+"."+prop+" is "+
+      model.kinds[kind].properties[prop]);
+  assert(predicates[model.kinds[kind].properties[prop]],
+      "expected predicate for "+model.kinds[kind].properties[prop]
+      +" is "+ predicates[model.kinds[kind].properties[prop]]);
   return predicates[model.kinds[kind].properties[prop]].cardinal;
 };
 
