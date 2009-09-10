@@ -116,7 +116,7 @@ db.loadCache = function DB_loadCache()
   {
     if(!(kind in tables)) {
       db.cache = {};
-      tk.dump("tables", dumpObject(tables));
+      //tk.dump("tables", dumpObject(tables));
       throw new Error("loadCache(): 1:"+ kind +" not in table list.");
     }
 
@@ -215,7 +215,7 @@ db.loadCache = function DB_loadCache()
     }
   }
 
-  tk.dump("cache", tk.dumpObject(db.cache));
+  //tk.dump("cache", tk.dumpObject(db.cache));
 };
 
 db.buildEntity = function DB_buildEntity(row, kind)
@@ -777,7 +777,7 @@ db.applyTransactionThread = function DB_applyTxnThread(transaction, callback)
 
 db.updateCache = function DB_updateCache()
 {
-  tk.dump("before", tk.dumpObject(db.cache));
+  //tk.dump("before", tk.dumpObject(db.cache));
   db.updates = [];
 
   for(let uri in db.cache)
@@ -793,7 +793,7 @@ db.updateCache = function DB_updateCache()
   }
 
   db.releaseCache();
-  tk.dump("after", tk.dumpObject(db.cache));
+  //tk.dump("after", tk.dumpObject(db.cache));
 };
 
 /**
@@ -916,9 +916,9 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
             return;
           }
 
-          tk.dump("predicate", op[1]);
+          //tk.dump("predicate", op[1]);
           let propname = model.getPropertyName(kind, op[1]);
-          tk.dump("property", propname);
+          //tk.dump("property", propname);
           
           if(typeof(propname) != "string") {
             db.logger.warn(
@@ -969,7 +969,7 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
               +" SET "+ meta.valuecol +"=:val"
               +" WHERE "+ meta.keycol +"=:uri";
 
-            tk.dump("sql", sql);
+            //tk.dump("sql", sql);
 
             var stmt = db.connection.createStatement(sql);
             stmt.params.val = target;
@@ -1003,7 +1003,7 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
             var sql = "DELETE FROM "+ meta.table +" WHERE "+
                 meta.keycol +"=:uri AND "+ meta.valuecol +"=:val";
 
-            tk.dump("sql", sql);
+            //tk.dump("sql", sql);
 
             var stmt = db.connection.createStatement(sql);
             stmt.params.val = target;
@@ -1054,7 +1054,7 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
             var sql = "INSERT OR IGNORE INTO "+ meta.table +" ("+
                 meta.keycol +","+ meta.valuecol +") VALUES (:uri,:val)";
 
-            tk.dump("sql", sql);
+            //tk.dump("sql", sql);
 
             var stmt = db.connection.createStatement(sql);
             stmt.params.val = target;
@@ -1078,9 +1078,9 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
         if(updateSet.updates.length && insertSet.updates.length) {
           rollback = true;
           db.connection.rollbackTransaction();
-          tk.dump("insert and update", tk.dumpObject(aTransaction));
-          tk.dump("inserts", tk.dumpObject(insertSet));
-          tk.dump("updates", tk.dumpObject(updateSet));
+          //tk.dump("insert and update", tk.dumpObject(aTransaction));
+          //tk.dump("inserts", tk.dumpObject(insertSet));
+          //tk.dump("updates", tk.dumpObject(updateSet));
           assert(false, "insert and update statemtents on the same table");
           return;
         }
@@ -1091,7 +1091,7 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
           let sql = "UPDATE "+ meta.table +" SET "+
               updateSet.updates.join(",") +" WHERE rowid=:index";
 
-          tk.dump("sql", sql);
+          //tk.dump("sql", sql);
 
           var stmt = db.connection.createStatement(sql);
           stmt.params.index = index;
@@ -1120,7 +1120,7 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
           let sql = "INSERT INTO "+ meta.table +" ("+ insertSet.cols.join(",")
               +") VALUES ("+ insertSet.updates.join(",") +")";
 
-          tk.dump("sql", sql);
+          //tk.dump("sql", sql);
 
           var stmt = db.connection.createStatement(sql);
           for(let p in insertSet) {
@@ -1155,7 +1155,7 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
   var insertsql = "INSERT INTO transaction_record "+
       "VALUES (:uid, :datetime, :seq, :message, :user, :state, :serial)";
 
-  tk.dump("sql", insertsql);
+  //tk.dump("sql", insertsql);
 
   var stmt = db.connection.createStatement(insertsql);
   stmt.params.uid = aTransaction.uid;
