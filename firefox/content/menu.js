@@ -107,7 +107,8 @@ function loadCustomerList()
         customer.name);
     name.onclick = onOpenCustomer;
 
-    let contract = SPAN({value: customer.uri}, "create contract for");
+    let contract = SPAN({class: "clickme little",
+        value: customer.uri}, "create contract");
     contract.onclick = onCreateContract;
 
     let li = LI([name, contract]);

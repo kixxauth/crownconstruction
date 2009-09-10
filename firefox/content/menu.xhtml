@@ -5,6 +5,8 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Crown Construction Enterprise Resource Management</title>
+  <link rel="stylesheet" type="text/css"
+    href="chrome://crownconstruction/content/css/styles.css" />
   <script src="js/domkit.js" type="application/javascript;version=1.7">
     </script>
   <script src="js/page.js" type="application/javascript;version=1.7">
@@ -17,10 +19,13 @@
 <div id="root-container">
 
   <div id="header">
-    <h1>Crown Construction Enterprise Resource Management</h1>
+    <img id="head-image"
+      src="chrome://crownconstruction/content/img/weblogo.gif" />
+    <h1 id="head-title">Crown Construction Enterprise Resource Management</h1>
   </div><!-- header -->
+  <div id="head-break" />
 
-  <ul id="customers">
+  <ul class="actions" id="customers">
     <li>
       <a id="new-customer"
         href="chrome://crownconstruction/content/customer.xhtml">
@@ -29,7 +34,7 @@
     </li>
   </ul>
 
-  <ul id="employees">
+  <ul class="actions" id="employees">
     <li>
       <a id="new-employee"
         href="chrome://crownconstruction/content/employee.xhtml">
@@ -38,7 +43,7 @@
     </li>
   </ul>
 
-  <h3>Customer List</h3>
+  <h3 class="section-head">Customer List</h3>
   <ul id="customer-list">
   </ul>
 

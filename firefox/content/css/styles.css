@@ -1,0 +1,108 @@
+#crownconstruction-login-panel {
+  width: 400px;
+  height: 300px;
+}
+#crownconstruction-login-panel-box {
+  width: 390px;
+  height: 300px;
+  padding: 30px;
+  color: #3e6a99;
+  font-size: 1.2em;
+  border: 3px solid #3e6a99;
+  -moz-border-radius: 20px;
+}
+
+.label {
+  padding: 0 1em 0 2em;
+}
+
+.subform {
+  border: 1px solid #777;
+  padding: 0 0 0 2em;
+  margin: 10px;
+  background: #fff;
+  -moz-border-radius: 10px;
+}
+
+.clickme {
+  color: blue;
+  padding-left: 1em;
+}
+.clickme:hover {
+  cursor: pointer;
+}
+
+.little {
+  font-size: 0.8em;
+}
+
+.section-head {
+  margin: 2em 0 0 1em;
+  color: #555;
+}
+
+.actions {
+  list-style-type: none;
+}
+.actions li {
+  border: 1px solid #777;
+  padding: 3px 0 3px 1em;
+  width: 14em;
+}
+.actions a {
+  display: block;
+  text-decoration: none;
+}
+
+.head-title {
+  font: bold 1.7em Verdana sans-serif;
+  color: #555;
+}
+
+.form {
+  border: 1px solid #3e6a99;
+  background: #3e6a99;
+  padding: 1em;
+  -moz-border-radius: 15px;
+}
+
+#header {
+  margin: 10px;
+  padding: 0;
+}
+
+#head-image {
+  float: left;
+}
+#head-title {
+  font: bold 1.7em Verdana sans-serif;
+  color: #555;
+  padding: 30px;
+  margin-left: 350px;
+}
+#head-break {
+  clear: both;
+}
+
+#customer-list {
+  border: 1px solid #3e6a99;
+  margin: 10px;
+  padding: 30px;
+}
+#customer-list li{
+  margin: 10px;
+  font-size: 1.1em;
+}
+
+#warning {
+  position: absolute;
+  top: 100px;
+  left: 200px;
+  border: 2px solid #777;
+  background: #333;
+  color: #fff;
+  padding: 2em;
+  -moz-border-radius: 20px;
+  opacity: 0.9;
+  width: 300px;
+}

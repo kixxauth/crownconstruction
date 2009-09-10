@@ -151,12 +151,12 @@ function addPerson(person)
   let lastname = person.lastname || "";
   let firstname = person.firstname || "";
 
-  let fn = INPUT({type: "text", value:firstname});
-  let ln = INPUT({type: "text", value:lastname});
+  let fn = INPUT({class:"input", type: "text", value:firstname});
+  let ln = INPUT({class:"input", type: "text", value:lastname});
   $("people").appendChild(DIV(P([
-        SPAN("Firstname: "),
+        SPAN({class:"label"}, "Firstname: "),
         fn,
-        SPAN("Lastname: "),
+        SPAN({class:"label"}, "Lastname: "),
         ln
       ])));
   People.push({key: person.key(), firstname: fn, lastname: ln});
@@ -172,19 +172,21 @@ function addAddress(address)
   let state = address.state || "";
   let zip = address.zip || "";
 
-  let l = INPUT({type: "text", value:label});
-  let str = INPUT({type: "text", value:street});
-  let ast = INPUT({type: "text", value:addStreet});
-  let cty = INPUT({type: "text", value:city});
-  let st = INPUT({type: "text", value:state});
-  let z =  INPUT({type: "text", value:zip});
+  let l = INPUT({class:"input", type: "text", value:label});
+  let str = INPUT({class:"input", type: "text", value:street});
+  let ast = INPUT({class:"input", type: "text", value:addStreet});
+  let cty = INPUT({class:"input", type: "text", value:city});
+  let st = INPUT({class:"input", size:10, type: "text", value:state});
+  let z =  INPUT({class:"input", size:10, type: "text", value:zip});
 
   $("addresses").appendChild(DIV(
     [
-      P([SPAN("Description:"), l]),
-      P([SPAN("Street:"), str]),
-      P(ast),
-      P([SPAN("City:"), cty, SPAN("State:"), st, SPAN("Zip:"), z]),
+      P([SPAN({class:"label"}, "Street:"), str]),
+      P([SPAN({class:"label"}, "Apt/Suite:"), ast]),
+      P([SPAN({class:"label"}, "City:"), cty,
+        SPAN({class:"label"}, "State:"), st,
+        SPAN({class:"label"}, "Zip:"), z]),
+      P([SPAN({class:"label"}, "Description:"), l])
     ]));
 
   Addresses.push({
@@ -204,13 +206,13 @@ function addPhone(phone)
   let label = phone.label || "";
   let num = phone.phonenumber || "";
 
-  let l = INPUT({type: "text", value:label});
-  let n = INPUT({type: "text", value:num});
+  let l = INPUT({class:"input", type: "text", value:label});
+  let n = INPUT({class:"input", type: "text", value:num});
 
   $("phones").appendChild(DIV(P([
-      SPAN("Label: "),
+      SPAN({class:"label"}, "Label: "),
       l,
-      SPAN("Number: "),
+      SPAN({class:"label"}, "Number: "),
       n
     ])));
   Phones.push({key: phone.key(), label: l, phonenumber: n});
@@ -222,13 +224,13 @@ function addEmail(email)
   let label = email.label || "";
   let link = email.link || "";
 
-  let l = INPUT({type: "text", value:label});
-  let lnk = INPUT({type: "text", value:link});
+  let l = INPUT({class:"input", type: "text", value:label});
+  let lnk = INPUT({class:"input", type: "text", value:link});
 
   $("emails").appendChild(DIV(P([
-      SPAN("Label: "),
+      SPAN({class:"label"}, "Label: "),
       l,
-      SPAN("Email: "),
+      SPAN({class:"label"}, "Email: "),
       lnk 
     ])));
   Emails.push({key: email.key(), label: l, link: lnk});
