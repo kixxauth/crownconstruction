@@ -1,3 +1,198 @@
+Components.utils.import("resource://crownconstruction/modules/toolkit.js");
+Components.utils.import("resource://crownconstruction/modules/db.js");
+
+function onWindowLoad(e)
+{
+  createEmployeeSelectList({
+    salesperson:[$("salesperson")],
+    estimator:[$("estimator")],
+    production:[$("production")]
+  });
+}
+
+function onAddJob(payment)
+{
+}
+
+function onAddSpecialOrder()
+{
+}
+
+function onAddContractor()
+{
+}
+
+function onAddPermit()
+{
+}
+
+function buildHeader(contract)
+{
+  if(contract.Salesperson)
+    setEmployeeSelectList($("salesperson"), contract.Salesperson.uri);
+
+  if(contract.Estimator)
+    setEmployeeSelectList($("estimator"), contract.Estimator.uri);
+
+  if(contract.Production)
+    setEmployeeSelectList($("production"), contract.Production.uri);
+}
+
+function setContractInfo(contract)
+{
+  setCustomerInfo(contract);
+  setContractDates(contract);
+  setCosts(contract);
+}
+
+function setJobInfo(contract)
+{
+  if(!contract.Job)
+    return;
+}
+
+function setSpecialOrders(contract)
+{
+  if(!contract.SpecialOrder)
+    return;
+}
+
+function setSubContractors(contract)
+{
+  if(!contract.SubContractor)
+    return;
+}
+
+function setPermits(contract)
+{
+}
+
+function setEstimateInfo(contract)
+{
+}
+
+function setCustomerInfo(contract)
+{
+  let customer = db.get(contract.customer);
+}
+
+function setCustomerPeople(customer)
+{
+  if(customer.Person) {
+    customer.Person.forEach(function setAddress(key) {
+        let ent = db.get(key);
+        $("customer-people").appendChild(P([
+            SPAN(ent.firstname || ""), BR(),
+            SPAN(ent.lastname || ""), BR()
+          ]));
+      });
+  }
+}
+
+function setCustomerAddresses(customer)
+{
+  if(customer.Address) {
+    customer.Address.forEach(function setAddress(key) {
+        let ent = db.get(key);
+        $("customer-addresses").appendChild(P([
+            SPAN(ent.label || ""), BR(),
+            SPAN(ent.street || ""), BR(),
+            SPAN(ent.addStreet || ""), BR(),
+            SPAN(ent.city || ""), BR(),
+            SPAN(ent.state || ""), BR(),
+            SPAN(ent.zip || ""), BR()
+          ]));
+      });
+  }
+}
+
+function setCustomerContacts(customer)
+{
+  if(customer.Phone) {
+    $("customer-contacts").appendChild(P("Phone numbers:"));
+    customer.Phone.forEach(function setPhone(key) {
+        let phone = db.get(key);
+        $("customer-contacts").appendChild(P([
+            SPAN(phone.label || ""),
+            SPAN(phone.phonenumber || "")
+          ]));
+      });
+  }
+
+  if(customer.Email) {
+    $("customer-contacts").appendChild(P("Email addresses:"));
+    customer.Email.forEach(function setEmail(key) {
+        let email = db.get(key);
+        $("customer-contacts").appendChild(P([
+            SPAN(email.label || ""),
+            SPAN(email.email || "")
+          ]));
+      });
+  }
+}
+
+function setContractDates(contract)
+{
+  $("contractDate").value = contract.contractDate || "";
+  $("startDate").value = contract.startDate || "";
+  $("completeDate").value = contract.completeDate || "";
+}
+
+function setCosts(contract)
+{
+  $("contractCost").value = contract.cost || "";
+  $("estimatedGP").value = contract.estimatedGP || "";
+  $("taxLabor").value = contract.taxlabor || "";
+}
+
+// element is the select element and key is the key().uri
+function setEmployeeSelectList(element, key)
+{
+  let opts = Iterator(element.getOptions());
+  for(let [i, op] in opts) {
+    if(op.value == key) {
+      element.setSelectedIndex(i);
+      return;
+    }
+  }
+}
+
+// lists is an object of the form:
+// {'categoryName':[element,..],...}
+function createEmployeeSelectList(lists)
+{
+  function query(ent, key)
+  {
+    if(key.kind != "Employee")
+      return;
+    if(!ent.category || !ent.category.length)
+      return;
+
+    ent.category.forEach(function queryCategory(cat)
+      {
+        if(!(cat in lists))
+          return;
+
+        lists[cat].forEach(function setItem(element)
+          {
+            let item = OPTION({value: key.uri},
+              ent.firstname +" "+ ent.lastname);
+            element.appendChild(item);
+          });
+      });
+  }
+  iterDBCache(query);
+}
+
+function iterDBCache(callback)
+{
+  let cache = Iterator(db.cache);
+  for(let [i, ent] in cache)
+    callback(ent, ent.key());
+}
+
+window.addEventListener("load", onWindowLoad, false);
+
 /* Handle window load event */
   // get the contract entity uri from URL
   // call routine to construct the form
