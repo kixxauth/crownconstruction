@@ -10,6 +10,7 @@
              a matching about attribute. The actual uri can be whatever you like -->
         <RDF:li resource="urn:mozilla:extension:crownconstruction@fireworksproject.com:2009-07-03-a"/>
         <RDF:li resource="urn:mozilla:extension:crownconstruction@fireworksproject.com:2009-07-03-b"/>
+        <RDF:li resource="urn:mozilla:extension:crownconstruction@fireworksproject.com:2009-09-10-a"/>
       </RDF:Seq>
     </em:updates>
   </RDF:Description>
@@ -49,5 +50,23 @@
     </em:targetApplication>
 
   </RDF:Description>
+        <RDF:li resource=/>
 
+  <RDF:Description about="urn:mozilla:extension:crownconstruction@fireworksproject.com:2009-09-10-a">
+    <em:version>2009-07-03-b</em:version> <!-- This is the version number of the add-on -->
+
+    <!-- One targetApplication for each application the add-on is compatible with -->
+    <em:targetApplication>
+      <RDF:Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- firefox -->
+        <em:minVersion>3.0</em:minVersion>
+        <em:maxVersion>3.5.*</em:maxVersion>
+
+        <!-- This is where this version of the add-on will be downloaded from -->
+        <em:updateLink>https://fireworkscomputer.appspot.com/mozilla-downloads/crownconstruction_2009-07-03-b.xpi</em:updateLink>
+
+      </RDF:Description>
+    </em:targetApplication>
+
+  </RDF:Description>
 </RDF:RDF>
