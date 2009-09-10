@@ -29,6 +29,8 @@ function onWindowLoad(e)
 
   $("new-customer").onclick = onNewCustomer;
   $("new-employee").onclick = onNewEmployee;
+
+  loadCustomerList();
 }
 
 function onNewCustomer(e)
@@ -47,6 +49,78 @@ function onNewEmployee(e)
   let employee = db.createNew("Employee");
   let url = page.createRepURL(e.target.href, employee.uri);
   tk.openNewTab(url);
+}
+
+function onNewContract(e)
+{
+  e.preventDefault();
+
+  let contract = db.createNew("Contract");
+  let url = page.createRepURL(e.target.href, contract.uri);
+  tk.openNewTab(url);
+}
+
+function onOpenCustomer(e)
+{
+  e.preventDefault();
+  let uri = e.target.getAttribute("value");
+  let url = page.createRepURL(e.target.href, uri);
+  tk.openNewTab(url);
+}
+
+function onCreateContract(e)
+{
+  let uri = e.target.getAttribute("value");
+  alert(uri);
+}
+
+function loadCustomerList()
+{
+  let customers = [];
+  iterDBCache(function(key) {
+      if(key.kind != "Customer")
+        return;
+
+      let customer = db.get(key);
+      let person = db.get(customer.Person[0]);
+
+      customers.push({
+          name: person.lastname +", "+ person.firstname,
+          uri: key.uri
+        });
+    });
+
+  customers.sort(function(a, b) {
+      if(a.name.toUpperCase() > b.name.toUpperCase())
+        return 1;
+      return -1;
+    });
+
+  let list = $("customer-list");
+  list.innerHTML = "";
+  let cust = Iterator(customers);
+  for(let [i, customer] in cust)
+  {
+    let name = A(
+        {href:"chrome://crownconstruction/content/customer.xhtml",
+        value: customer.uri},
+        customer.name);
+    name.onclick = onOpenCustomer;
+
+    let contract = SPAN({value: customer.uri}, "create contract for");
+    contract.onclick = onCreateContract;
+
+    let li = LI([name, contract]);
+    list.appendChild(li);
+  }
+}
+
+function iterDBCache(callback)
+{
+  let cache = Iterator(db.cache);
+  for(let [i, ent] in cache) {
+    callback(ent.key());
+  }
 }
 
 window.addEventListener("load", onWindowLoad, false);
