@@ -136,7 +136,7 @@ function addAddresses(addresses)
 function addPhones(phones)
 {
   phones = phones || [null];
-  phones.forEach(addPhones);
+  phones.forEach(addPhone);
 }
 
 function addEmails(emails)
