@@ -390,7 +390,7 @@ db.validatePrimitive = function DB_validPrimitive(range, value)
     return value || null;
 
   if(range != "literal" && value == null || value.constructor == Key)
-    return value.uri || null;
+    return value || null;
 
   if(range == "literal") {
     throw TypeError("must be a string or null");
@@ -739,8 +739,17 @@ db.normalizeEntity = function DB_normalizeEntity(aEntity)
 
 db.normalizeOperation = function DB_normalizeOperation(uri, stored, current)
 {
+  //tk.dump("uri", uri);
+  //tk.dump("stored", stored);
+  //tk.dump("current", current);
+
   stored = stored || null;
   current = current || null;
+
+  if(stored && typeof(stored) == "object")
+    stored = stored.uri;
+  if(current && typeof(current) == "object")
+    current = current.uri;
 
   if(stored == current)
     return null;
@@ -828,6 +837,8 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
     }
     return db.TRANSACTION_STATE.complete;
   }
+
+  //tk.dump("transaction", tk.dumpObject(aTransaction));
 
   // a transaction happens within an SQLite transaction
   db.connection.beginTransaction();
@@ -960,7 +971,8 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
             // if 1 to many [??? or many to many]; create and execute update
             if(range != "literal"){
               rollback = true;
-              assert(false, "unexpected many to many relationship");
+              assert(false, "unexpected many to many relationship for "+
+                  kind +"."+ propname);
               return;
             }
             var meta = db.getFKMeta(kind, propname);
@@ -1148,7 +1160,15 @@ db.applyTransaction = function DB_applyTxn(aTransaction, aState)
   } catch(e) {
     rollback = true;
     if(db.connection.transactionInProgress)
-      db.connection.rollbackTransaction();
+    {
+      // rollback may not work if there is a statement
+      // that was not finalize()d
+      try {
+        db.connection.rollbackTransaction();
+      } catch(e) {
+        Cu.reportError(e);
+      }
+    }
     db.logger.error(e.message +" "+ e.fileName +" line:" + e.lineNumber);
     Cu.reportError(e);
   }
