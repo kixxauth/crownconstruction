@@ -109,6 +109,8 @@ db.releaseCache = function DB_releaseCache() {
 
 db.loadCache = function DB_loadCache()
 {
+  db.cache = {};
+
   let tables = db.schema();
   //tk.dump("schema", tk.dumpObject(tables));
   
