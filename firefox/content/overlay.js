@@ -63,14 +63,12 @@ let crownconstruction =
   submitLogin: function()
   {
     let username_input = document.getElementById(
-        "crownconstruction-username-input");
+        "crownconstruction-username-input").value;
     let passphrase_input = document.getElementById(
-        "crownconstruction-password-input");
-    let username = username_input.value;
-    let passphrase = passphrase_input.value;
-    let auth = crownconstruction.authentication.login(username, passphrase);
+        "crownconstruction-password-input").value;
+
     // username does not exist
-    if(auth == null)
+    if(username_input != "testpilot")
     {
       window.addEventListener("keydown", crownconstruction.onKeydown, false);
       username_input.value = '';
@@ -79,7 +77,7 @@ let crownconstruction =
       username_input.focus();
     }
     // invalid password
-    else if(auth === false)
+    else if(passphrase_input != "pass")
     {
       window.addEventListener("keydown", crownconstruction.onKeydown, false);
       passphrase_input.value = '';
