@@ -9,10 +9,10 @@ strict: true,
 immed: true */
 
 /*members apply, baseEvent, broadcast, call, cancelDefault, constructor, 
-    dismiss, emit, emitter, getDefaulting, getPropagation, import, indexOf, 
-    length, observe, promise, prototype, push, require, setSignal, signal, 
-    slice, splice, stopPropagation, then, toString, tower, tuneIn, tuneOut, 
-    utils
+    dismiss, emit, emitter, event, getDefaulting, getPropagation, import, 
+    indexOf, length, observe, promise, prototype, push, require, setSignal, 
+    signal, slice, splice, state, stopPropagation, then, toString, tower, 
+    tuneIn, tuneOut, utils, values
 */
 
 /*global
@@ -23,7 +23,7 @@ Components: false
 
 var EXPORTED_SYMBOLS = ["exports"];
 
-if (typeof Components === "undefined") {
+if (typeof Components !== "undefined") {
   var require = Components.utils.import(
         "resource://crownconstruction/modules/boot.js", null).require;
   var exports = {};
@@ -133,9 +133,13 @@ exports.signal = function signal_constructor(action, eventConstructor) {
 /**
  * Construct a tower instance that observes and broadcasts signals.
  */
-exports.tower = function tower_constructor() {
+exports.tower = function tower_constructor(signal_names) {
   var self = {},
-      signals = {};
+      signals = {}, i;
+
+  for (i = 0; i < signal_names.length; i += 1) {
+    signals[signal_names[i]] = exports.signal();
+  }
 
   /**
    * Create a named signal for this tower to broadcast or observe.
@@ -205,53 +209,15 @@ exports.tower = function tower_constructor() {
   return self;
 };
 
-exports.promise = function promise_constructor(tower, id) {
-  var self = {}, event, values,
-      initialized = 1,
+function initialized_promise_constructor(spec) {
+  var self = {},
+      tower = spec.tower,
+      event = spec.event,
+      values = spec.values,
       inprogress = 2,
       fulfilled = 3,
       exception = 4,
-      state = 0;
-
-  id = id || "unidentified";
-
-  if (tower.constructor !== exports.tower) {
-    tower = exports.tower();
-
-    tower.setSignal("progress", function progress_default() {
-          if (state >= fulfilled) {
-            throw new Error("Promise '"+ id +
-              "' has already reached a fulfilled or exception state.");
-          }
-          event = this;
-          values = Array.prototype.slice.call(arguments, 0);
-          state = inprogress;
-        });
-
-    tower.setSignal("exception", function exception_default() {
-          if (state >= fulfilled) {
-            throw new Error("Promise '"+ id +
-              "' has already reached a fulfilled or exception state.");
-          }
-          event = this;
-          values = Array.prototype.slice.call(arguments, 0);
-          state = exception;
-        });
-
-    tower.setSignal("fulfill", function fulfill_default() {
-          if (state >= fulfilled) {
-            throw new Error("Promise '"+ id +
-              "' has already reached a fulfilled or exception state.");
-          }
-          event = this;
-          values = Array.prototype.slice.call(arguments, 0);
-          state = fulfilled;
-        });
-
-    tower.setSignal("register", function register_default() {
-          // noop
-        });
-  }
+      state = spec.state;
 
   self.then = function then(fulfill, except, progress) {
     var new_promise;
@@ -274,9 +240,91 @@ exports.promise = function promise_constructor(tower, id) {
       if (state === inprogress) {
         progress.apply(event, values);
       }
-      tower.observe("progress", except);
+      tower.observe("progress", progress);
     }
-    new_promise = exports.promise(tower, id);
+    new_promise = initialized_promise_constructor({tower: tower,
+                                                   state: state,
+                                                   event: event,
+                                                   values: values});
+    tower.broadcast("register");
+    return new_promise;
+  };
+
+  self.constructor = exports.promise;
+  return self;
+}
+
+exports.promise = function promise_constructor(init, id) {
+  var self = {},
+      tower = exports.tower(["progress", "exception", "fulfill", "register"]),
+      event, values,
+      initialized = 1,
+      inprogress = 2,
+      fulfilled = 3,
+      exception = 4,
+      state = 0;
+
+  id = ((typeof id === "undefined") ? "unidentified" : id);
+
+  tower.observe("progress", function progress_default() {
+        if (state >= fulfilled) {
+          throw new Error("Promise '"+ id +
+            "' has already reached a fulfilled or exception state.");
+        }
+        event = this;
+        values = Array.prototype.slice.call(arguments, 0);
+        state = inprogress;
+      });
+
+  tower.observe("fulfill", function exception_default() {
+        if (state >= fulfilled) {
+          throw new Error("Promise '"+ id +
+            "' has already reached a fulfilled or exception state.");
+        }
+        event = this;
+        values = Array.prototype.slice.call(arguments, 0);
+        state = exception;
+      });
+
+  tower.observe("fulfill", function fulfill_default() {
+        if (state >= fulfilled) {
+          throw new Error("Promise '"+ id +
+            "' has already reached a fulfilled or exception state.");
+        }
+        event = this;
+        values = Array.prototype.slice.call(arguments, 0);
+        state = fulfilled;
+      });
+
+  init(tower);
+
+  self.then = function then(fulfill, except, progress) {
+    var new_promise;
+
+    if (typeof fulfill === "function") {
+      if (state === fulfilled) {
+        fulfill.apply(event, values);
+      } else {
+        tower.observe("fulfill", fulfill);
+      }
+    }
+    if (typeof except === "function") {
+      if (state === exception) {
+        except.apply(event, values);
+      } else {
+        tower.observe("exception", except);
+      }
+    }
+    if (typeof progress === "function") {
+      if (state === inprogress) {
+        progress.apply(event, values);
+      }
+      tower.observe("progress", progress);
+    }
+    new_promise = initialized_promise_constructor({tower: tower,
+                                                   state: state,
+                                                   event: event,
+                                                   values: values});
     tower.broadcast("register");
     return new_promise;
   };
