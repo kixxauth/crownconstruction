@@ -1,3 +1,29 @@
+/*
+Licensed under The MIT License
+==============================
+
+Copyright (c) 2009 - 2010 Fireworks Technology Projects Inc.
+[www.fireworksproject.com](http://www.fireworksproject.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
+
 /*jslint
 onevar: true,
 undef: true,
@@ -9,12 +35,12 @@ strict: true,
 immed: true */
 
 /*members "@mozilla.org\/xmlextras\/xmlhttprequest;1", XHRConstructor, 
-    async, body, broadcast, call, classes, constructor, create, 
-    createInstance, data, encode, getAllResponseHeaders, hasOwnProperty, 
-    headers, http, import, interfaces, join, length, method, 
-    nsIXMLHttpRequest, observe, onreadystatechange, open, promise, 
-    prototype, push, readyState, replace, require, responseText, send, 
-    setRequestHeader, target, toString, url, utils
+    async, body, call, classes, constructor, create, createInstance, data, 
+    encode, getAllResponseHeaders, hasOwnProperty, headers, http, import, 
+    interfaces, join, length, method, notify, nsIXMLHttpRequest, 
+    onreadystatechange, open, promise, prototype, push, readyState, replace, 
+    require, responseText, send, setRequestHeader, status, target, toString, 
+    url, utils
 */
 
 /*global
@@ -35,6 +61,9 @@ if (typeof Components !== "undefined") {
 
 var EVENTS = require("events");
 
+/**
+ * Create an http instance wrapping XMLHttpRequest.
+ */
 exports.create = function http_constructor(spec) {
   spec = spec || {};
   var self = {},
@@ -72,7 +101,7 @@ exports.create = function http_constructor(spec) {
   function update(opt) {
     var set = {};
     set.method = opt.method || spec.method || "GET";
-    set.url = opt.url || spec.url || "";
+    set.url = opt.url || spec.url;
     set.data = opt.data || spec.data || null;
     set.headers = update_headers(headers, opt.headers) || headers;
     return set;
@@ -80,17 +109,8 @@ exports.create = function http_constructor(spec) {
 
   spec = update(spec);
 
-  function xhr_send(xhr, data) {
-    try {
-      xhr.send(data);
-    } catch(sendErr) {
-      throw new Error("Problem calling XMLHttpRequest.send("+ data +
-                      ") in http.send().");
-    }
-  }
-
   self.send = function http_send(opt) {
-    var xhr = constructor(), conf, promise,
+    var xhr = constructor(), conf, promise, res,
         method, url, data, request_headers, i;
 
     if (arguments.length === 1) {
@@ -113,27 +133,37 @@ exports.create = function http_constructor(spec) {
       request_headers = update_headers(headers, arguments[3]) || headers;
     }
 
+    if (!url) {
+      throw new Error("A URL string must be provided to send().");
+    }
+
     if (async) {
       promise = EVENTS.promise(function init_http_promise(notifier) {
-          notifier.observe("register",
-              function promise_registered() {
-                try {
-                  xhr_send(data);
-                } catch(e) {
-                  notifier.broadcast("exception", e);
-                }
-              });
           xhr.onreadystatechange = function on_ready_state_change(ev) {
             if (ev.target.readyState === 0) {
-              notifier.broadcast("exception",
+              notifier.notify("exception",
                   new Error("XMLHttpRequest emitted a ready state of 0."));
             }
+
             if (ev.target.readyState === 4) {
-              notifier.broadcast("fulfill",
-                  {body: xhr.responseText,
-                   headers: xhr.getAllResponseHeaders()});
+              res = {body: xhr.responseText,
+                     status: xhr.status,
+                     headers: {}};
+              try {
+                res.headers = xhr.getAllResponseHeaders();
+              } catch(e) { /* bury it */}
+              notifier.notify("fulfill", res);
             }
           };
+
+          try {
+            xhr.send(data);
+          } catch(sendErr) {
+            notifier.notify("exception",
+                            new Error("Problem calling XMLHttpRequest.send("+
+                            data +") in http.send().\nmethod: "+ method +
+                            "\nURL:"+ url));
+          }
         });
     }
 
@@ -151,15 +181,30 @@ exports.create = function http_constructor(spec) {
     if (async){
       return promise;
     }
-    xhr_send(data);
-    return {body: xhr.responseText,
-            headers: xhr.getAllResponseHeaders()};
+    try {
+      xhr.send(data);
+    } catch(sendErr) {
+      throw new Error("Problem calling XMLHttpRequest.send("+
+                      data +") in http.send().\nmethod: "+ method +
+                      "\nURL:"+ url);
+    }
+
+    res = {body: xhr.responseText,
+           status: xhr.status,
+           headers: {}};
+    try {
+      res.headers = xhr.getAllResponseHeaders();
+    } catch(e) { /* bury it */}
+    return res;
   };
 
   self.constructor = exports.http;
   return self;
 };
 
+/**
+ * URL encode an object.
+ */
 exports.encode = function encode(data) {
   var postData = [], value, property;
 
