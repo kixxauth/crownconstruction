@@ -32,8 +32,17 @@ if (Components) {
   var require = Components.utils.import(
         "resource://crownconstruction/modules/boot.js", null).require;
   var exports = {};
-  var module = {id: "util"};
+  var module = {id: "assert"};
 }
+
+if (typeof Object.create !== 'function') {
+    Object.create = function (o) {
+        function F() {}
+        F.prototype = o;
+        return new F();
+    };
+}
+
 
 // END: Crown Construction pilot project ammendment.
 
