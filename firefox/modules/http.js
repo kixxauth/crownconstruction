@@ -108,7 +108,8 @@ exports.create = function http_constructor(spec) {
     set.method = opt.method || spec.method || "GET";
     set.url = opt.url || spec.url;
     set.data = opt.data || spec.data || null;
-    set.headers = update_headers(headers, opt.headers) || headers;
+    update_headers(headers, opt.headers);
+    set.headers = headers;
     return set;
   }
 
