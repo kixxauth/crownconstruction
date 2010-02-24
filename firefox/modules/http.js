@@ -24,6 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
 
+
 /*jslint
 onevar: true,
 undef: true,
@@ -45,18 +46,22 @@ immed: true */
 
 /*global
 Components: false,
-XMLHttpRequest: true,
-exports: true,
+XMLHttpRequest: true
 */
 
 "use strict";
 
+// For Mozilla JavaScript modules system.
 var EXPORTED_SYMBOLS = ["exports"];
 
-if (typeof Components !== "undefined") {
+// If we are in the Mozilla module system we need to add some boilerplate to be
+// CommonJS complient. This is obviously an ugly hack to allow integration with
+// legacy code that uses the Mozilla module system.
+if (Components) {
   var require = Components.utils.import(
         "resource://crownconstruction/modules/boot.js", null).require;
   var exports = {};
+  var module = {id: "http"};
 }
 
 var EVENTS = require("events");
