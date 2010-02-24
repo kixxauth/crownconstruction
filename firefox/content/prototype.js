@@ -6,7 +6,7 @@ var P;
 window.addEventListener("load",
     function (e) {
       var r = HTTP.create();
-      var p = r.send("GET", "http://www.foodoes_not_exist/");
+      var p = r.send("GET", "htt://www.foodoes_not_exist/");
       dump("call to r.send() returned\n");
       p.then(
         function (res) {
