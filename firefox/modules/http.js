@@ -37,8 +37,8 @@ immed: true */
 
 /*members "@mozilla.org\/xmlextras\/xmlhttprequest;1", XHRConstructor, 
     async, body, call, classes, constructor, create, createInstance, data, 
-    encode, getAllResponseHeaders, hasOwnProperty, headers, http, import, 
-    interfaces, join, length, method, notify, nsIXMLHttpRequest, 
+    encode, getAllResponseHeaders, hasOwnProperty, headers, http, id, 
+    import, interfaces, join, length, method, notify, nsIXMLHttpRequest, 
     onreadystatechange, open, promise, prototype, push, readyState, replace, 
     require, responseText, send, setRequestHeader, status, target, toString, 
     url, utils
@@ -90,13 +90,16 @@ exports.create = function http_constructor(spec) {
 
     if (typeof new_headers === "object") {
       for (h in new_headers) {
-        if (Object.prototype.hasOwnProperty.call(headers, h)) {
+        if (Object.prototype.hasOwnProperty.call(new_headers, h)) {
           for (i = 0; i < headers.length; i += 1) {
             if (headers[i][0] === h) {
               headers[i][1] = new_headers[h];
             } else {
               headers.push([h, new_headers[h]]);
             }
+          }
+          if (!headers.length) {
+            headers.push([h, new_headers[h]]);
           }
         }
       }
