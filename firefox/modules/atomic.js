@@ -24,8 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
 
-/*members apply, cc, id, import, length, locked, push, queue, require, 
-    shift, short_stack, tall_stack, unshift, utils
+/*members apply, args, binding, cc, id, import, length, next, push, 
+    queue, require, shift, short_stack, tall_stack, unshift, utils
 */
 
 /*jslint
@@ -59,28 +59,40 @@ if (Components) {
 
 var EVENTS = require("events");
 
+function make_stack() {
+  var self = {}, stack = [], locked = 0;
+
+  function done() {
+    locked = 0;
+    self.next();
+  }
+
+  self.push = function stack_push(cc, args, binding) {
+    args = args || [];
+    args.shift(done);
+    stack.push({cc: cc, args: args, binding: binding});
+    return self;
+  };
+
+  self.next = function stack_next() {
+    var cont;
+
+    if (stack.length && !locked) {
+      locked = 1;
+      cont = stack.unshift();
+      cont.cc.apply(cont.binding, cont.args);
+    }
+  };
+
+  return self;
+}
+
 exports.short_stack = (function make_short_stack() {
     var stacks = {};
 
-    function next(stack) {
-      var cc;
-
-      function done() {
-        stacks[stack].locked = 0;
-        next(stack);
-      }
-
-      if (stacks[stack].cc.length && !stacks[stack].locked) {
-        stacks[stack].locked = 1;
-        cc = stacks[stack].cc.unshift();
-        cc[0].apply(cc[2], cc[1].shift(done));
-      }
-    }
-
     return function q(stack, continuation, args, binding) {
-      stacks[stack] = stacks[stack] || {locked: 0, cc: []};
-      stacks[stack].cc.push([continuation, args, binding]);
-      next(stack);
+      stacks[stack] = stacks[stack] || make_stack();
+      stacks[stack].push(continuation, args, binding).next();
     };
 }());
 
