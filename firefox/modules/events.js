@@ -79,6 +79,8 @@ var queue = (function create_queue() {
         };
 }());
 
+exports.queue = queue;
+
 /**
  * The base event prototype.
  */
