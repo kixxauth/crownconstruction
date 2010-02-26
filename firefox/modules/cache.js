@@ -66,6 +66,8 @@ exports.set_item = function set_item(key, value) {
 };
 
 exports.get_item = function get_item(key) {
-  return JSON.parse(JSON.stringify(CACHE[key]));
+  return ((!CACHE[key] || typeof CACHE[key] !== "object") ?
+               CACHE[key] :
+               JSON.parse(JSON.stringify(CACHE[key])));
 };
 
