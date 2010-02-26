@@ -36,11 +36,11 @@ strict: true,
 immed: true */
 
 /*members "@mozilla.org\/thread-manager;1", DISPATCH_NORMAL, apply, 
-    baseEvent, call, classes, constructor, dispatch, eventConstructor, 
-    getDefaulting, getPropagation, getService, id, import, interfaces, 
-    length, listen, mainThread, notify, nsIThread, nsIThreadManager, ok, 
-    promise, prototype, push, require, run, send, slice, then, toString, 
-    utils, watch
+    baseEvent, call, classes, concat, constructor, dispatch, eq, 
+    eventConstructor, getDefaulting, getPropagation, getService, id, import, 
+    interfaces, length, listen, mainThread, notify, nsIThread, 
+    nsIThreadManager, ok, promise, prototype, push, queue, require, run, 
+    send, slice, splice, then, toString, utils, watch
 */
 
 /*global
@@ -154,6 +154,26 @@ function beacon_constructor(spec, id) {
   return self;
 }
 
+function tuner_constructor(spec, id) {
+  var self = beacon_constructor(spec, id), len = spec.length, i;
+
+  function make_notify_method(name) {
+    ASSERT.eq(typeof self[name], "undefined");
+
+    self[name] = function () {
+      var args = Array.prototype.splice.call(arguments);
+      self.notify.apply(self, [name].concat(args));
+    };
+  }
+
+  for (i = 0; i < len; i += 1) {
+    make_notify_method(spec[i]);
+  }
+
+  self.constructor = tuner_constructor;
+  return self;
+}
+
 exports.promise = function promise_constructor(init, id) {
   if (typeof init !== "function") {
     throw new Error(
@@ -167,7 +187,7 @@ exports.promise = function promise_constructor(init, id) {
       inprogress = 2,
       fulfilled = 3,
       exception = 4,
-      beacon = beacon_constructor(["fulfill", "exception", "progress"], id),
+      beacon = tuner_constructor(["fulfill", "exception", "progress"], id),
       event,
       values,
       state = 0;
