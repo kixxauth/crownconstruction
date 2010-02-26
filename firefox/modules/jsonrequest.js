@@ -118,6 +118,10 @@ exports.post = function post(url, send, done, timeout) {
     throw JSONRequestError("bad data");
   }
 
+  if (DEBUG) {
+    LOG("JSONRequest.post() to "+ url);
+  }
+
   try {
     promise = HTTP.send("POST", url, data);
   } catch(HTTPex) {
