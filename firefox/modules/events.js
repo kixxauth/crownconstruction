@@ -158,7 +158,7 @@ function tuner_constructor(spec, id) {
   var self = beacon_constructor(spec, id), len = spec.length, i;
 
   function make_notify_method(name) {
-    ASSERT.eq(typeof self[name], "undefined");
+    ASSERT.equal(typeof self[name], "undefined");
 
     self[name] = function () {
       var args = Array.prototype.splice.call(arguments);
