@@ -161,7 +161,7 @@ function tuner_constructor(spec, id) {
     ASSERT.equal(typeof self[name], "undefined");
 
     self[name] = function () {
-      var args = Array.prototype.splice.call(arguments);
+      var args = Array.prototype.slice.call(arguments);
       self.notify.apply(self, [name].concat(args));
     };
   }
