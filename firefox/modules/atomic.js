@@ -68,6 +68,10 @@ function make_stack() {
   }
 
   self.push = function stack_push(cc, args, binding) {
+    if (typeof cc !== "function") {
+      throw new Error("short_stack.push() expected a function as the "+
+                      "first argument but got '"+ typeof cc +"'.");
+    }
     args = args || [];
     args.shift(done);
     stack.push({cc: cc, args: args, binding: binding});
@@ -79,7 +83,7 @@ function make_stack() {
 
     if (stack.length && !locked) {
       locked = 1;
-      cont = stack.unshift();
+      cont = stack.shift();
       cont.cc.apply(cont.binding, cont.args);
     }
   };
