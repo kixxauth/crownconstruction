@@ -35,6 +35,11 @@ if (Components) {
   var module = {id: "util"};
 }
 
+Array.isArray = function Array_isArray(x) {
+  return (typeof x === "object" && typeof x.length === "number" &&
+    typeof x.slice === "function");
+};
+
 // END: Crown Construction pilot project ammendment.
 
 
