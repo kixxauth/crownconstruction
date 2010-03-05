@@ -73,7 +73,7 @@ function make_stack() {
                       "first argument but got '"+ typeof cc +"'.");
     }
     args = args || [];
-    args.shift(done);
+    args.unshift(done);
     stack.push({cc: cc, args: args, binding: binding});
     return self;
   };
