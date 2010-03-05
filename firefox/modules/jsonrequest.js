@@ -119,7 +119,9 @@ exports.post = function post(url, send, done, timeout) {
   }
 
   if (DEBUG) {
-    LOG("JSONRequest.post() to "+ url);
+    LOG("\nJSONRequest.post() to "+ url);
+    LOG(" Request body:");
+    LOG(data);
   }
 
   try {
