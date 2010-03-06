@@ -1,26 +1,42 @@
-var Q = require("events");
-var HTTP = require("http");
+var CHAP = require("chap");
+var JR = require("jsonrequest");
+var DDD = require("dcube");
+DDD.debug(1);
+DDD.setDomain("0-5.latest.fireworks-skylight.appspot.com");
 
-var P;
+var CXN;
 
-window.addEventListener("load",
-    function (e) {
-      var r = HTTP.create();
-      var p = r.send("GET", "htt://www.foodoes_not_exist/");
-      dump("call to r.send() returned\n");
-      p.then(
-        function (res) {
-          dump("RESPONSE status:\n"+ res.status +"\n");
-          res.headers = 44;
-        },
-        function (e) {dump("Got exception. \n"+ e +"\n");}).
-      then(
-        function (res) {
-          dump("RESPONSE HEADERS:\n"+ res.headers +"\n");
-          res.headers = 7;
-        },
-        function (e) {dump("Got exception. \n"+ e +"\n");}
-        );
-      dump("call to r.then() returned\n");
-      P = p;
-    }, false);
+function dojr() {
+  dump(" cnonce: "+ CHAP.cnonce("x", "nextnonce") +"\n");
+  dump(" response: "+ CHAP.response("x", "nonce") +"\n");
+}
+
+function doDCube() {
+  var promise = DDD.connect("sandbox", "sandbox", [], "3 taps");
+  promise.then(
+      function (rv) {
+        CXN = rv.connection;
+      },
+      function (ex) {
+        ex = ex || {name: "undefined", message: "none"};
+        alert(ex.name +" : "+ ex.message);
+      });
+}
+
+function putdata() {
+  var r = CXN.request();
+  var q = DDD.query("put");
+  q.appendStatement("group", "=", "new");
+  q.appendStatement("blob", "=", "stuff");
+  r.appendQuery(q);
+  var promise = r.send();
+  promise.then(
+      function (rv) {
+        dump(" result:\n"+ require("util").repr(rv) +"\n\n");
+        alert("OK");
+      },
+      function (ex) {
+        ex = ex || {name: "undefined", message: "none"};
+        alert(ex.name +" : "+ ex.message);
+      });
+}
