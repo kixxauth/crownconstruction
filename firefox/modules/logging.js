@@ -70,7 +70,7 @@ var Cc = Components.classes,
     Cu = Components.utils,
     LOG_FILE = "crownconstruction.log",
     log4moz = Cu.import(
-        "resource://crownconstruction/modules/log4moz.js", null),
+        "resource://crownconstruction/modules/log4moz.js", null).Log4Moz,
     LOGGERS = {},
     LEVEL = log4moz.Level.Error,
     SET_LEVEL,
