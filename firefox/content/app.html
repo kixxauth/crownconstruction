@@ -5,11 +5,38 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Crown Construction ERM</title>
+  <link type="text/css" href="css/start/jquery-ui-1.8rc3.custom.css" rel="stylesheet" />	
+  <script type="text/javascript" src="jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="jquery-ui-1.8rc3.custom.min.js"></script>
   <script src="resource://crownconstruction/modules/boot.js"
           type="application/javascript;version=1.7"></script>
   <script src="app.js"
           type="application/javascript;version=1.7"></script>
 </head>
 <body>
+  <div id="root">
+
+    <!-- start -->
+    <div id="deck_1">
+    </div>
+
+    <!-- login -->
+    <div id="deck_2" style="display:none">
+      <p>username: <input id="username" type="text" /></p>
+      <p>passphrase: <input id="passphrase" type="password" /></p>
+      <p>Then tap the enter key.</p>
+    </div>
+
+    <!-- loading -->
+    <div id="deck_3" style="display:none">
+      <p>Loading...</p>
+    </div>
+
+    <!-- application -->
+    <div id="deck_4" style="display:none">
+      <h1>Crown Construction</h1>
+    </div>
+
+  </div>
 </body>
 </html>
