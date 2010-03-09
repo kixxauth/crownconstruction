@@ -154,7 +154,7 @@ function beacon_constructor(spec, id) {
   return self;
 }
 
-function tuner_constructor(spec, id) {
+exports.beacon = function tuner_constructor(spec, id) {
   var self = beacon_constructor(spec, id), len = spec.length, i;
 
   function make_notify_method(name) {
@@ -170,9 +170,9 @@ function tuner_constructor(spec, id) {
     make_notify_method(spec[i]);
   }
 
-  self.constructor = tuner_constructor;
+  self.constructor = exports.beacon;
   return self;
-}
+};
 
 exports.promise = function promise_constructor(init, id) {
   if (typeof init !== "function") {
@@ -187,7 +187,7 @@ exports.promise = function promise_constructor(init, id) {
       inprogress = 2,
       fulfilled = 3,
       exception = 4,
-      beacon = tuner_constructor(["fulfill", "exception", "progress"], id),
+      beacon = exports.beacon(["fulfill", "exception", "progress"], id),
       event,
       values,
       state = 0;
