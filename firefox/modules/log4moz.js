@@ -223,12 +223,7 @@ Logger.prototype = {
   },
 
   removeAppender: function Logger_removeAppender(appender) {
-    let newAppenders = [];
-    for (let i = 0; i < this._appenders.length; i++) {
-      if (this._appenders[i] != appender)
-        newAppenders.push(this._appenders[i]);
-    }
-    this._appenders = newAppenders;
+    this._appenders.splice(this._appenders.indexOf(appender), 1);
   },
 
   log: function Logger_log(message) {
@@ -236,7 +231,8 @@ Logger.prototype = {
       return;
     let appenders = this.appenders;
     for (let i = 0; i < appenders.length; i++){
-      appenders[i].append(message);
+      if(typeof appenders[i] === "object" && typeof appenders[i].append === "function")
+        appenders[i].append(message);
     }
   },
 
