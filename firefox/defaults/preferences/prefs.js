@@ -1,9 +1,9 @@
 pref("extensions.crownconstruction.datadomain",
-    "http://fireworks-skylight.appspot.com/");
-pref("extensions.crownconstruction.dataurl", "hardcode");
-pref("extensions.crownconstruction.realm",
-    "crownconstructioninc");
-pref("extensions.crownconstruction.loglevel",
-    "Error");
-pref("extensions.crownconstruction.debug",
-    false);
+    "fireworks-skylight.appspot.com");
+
+pref("extensions.crownconstruction.dbname",
+    "crown_construction_1");
+
+pref("extensions.crownconstruction.sandboxdbname",
+    "crown_construction_sandbox");
+
