@@ -216,6 +216,12 @@ function user_constructor(username) {
     }
   };
 
+  self.reset = function user_reset() {
+    passkey = undefined;
+    cnonce = undefined;
+    response = undefined;
+  };
+
   self.cnonce = function user_cnonce(nextnonce) {
     if (nextnonce) {
       ASSERT.equal(typeof passkey, "string",
@@ -246,6 +252,12 @@ function user_constructor(username) {
 
   self.constructor = user_constructor;
   return self;
+}
+
+function reset_user(username) {
+  if (USERS[username]) {
+    USERS[username].reset();
+  }
 }
 
 /**
@@ -506,11 +518,18 @@ function init_database(finished, dbname, username) {
 }
 
 function init_database_with_query(finished, dbname, username, query) {
+  var i, queries = [];
+
+  for (i = 0; i < query.length; i += 1) {
+    queries.push(query[i].valueOf());
+  }
+
   send(
       function (rv, ex) {
         var auth;
         if (rv) {
           if (rv.head.status === 401) {
+            reset_user(username);
             finished(null, dcube_Exception("invalid passkey"));
             return;
           }
@@ -535,7 +554,7 @@ function init_database_with_query(finished, dbname, username, query) {
         username: username,
         cnonce: USERS[username].cnonce(),
         response: USERS[username].response(),
-        body: query.valueOf()
+        body: queries
       });
   return true;
 }
@@ -547,6 +566,7 @@ function put_database(finished, dbname, username, db) {
 
         if (rv) {
           if (rv.head.status === 401) {
+            reset_user(username);
             finished(null, dcube_Exception("invalid passkey"));
             return;
           }
@@ -581,6 +601,7 @@ function put_user(finished, target_user, username, user) {
 
         if (rv) {
           if (rv.head.status === 401) {
+            reset_user(username);
             finished(null, dcube_Exception("invalid passkey"));
             return;
           }
