@@ -41,7 +41,8 @@ jQuery: false,
 require: false,
 dump: false,
 document: false,
-setTimeout: false
+setTimeout: false,
+alert: false
 */
 
 "use strict";
@@ -56,11 +57,8 @@ function application() {
       doc = jQuery(document),
       root = jQuery("#root"),
 
-      // The start GUI function
-      gui_start,
-
       // The login waiting function
-      end_login_gui = function (f) { f(); },
+      end_login_gui = function (f, args) { f.apply(null, args); },
       
       swap_deck = (function () {
         var decks = [
@@ -76,8 +74,10 @@ function application() {
                 root.trigger("hide-alert");
                 deck -= 1;
 
-                if (current_deck === decks[deck]) {
-                  cc();
+                if (!decks[deck] || current_deck === decks[deck]) {
+                  if (typeof cc === "function") {
+                    cc();
+                  }
                   done();
                   return;
                 }
@@ -135,34 +135,51 @@ function application() {
 
         function blocker_constructor(message) {
           var self = {}, ready = false, complete = false,
-              my_callback, my_args, my_binding,
-              index;
+              index, continuations = [];
+
+          function execute_continuation(continuation, args, binding) {
+            if (typeof binding === "object" || util.isArrayLike(args)) {
+              binding = binding || null;
+              continuation.apply(binding, args);
+            }
+            else {
+              continuation();
+            }
+          }
 
           function try_me() {
+            var i;
+
             if (complete) {
-              return;
+              return true;
             }
 
-            if (ready && my_callback) {
+            if (ready && continuations.length) {
               complete = true;
+
+              for (i = 0; i < continuations.length; i += 1) {
+                execute_continuation(
+                    continuations[i].continuation,
+                    continuations[i].args,
+                    continuations[i].binding);
+              }
+
               blockers.splice(index, 1);
               update();
-              if (typeof my_binding === "object" ||
-                  util.isArrayLike(my_args)) {
-                my_binding = my_binding || null;
-                my_callback.apply(my_binding, my_args);
-              }
-              else {
-                my_callback();
-              }
             }
           }
 
           self.unblock = function blocker_unblock(callback, args, binding) {
             if (typeof callback === "function") {
-              my_callback = callback;
-              my_args = args;
-              my_binding = binding;
+              if (complete) {
+                execute_continuation(callback, args, binding);
+                return;
+              }
+
+              continuations.push({
+                continuation: callback,
+                args: args,
+                binding: binding});
               try_me();
             }
             else {
@@ -181,17 +198,41 @@ function application() {
 
         return function (message, tt) {
             var blocker = blocker_constructor(message);
+
             tt = (typeof tt === "number" && tt >= 0) ? tt : 1500;
-            
             update(message);
             setTimeout(blocker.unblock, tt);
-
-            return function (continuation, args, binding) {
-                blocker.unblock(continuation, args, binding);
-              };
+            return blocker.unblock;
           };
 
+      }()),
+      
+      place_customer_search_widget = (function () {
+        var widget = jQuery("#widgets")
+                     .children(".customer-search-widget");
+
+        return function (target) {
+            var self = widget.clone();
+            target.append(self);
+
+            doc.keyup(
+              function (ev) {
+                if (ev.which !== 13) {
+                  return false;
+                }
+
+                doc.unbind(ev);
+
+                alert(self.children("input").val());
+              });
+
+            return self;
+          };
       }());
+
+  function logged_in() {
+    alert("logged in");
+  }
 
   root.bind({
     "error": function init_error_handler(ev, ex) {
@@ -199,85 +240,78 @@ function application() {
 
       switch (ex.name +":"+ ex.message) {
       case "Error:invalid database":
-        swap_deck(1,
-            function () {
-              end_login_gui(
-                function () {
-                  show_alert("A database has not been set up for "+
-                             "Crown Construction. Please contact your "+
-                             "system administrator about this problem.");
-                });
-            });
+        end_login_gui(swap_deck, [1,
+          function () {
+            show_alert("A database has not been set up for "+
+                       "Crown Construction. Please contact your "+
+                       "system administrator about this problem.");
+          }]);
         break;
       
       default:
-        swap_deck(1,
-            function () {
-              end_login_gui(
-                function () {
-                  show_alert("The system threw an exception that was not "+
-                             "recognized: "+ ex.toString());
-                });
-            });
+        end_login_gui(swap_deck, [1,
+          function () {
+            show_alert("The system threw an exception that was not "+
+                       "recognized: "+ ex.toString());
+          }]);
       }
     },
 
     "login": function init_login_handler(ev, cc, reason) {
-      swap_deck(2,
-        function () {
-          end_login_gui(
-            function () {
-              // `this` is bound to the deck <div id="deck_2"> element.
-              switch (reason) {
-              case "username too short":
-                show_alert("A username must contain at least 1 character.");
-                break;
-              case "username too long":
-                show_alert("A username may not contain more than 144 characters.");
-                break;
-              case "username has bad characters":
-                show_alert("A username may only contain the characters "+
-                           "a-z, A-Z, 0-9, and '_'.");
-                break;
-              case "passkey too short":
-                show_alert("A passphrase must contain at least 1 character.");
-                break;
-              case "passkey too long":
-                show_alert("A passphrase may not contain more than "+
-                           "144 characters.");
-                break;
-              case "user does not exist":
-                show_alert("That username does not exist. "+
-                           "Check for a typo and try again.");
-                break;
-              case "invalid passkey":
-                show_alert("That passphrase was invalid. "+
-                           "Check for a typo and try again.");
-                break;
-              }
+      end_login_gui(swap_deck, [2,
+          function () {
+            // `this` is bound to the deck <div id="deck_2"> element.
+            switch (reason) {
+            case "username too short":
+              show_alert("A username must contain at least 1 character.");
+              break;
+            case "username too long":
+              show_alert("A username may not contain more than "+
+                         "144 characters.");
+              break;
+            case "username has bad characters":
+              show_alert("A username may only contain the characters "+
+                         "a-z, A-Z, 0-9, and '_'.");
+              break;
+            case "passkey too short":
+              show_alert("A passphrase must contain at least 1 character.");
+              break;
+            case "passkey too long":
+              show_alert("A passphrase may not contain more than "+
+                         "144 characters.");
+              break;
+            case "user does not exist":
+              show_alert("That username does not exist. "+
+                         "Check for a typo and try again.");
+              break;
+            case "invalid passkey":
+              show_alert("That passphrase was invalid. "+
+                         "Check for a typo and try again.");
+              break;
+            }
 
-              doc.keyup(
-                function (ev) {
-                  if (ev.which !== 13) {
-                    return false;
-                  }
-
-                  doc.unbind(ev);
-
-                  var username = jQuery("#username").val(),
-                      passkey = jQuery("#passphrase").val(),
-                      database;
-
-                  worker.databaseSandbox(jQuery("#fake-database").attr("checked"));
-                  worker.debug(jQuery("#debug-mode").attr("checked"));
-
-                  swap_deck(1);
-                  end_login_gui = gui_wait("<h3>Logging in...</h3>");
-                  cc(username, passkey, database);
+            doc.keyup(
+              function (ev) {
+                if (ev.which !== 13) {
                   return false;
-                });
-            });
-        });
+                }
+
+                doc.unbind(ev);
+
+                var username = jQuery("#username").val(),
+                    passkey = jQuery("#passphrase").val(),
+                    database;
+
+                worker.databaseSandbox(jQuery("#fake-database")
+                  .attr("checked"));
+                worker.debug(jQuery("#debug-mode").attr("checked"));
+
+                swap_deck(1);
+                end_login_gui = gui_wait("<h3>Logging in...</h3>");
+                cc(username, passkey, database);
+                return false;
+              });
+          }]);
     },
 
     "loading": function init_loading_handler(ev) {
@@ -285,13 +319,13 @@ function application() {
     },
 
     "ready": function init_ready_handler(ev) {
-      swap_deck(3,
-          function () {
-            end_login_gui(
-              function () {
-                dump("ready!!!\n");
-              });
+      jQuery("#tabs").tabs({
+            selected: 0,
+            select: function (ev, ui) {
+              alert(ui.index);
+            }
           });
+      end_login_gui(swap_deck, [3, logged_in]);
     }
   });
 
@@ -339,3 +373,4 @@ function application() {
             });
       });
 });
+
