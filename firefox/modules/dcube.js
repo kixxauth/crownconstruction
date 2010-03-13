@@ -711,6 +711,9 @@ exports.validateDatabaseName = function pub_validate_dbname(name) {
  *  - DCubeUsernameValidationError: too short
  *  - DCubeUsernameValidationError: too long
  *  - DCubeUsernameValidationError: invalid characters
+ *  - DCubePasskeyValidationError: not a string
+ *  - DCubePasskeyValidationError: too short
+ *  - DCubePasskeyValidationError: too long
  *  - DCubeDatabaseNameValidationError: not a string
  *  - DCubeDatabaseNameValidationError: too short
  *  - DCubeDatabaseNameValidationError: too long
@@ -744,6 +747,7 @@ exports.connect = function pub_connect(dbname, username, query, passkey) {
 
             if (USERS[username]) {
               if (USERS[username].passkey()) {
+                beacon.progress("authenticated");
                 init_database_with_query(finished, dbname, username, query);
               }
               else {
@@ -777,6 +781,20 @@ exports.connect = function pub_connect(dbname, username, query, passkey) {
  *  - DCubeUsernameValidationError: too short
  *  - DCubeUsernameValidationError: too long
  *  - DCubeUsernameValidationError: invalid characters
+ *  - DCubePasskeyValidationError: not a string
+ *  - DCubePasskeyValidationError: too short
+ *  - DCubePasskeyValidationError: too long
+ *
+ *  callback exceptions:
+ *  - DCubeException: user exists
+ *  - DCubeException: unexpected error
+ *  - DCubeException: no response
+ *  - DCubeException: server error 
+ *  - DCubeException: cient error 
+ *  - DCubeException: not found 
+ *  - DCubeException: forbidden 
+ *
+ *  The promise fulfill function is passed the username on success.
  */
 exports.createUser = function pub_create_user(username) {
   username = exports.validateUsername(username);
@@ -832,6 +850,19 @@ exports.createUser = function pub_create_user(username) {
  *  - DCubeDatabaseNameValidationError: too short
  *  - DCubeDatabaseNameValidationError: too long
  *  - DCubeDatabaseNameValidationError: invalid characters
+ *
+ *  callback exceptions:
+ *  - DcubeException: passkey not a string
+ *  - DcubeException: passkey too short
+ *  - DcubeException: passkey too long
+ *  - DCubeException: user does not exist
+ *  - DCubeException: unexpected error
+ *  - DCubeException: no response
+ *  - DCubeException: server error 
+ *  - DCubeException: cient error 
+ *  - DCubeException: not found 
+ *  - DCubeException: forbidden 
+ *  - DCubeException: invalid passkey
  */
 exports.putDatabase = function pub_put_database(dbname, db, username, passkey) {
   username = exports.validateUsername(username);
@@ -865,7 +896,7 @@ exports.putDatabase = function pub_put_database(dbname, db, username, passkey) {
                 }
                 init_remote_user(
                   finished, put_database, dbname, username, db, passkey);
-             }
+              }
             }
             else {
               try {
@@ -887,6 +918,9 @@ exports.putDatabase = function pub_put_database(dbname, db, username, passkey) {
  *  - DCubeUsernameValidationError: too short
  *  - DCubeUsernameValidationError: too long
  *  - DCubeUsernameValidationError: invalid characters
+ *  - DCubePasskeyValidationError: not a string
+ *  - DCubePasskeyValidationError: too short
+ *  - DCubePasskeyValidationError: too long
  */
 exports.putUser = function put_user(targetUsername, user, username, passkey) {
   username = exports.validateUsername(username);
