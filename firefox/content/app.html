@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Crown Construction ERM</title>
   <link type="text/css" href="css/start/jquery-ui-1.8rc3.custom.css" rel="stylesheet" />	
+  <link type="text/css" href="css/app.css" rel="stylesheet" />	
   <script type="text/javascript" src="jquery-1.4.2.min.js"></script>
   <script type="text/javascript" src="jquery-ui-1.8rc3.custom.min.js"></script>
   <script src="resource://crownconstruction/modules/boot.js"
@@ -16,27 +17,43 @@
 <body>
   <div id="root">
 
-    <!-- start -->
+    <!-- blank -->
     <div id="deck_1">
     </div>
 
     <!-- login -->
     <div id="deck_2" style="display:none">
-      <p>username: <input id="username" type="text" /></p>
-      <p>passphrase: <input id="passphrase" type="password" /></p>
-      <p>Then tap the enter key.</p>
-    </div>
-
-    <!-- loading -->
-    <div id="deck_3" style="display:none">
-      <p>Loading...</p>
+      <form id="login-form">
+        <p>Enter username and passphrase.</p>
+        <p>username: <input id="username" type="text" /></p>
+        <p>passphrase: <input id="passphrase" type="password" /></p>
+        <p>Then tap the enter key.</p>
+        <p>
+        Use fake database:<input id="fake-database" type="checkbox" />
+        Start in debug mode:<input id="debug-mode" type="checkbox" />
+        </p>
+      </form>
     </div>
 
     <!-- application -->
-    <div id="deck_4" style="display:none">
+    <div id="deck_3" style="display:none">
       <h1>Crown Construction</h1>
     </div>
 
   </div>
+
+  <!-- alert box -->
+  <div id="gen-alert" class="ui-state-error ui-corner-all"
+    style="padding: 0 .7em; width: 50%; display: none;"> 
+    <p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
+    <strong>Alert:</strong> <span class="dynamic-content"></span></p>
+  </div>
+
+  <!-- gui waiting -->
+  <div id="waiting" style="display:none">
+    <div id="waiting-message">
+    </div>
+  </div>
+
 </body>
 </html>

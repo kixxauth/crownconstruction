@@ -1,0 +1,14 @@
+#waiting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  opacity: 0.5;
+}
+
+#waiting-message {
+  margin: 20% 20% 0 20%;
+  color: #fff;
+}
