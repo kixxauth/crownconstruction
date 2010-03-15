@@ -37,6 +37,7 @@
 
     <!-- application -->
     <div id="deck_3" style="display:none">
+
       <div id="tabs">
         <ul>
           <li><a href="#tabs-job_form">Job Form</a></li>
@@ -44,6 +45,124 @@
         </ul>
 
         <div id="tabs-job_form" class="tab">
+
+          <div class="form-section">
+            <h3 class="tab-header">Customer Information</h3>
+
+            <div class="col-2 ui-helper-clearfix">
+
+            <div class="left-col">
+
+            <!-- names -->
+            <div class="form-sub-section">
+              <div class="form-sub-section-head-ctn">
+                <h4 class="form-sub-section-header">Names</h4>
+              </div>
+              <div class="input-section" viewpath="jobform.names" datapath="job.customer.person">
+                <div class="line ui-helper-clearfix">
+                  <p class="input-float"><label>last:</label>
+                  <input class="clean input-last-name" type="text"
+                         viewpath="jobform.names.last" datapath="job.customer.person.lastname" />
+                  </p>
+                  <p class="input-float"><label>first:</label>
+                    <input class="clean input-first-name" type="text"
+                         viewpath="jobform.names.first" datapath="job.customer.person.firstname" />
+                  </p>
+                </div>
+              </div>
+              <div class="form-sub-section-footer-ctn ui-helper-clearfix"
+                   title="Add another contact person."
+                   onclick="app.expandForm(this.parentNode.children[1])">
+                <p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+                  <span class="ui-icon ui-icon-circle-plus"></span>
+                </p>
+                <span>Add another contact person.</span>
+              </div>
+            </div>
+            <!-- end names -->
+
+            <!-- addresses -->
+            <div class="form-sub-section">
+              <div class="form-sub-section-head-ctn">
+                <h4 class="form-sub-section-header">Addresses</h4>
+              </div>
+              <div class="input-section">
+                <div class="line">
+                  <p><label>street:</label><input class="clean input-street" type="text" /></p>
+                </div>
+                <div class="line">
+                  <p><label>+ address:</label><input class="clean input-street" type="text" /></p>
+                </div>
+                <div class="line ui-helper-clearfix">
+                  <p class="input-float"><label>city:</label><input class="clean input-city" type="text" /></p>
+                  <p class="input-float"><label>state:</label><input class="clean input-state" type="text" /></p>
+                  <p class="input-float"><label>zip:</label><input class="clean input-zip" type="text" /></p>
+                </div>
+              </div>
+              <div class="form-sub-section-footer-ctn ui-helper-clearfix"
+                   title="Add another customer address."
+                   onclick="app.expandForm(this.parentNode.children[1])">
+                <p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+                  <span class="ui-icon ui-icon-circle-plus"></span>
+                </p>
+                <span>Add another customer address.</span>
+              </div>
+            </div>
+            <!-- end addresses -->
+
+            </div><!-- end left-col -->
+            <div class="right-col">
+
+            <!-- phone numbers -->
+            <div class="form-sub-section">
+              <div class="form-sub-section-head-ctn">
+                <h4 class="form-sub-section-header">Phone Numbers</h4>
+              </div>
+              <div class="input-section">
+                <div class="line ui-helper-clearfix">
+                  <p class="input-float"><label>number:</label><input class="clean input-phone" type="text" /></p>
+                  <p class="input-float"><label>label:</label><input class="clean input-label" type="text" /></p>
+                </div>
+              </div>
+              <div class="form-sub-section-footer-ctn ui-helper-clearfix"
+                   title="Add another phone number."
+                   onclick="app.expandForm(this.parentNode.children[1])">
+                <p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+                  <span class="ui-icon ui-icon-circle-plus"></span>
+                </p>
+                <span>Add another phone number.</span>
+              </div>
+            </div>
+            <!-- end phone numbers -->
+
+            <!-- emails -->
+            <div class="form-sub-section">
+              <div class="form-sub-section-head-ctn">
+                <h4 class="form-sub-section-header">Email Addresses</h4>
+              </div>
+              <div class="input-section">
+                <div class="line ui-helper-clearfix">
+                  <p class="input-float"><label>email:</label><input class="clean input-email" type="text" /></p>
+                  <p class="input-float"><label>label:</label><input class="clean input-label" type="text" /></p>
+                </div>
+              </div>
+              <div class="form-sub-section-footer-ctn ui-helper-clearfix"
+                   title="Add another email address."
+                   onclick="app.expandForm(this.parentNode.children[1])">
+                <p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+                  <span class="ui-icon ui-icon-circle-plus"></span>
+                </p>
+                <span>Add another email address.</span>
+              </div>
+            </div>
+            <!-- end emails -->
+
+            </div><!-- end right-col -->
+
+            </div><!-- end col-2 -->
+
+          </div>
+
         </div><!-- tabs-job_form -->
 
         <div id="tabs-other" class="tab">

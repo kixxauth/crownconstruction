@@ -47,6 +47,16 @@ alert: false
 
 "use strict";
 
+var app = (function () {
+var self = {};
+
+self.expandForm = function app_expand_form(frag) {
+  alert("hi");
+};
+
+return self;
+    }());
+
 jQuery(
 function application() {
   var util = require("util"),
@@ -231,7 +241,7 @@ function application() {
       }());
 
   function logged_in() {
-    alert("logged in");
+    dump("logged in\n");
   }
 
   root.bind({
@@ -307,7 +317,7 @@ function application() {
                 worker.debug(jQuery("#debug-mode").attr("checked"));
 
                 swap_deck(1);
-                end_login_gui = gui_wait("<h3>Logging in...</h3>");
+                end_login_gui = gui_wait('<h3 class="wait"><img src="css/images/ui-anim_basic_16x16.gif" /> Logging in...</h3>');
                 cc(username, passkey, database);
                 return false;
               });
@@ -322,14 +332,14 @@ function application() {
       jQuery("#tabs").tabs({
             selected: 0,
             select: function (ev, ui) {
-              alert(ui.index);
+              dump(ui.index +"\n");
             }
           });
       end_login_gui(swap_deck, [3, logged_in]);
     }
   });
 
-  gui_wait("<h3>Starting...</h3>")(
+  gui_wait('<h3 class="wait"><img src="css/images/ui-anim_basic_16x16.gif" /> Starting...</h3>')(
       function () {
 
         worker.init().then(
@@ -372,5 +382,11 @@ function application() {
               }
             });
       });
+
+  jQuery(".ui-ex-hover").hover(
+        function() { jQuery(this).addClass('ui-state-hover'); }, 
+        function() { jQuery(this).removeClass('ui-state-hover'); }
+      );
+
 });
 
