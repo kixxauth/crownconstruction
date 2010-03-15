@@ -65,10 +65,19 @@ if (Components) {
 var HTTP = require("http").create({headers: {
                                    "Accept": "application/jsonrequest",
                                    "Content-Type": "application/jsonrequest"}}),
-    ASSERT = require("assert").ok;
+    assert = require("assert").ok;
 
 var LOG = function dump_logger(msg) { dump(msg +"\n"); };
 var DEBUG = false;
+
+function ASSERT(guard) {
+  try {
+    assert(guard);
+  } catch(e) {
+    LOG(e.toString());
+    throw e;
+  }
+}
 
 var serial_number_gen = (function create_sn_gen() {
     var keeper = 0;
