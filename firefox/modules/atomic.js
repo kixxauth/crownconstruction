@@ -25,7 +25,7 @@ THE SOFTWARE.
  */
 
 /*members apply, args, binding, cc, id, import, length, next, push, 
-    queue, require, shift, short_stack, tall_stack, unshift, utils
+    queue, require, shift, block, queue, unshift, utils
 */
 
 /*jslint
@@ -69,7 +69,7 @@ function make_stack() {
 
   self.push = function stack_push(cc, args, binding) {
     if (typeof cc !== "function") {
-      throw new Error("short_stack.push() expected a function as the "+
+      throw new Error("block.push() expected a function as the "+
                       "first argument but got '"+ typeof cc +"'.");
     }
     args = args || [];
@@ -91,7 +91,7 @@ function make_stack() {
   return self;
 }
 
-exports.short_stack = (function make_short_stack() {
+exports.block = (function make_block() {
     var stacks = {};
 
     return function q(stack, continuation, args, binding) {
@@ -100,7 +100,7 @@ exports.short_stack = (function make_short_stack() {
     };
 }());
 
-exports.tall_stack = function tall_stack(continuation, args, binding) {
+exports.queue = function queue(continuation, args, binding) {
   args = args || [];
   binding = binding || null;
   EVENTS.queue(continuation, binding, args);
