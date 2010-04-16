@@ -38,7 +38,8 @@ immed: true */
 /*global
 Components: false,
 window: false,
-jQuery: false
+jQuery: false,
+jMonad: false
 */
 
 "use strict";
@@ -53,7 +54,7 @@ function require(id) {
 }
 
 var DECK,
-		SIGNALS,
+		SIGS,
 		CACHE = require("cache");
 
 // Function
@@ -67,7 +68,7 @@ DECK = (function () {
 }());
 
 // Module
-SIGNALS = (function () {
+SIGS = (function () {
 
 	var signals = (function () {
 		var sigs = {};
@@ -101,8 +102,8 @@ SIGNALS = (function () {
 		}
 
 		return function (name) {
-				return sigs[name] || (sigs[name] = construct_signal(name));
-			};
+			return sigs[name] || (sigs[name] = construct_signal(name));
+		};
 	}());
 
 	function broadcast(signal) {
@@ -294,7 +295,7 @@ SIGNALS = (function () {
 		wait: wait,
 
 
-		// The first parameter is a continuation callback function. The rest of tha
+		// The first parameter is a continuation callback function. The rest of the
 		// params may be a combination of signal names and observer callback
 		// functions.  As soon as all of the signals has fired, or have already
 		// been fired, all the callbacks are invoked with the signal parameters.
@@ -304,7 +305,13 @@ SIGNALS = (function () {
 
 }());
 
-dump(typeof(jMonad)+"\n");
+function init() {
+	alert('hi');
+}
+
+jQuery(function () { SIGS.broadcast("DOM_ready"); });
+
+SIGS.wait_and(init, "DOM_ready", 700);
 
 }(window));
 
