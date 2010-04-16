@@ -35,19 +35,15 @@ bitwise: true,
 strict: true,
 immed: true */
 
-/*members get_item, id, import, parse, require, set_item, stringify, 
-    utils
-*/
-
 /*global
-Components: false,
-JSON: false
+Components: false
 */
 
 "use strict";
 
 // For Mozilla JavaScript modules system.
-var EXPORTED_SYMBOLS = ["exports"];
+var EXPORTED_SYMBOLS = ["exports"],
+		CACHE, PROMISE;
 
 // If we are in the Mozilla module system we need to add some boilerplate to be
 // CommonJS complient. This is obviously an ugly hack to allow integration with
@@ -59,15 +55,77 @@ if (Components) {
   var module = {id: "cache"};
 }
 
-var CACHE = {};
-exports.set_item = function set_item(key, value) {
-  CACHE[key] = value;
-  return value;
-};
+PROMISE = require("promise");
 
-exports.get_item = function get_item(key) {
-  return ((!CACHE[key] || typeof CACHE[key] !== "object") ?
-               CACHE[key] :
-               JSON.parse(JSON.stringify(CACHE[key])));
-};
+CACHE = (function () {
+	var memo = {}, self = {}, stacks = {}, done, next;
+
+	function cache_Exception(message) {
+		var self = new Error(message || "unkown");
+		self.name = "CacheError";
+		self.constructor = arguments.callee;
+		return self;
+	}
+
+	done = function (key) {
+		stacks[key].blocked = false;
+		next(key);
+	};
+
+	next = function (key) {
+		if (stacks[key].stack.length && !stacks[key].blocked) {
+			stacks[key].blocked = true;
+			stacks[key].stack.shift()();
+		}
+	};
+
+	self.atomic = function cache_atomic(key) {
+
+		var txn = function (method, val) {
+			switch (method) {
+			case "get":
+				if (!memo.hasOwnProperty(key)) {
+					memo[key] = null;
+				}
+				return memo[key];
+
+			case "set":
+				return (memo[key] = val);
+
+			case "update":
+				var p;
+				memo[key] = memo[key] || {};
+				for (p in val) {
+					if (val.hasOwnProperty(p)) {
+						memo[key][p] = val[p];
+					}
+				}
+				return memo[key];
+
+			case "commit":
+				done(key);
+				txn = function () {
+					throw cache_Exception("transaction committed");
+				};
+				break;
+			}
+		};
+
+		function transaction(method, val) {
+			return txn(method, val);
+		}
+
+		return PROMISE(function (fulfill) {
+			stacks[key] = stacks[key] || {blocked: false, stack: []};
+			stacks[key].stack.push(function () {
+				fulfill.call(null, transaction);
+			});
+			next(key);
+		});
+	};
+
+	return self;
+}());
+
+exports = CACHE;
 

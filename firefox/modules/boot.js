@@ -20,9 +20,6 @@ Components: false
 function require(id) {
   var m = Components.utils.import(
       "resource://crownconstruction/modules/"+ id +".js", null);
-  if (m.exports === "object") {
-    return m.exports;
-  }
   return ((typeof m.exports === "object") ? m.exports : m);
 }
 

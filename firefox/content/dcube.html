@@ -9,42 +9,41 @@
     body {margin: 2em}
     .section {padding: 0.5em; margin-top: 1em; border: 1px solid #777;}
   </style>
-  <script src="resource://crownconstruction/modules/boot.js"
-          type="application/javascript;version=1.7"></script>
   <script src="dcube.js"
           type="application/javascript;version=1.7"></script>
 </head>
 <body>
+
   <h1>DCube Admin Client</h1>
+
   <p>
     debug mode:<input id="debug-mode" type="checkbox" />
     domain:<input id="domain" type="text" size="38" />
     <button onclick="DCUBE.set_domain('domain');">Re-set Domain</button>
   </p>
 
-  <div class="section">
-    <h5 class="section-head">Create a New User</h5>
-    <p>
-      username: <input id="new-username" type="text" />
-      <button onclick="DCUBE.create_user('new-username');">Create User</button>
-    </p>
-  </div>
+	<div class="section">
+		<p>
+			username:<input id="check-user" type="text" />
+			<button onclick="DCUBE.check_user('check-user');">Check User</button>
+		</p>
+		<p>
+			username:<input id="create-user" type="text" />
+			<button onclick="DCUBE.create_user('create-user');">Create User</button>
+		</p>
+	</div>
 
-  <div class="section">
-    <h5 class="section-head">Databases</h5>
-    <p id="database">
-      dbname: <input id="dbname" type="text" />
-      username: <input id="getdb_username" type="text" />
-      passkey: <input id="getdb_passkey" type="password" />
-      <br /><button onclick="DCUBE.put_db('dbname');">Put Database</button>
-      <br />owner_acl: <input id="owner_acl" type="text" />
-      <br />manager_acl: <input id="manager_acl" type="text" />
-      <br />user_acl: <input id="user_acl" type="text" />
-    </p>
-  </div>
+	<div class="section">
+		<p>
+			username:<input id="get-username" type="text" />
+			passkey:<input id="get-passkey" type="text" />
+			<button onclick="DCUBE.get_user('get-username', 'get-passkey');">Get User</button>
+		</p>
+	</div>
 
   <div id="output" class="section">
     <h5 class="section-head">Messages:</h5>
   </div>
+
 </body>
 </html>
