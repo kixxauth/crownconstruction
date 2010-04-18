@@ -53,18 +53,35 @@ function require(id) {
   return ((typeof m.exports === "object") ? m.exports : m);
 }
 
-var DECK,
-		SIGS,
-		CACHE = require("cache");
+var LOG,
+	LOGGING = require("logging"),
+	CACHE = require("cache"),
+	DCube = require("dcube"),
+	DECK,
+	SIGS,
+	WIDGETS,
+	jQ,
+	BBQ,
+	jMon = jMonad();
+
+function isin(x, y) {
+	return Object.prototype.hasOwnProperty.call(x, y);
+}
+
+LOG = (function () {
+	var d = new Date();
+	return LOGGING.getLogger("CC_ERM_"+
+		(d.getMonth() +1) +"-"+
+		d.getDate() +"-"+
+		d.getHours() +":"+
+		d.getMinutes() +":"+
+		d.getSeconds());
+}());
+
+DCube.logger(LOG);
 
 // Function
 DECK = (function () {
-	var current = jQuery('#deck-start');
-
-	return function (id, cb) {
-		current.hide();
-		current = jQuery('#'+ id).show();
-	};
 }());
 
 // Module
@@ -305,11 +322,109 @@ SIGS = (function () {
 
 }());
 
-function init() {
-	alert('hi');
+// Module
+function mod_widgets(deparam) {
+	var self = {}, widgets = {};
+
+	function widget_constructor(widget) {
+		var overridden_update = widget.update,
+			current_state_string;
+
+		widget.update = function (new_state_string) {
+			if (new_state_string === current_state_string) {
+				return;
+			}
+			var parts = new_state_string.split('?'),
+				hash = parts[0],
+				params = deparam(parts[1]);
+
+			overridden_update(hash, params);
+		};
+
+		widgets[widget.id] = widget;
+		return widget;
+	}
+
+	function has_widget(id) {
+		return isin(widgets, id);
+	}
+
+	function each(fn) {
+		var id;
+		for (id in widgets) {
+			if(isin(widgets, id)) {
+				fn(widgets[id]);
+			}
+		}
+	}
+
+	self.hasWidget = has_widget;
+	self.widget = widget_constructor;
+	self.each = each;
+	return self;
 }
 
-jQuery(function () { SIGS.broadcast("DOM_ready"); });
+WIDGETS = mod_widgets(function (params) {
+	return jQ.deparam.querystring(params, true);
+});
+
+function customers_tab_widget() {
+	var self = {id: "tab-customers"};
+
+	self.update = function (hash, params) {
+		dump("hash: "+ hash);
+		dump(" params: "+ JSON.stringify(params) +"\n");
+	};
+
+	return self;
+}
+
+function make_widgets() {
+	WIDGETS.widget(customers_tab_widget());
+}
+
+function init() {
+	LOG.info("init()");
+	make_widgets();
+
+	jQ('#tabs').tabs();
+  
+  // For all links inside a .bbq widget, push the appropriate state onto the
+  // history when clicked.
+  jQ('.bbq a[href^=#]').live('click', function(e){
+    var state = {},
+      
+      // Get the id of this .bbq widget.
+      id = jQ(this).closest('.bbq').attr('id'),
+      
+      // Get the url from the link's href attribute, stripping any leading #.
+      url = jQ(this).attr('href').replace(/^#/, '');
+
+		// Make sure there is a widget object with this id.
+		if (!WIDGETS.hasWidget(id)) {
+			LOG.warn('No widget with id "'+ id +'".');
+		}
+    
+    // Set the state.
+    state[id] = url;
+    BBQ.pushState(state);
+    
+    // And finally, prevent the default link click behavior by returning false.
+    return false;
+  });
+
+	jQ(window).bind('hashchange', function(e) {
+		WIDGETS.each(function (widget) {
+			widget.update(e.getState(widget.id) || '');
+		});
+	});
+}
+
+jQuery(function (x) {
+	jQ = x;
+	BBQ = jQ.bbq;
+	SIGS.broadcast("DOM_ready");
+});
 
 SIGS.wait_and(init, "DOM_ready", 700);
 

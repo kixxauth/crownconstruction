@@ -9,12 +9,24 @@
   <link type="text/css" href="css/main.css" rel="stylesheet" />	
   <script src="jquery-1.4.2.min.js" type="application/javascript"></script>
   <script src="jquery-ui-1.8rc3.custom.min.js" type="application/javascript"></script>
+	<script type="text/javascript" src="jquery.ba-bbq.js"></script>
   <script src="resource://crownconstruction/modules/jmonad.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript;version=1.7"></script>
 </head>
 <body>
-	<div id="deck-start">
-		<p>Loading...</p>
+	<div id="tabs">
+		<ul>
+			<li><a href="#tab-customers">customers</a></li>
+			<li><a href="#tab-jobs">jobs</a></li>
+		</ul>
+		<div id="tab-customers" class="bbq">
+			<ul>
+				<li><a href="#new">new customer</a></li>
+				<li><a href="#find">find customer</a></li>
+			</ul>
+		</div>
+		<div id="tab-jobs">
+		</div>
 	</div>
 </body>
 </html>
