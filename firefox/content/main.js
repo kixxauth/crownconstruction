@@ -62,11 +62,26 @@ var LOG,
 	WIDGETS,
 	jQ,
 	BBQ,
-	jMon = jMonad();
+	U = _.noConflict(),
+	jMon = jMonad(),
+	TPL,
+	$N = {}, $A = [], $F = function(){},
+	isObject, isArray, confirmObject, confirmArray, confirmFunc;
 
 function isin(x, y) {
 	return Object.prototype.hasOwnProperty.call(x, y);
 }
+
+TPL = (function () {
+	var templates = {};
+
+	return function (id, data) {
+		if (!isin(templates, id)) {
+			templates[id] = U.template(jQ('#'+ id).html());
+		}
+		return templates[id](data);
+	};
+}());
 
 LOG = (function () {
 	var d = new Date();
@@ -322,7 +337,39 @@ SIGS = (function () {
 
 }());
 
-// Module
+///////////////////////////////////////////////////////////////////////////////
+// Data
+// ----
+
+function prop(x, def) {
+	x = confirmArray(x);
+	var i = 0, len = x.length || 1;
+	for (; i < len; i += 1) {
+		x[i] = isObject(x[i]) || def;
+	}
+	return x;
+}
+
+function customer(names, addresses, phones, emails) {
+	var self = {};
+
+	names = prop(names, {last: '', first: ''});
+	addresses = prop(addresses, {street: '', city: '', state: '', zip: ''});
+	phones = prop(phones, {phone: '', label: ''});
+	emails = prop(emails, {email: '', label: ''});
+
+	self.names = names;
+	self.addresses = addresses;
+	self.phones = phones;
+	self.emails = emails;
+	return self;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Widgets
+// -------
+
+// Module Constructor.
 function mod_widgets(deparam) {
 	var self = {}, widgets = {};
 
@@ -369,11 +416,30 @@ WIDGETS = mod_widgets(function (params) {
 });
 
 function customers_tab_widget() {
-	var self = {id: "tab-customers"};
+	var self = {id: "tab-customers"},
+
+		actions;
+
+	actions = {
+
+		'find': function () {
+			alert('find');
+		},
+
+		'new': function () {
+			var x = customer();
+
+			jQ('#customer_form')
+				.html(
+						TPL('customer-names_template', x) +
+						TPL('customer-addresses_template', x) +
+						TPL('customer-phones_template', x) +
+						TPL('customer-emails_template', x));
+		}
+	};
 
 	self.update = function (hash, params) {
-		dump("hash: "+ hash);
-		dump(" params: "+ JSON.stringify(params) +"\n");
+		actions[hash](params);
 	};
 
 	return self;
@@ -382,6 +448,30 @@ function customers_tab_widget() {
 function make_widgets() {
 	WIDGETS.widget(customers_tab_widget());
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+isObject = function isObject(x) {
+	return ((x && Object.prototype.toString.call(x) === "[object Object]") ?
+			x : false);
+};
+
+isArray = function isArray(x) {
+	return ((x && Object.prototype.toString.call(x) === "[object Array]") ?
+			x : false);
+};
+
+confirmObject = function confirmObject(x) {
+	return isObject(x) ? x : $N;
+};
+
+confirmArray = function confirmArray(x) {
+	return isArray(x) ? x : $A;
+};
+
+confirmFunc = function confirmFunc(x) {
+	return typeof x === "function" ? x : $F;
+};
 
 function init() {
 	LOG.info("init()");

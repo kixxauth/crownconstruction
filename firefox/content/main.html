@@ -25,9 +25,164 @@
 				<li><a href="#new">new customer</a></li>
 				<li><a href="#find">find customer</a></li>
 			</ul>
+			<div id="customer_form">
+			</div>
 		</div>
 		<div id="tab-jobs">
 		</div>
 	</div>
+
+	<!-- templates -->
+	<script type="text/html" id="customer-names_template">
+		<% var i = 0, len = names.length; %>
+		<div class="form-sub-section">
+			<div class="form-sub-section-head-ctn">
+				<h4 class="form-sub-section-header">Names</h4>
+			</div>
+
+			<% for (; i < len; i += 1) { %>
+			<div class="input-section">
+				<div class="line ui-helper-clearfix">
+					<p class="input-float"><label>last:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= names[i].last %>" />
+					</p>
+					<p class="input-float"><label>first:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= names[i].first %>" />
+					</p>
+				</div>
+			</div>
+			<% } %>
+
+			<div class="form-sub-section-footer-ctn ui-helper-clearfix"
+					 title="Add another contact person."
+					 onclick="app.expandForm(this.parentNode.children[1])">
+				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+					<span class="ui-icon ui-icon-circle-plus"></span>
+				</p>
+				<span>Add another contact person.</span>
+			</div>
+
+		</div>
+	</script>
+
+	<script type="text/html" id="customer-addresses_template">
+		<% var i = 0, len = addresses.length; %>
+		<div class="form-sub-section">
+			<div class="form-sub-section-head-ctn">
+				<h4 class="form-sub-section-header">Addresses</h4>
+			</div>
+
+			<% for (; i < len; i += 1) { %>
+			<div class="input-section">
+				<div class="line">
+					<p>
+						<label>street:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= addresses[i].street %>" />
+					</p>
+				</div>
+				<div class="line ui-helper-clearfix">
+					<p class="input-float">
+						<label>city:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= addresses[i].city %>" />
+					</p>
+					<p class="input-float">
+						<label>state:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= addresses[i].state %>" />
+					</p>
+					<p class="input-float">
+						<label>zip:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= addresses[i].zip %>" />
+					</p>
+				</div>
+			</div>
+			<% } %>
+
+			<div class="form-sub-section-footer-ctn ui-helper-clearfix"
+					 title="Add another customer address."
+					 onclick="app.expandForm(this.parentNode.children[1])">
+				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+					<span class="ui-icon ui-icon-circle-plus"></span>
+				</p>
+				<span>Add another customer address.</span>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/html" id="customer-phones_template">
+		<% var i = 0, len = phones.length; %>
+		<div class="form-sub-section">
+			<div class="form-sub-section-head-ctn">
+				<h4 class="form-sub-section-header">Phone Numbers</h4>
+			</div>
+
+			<% for (; i < len; i += 1) { %>
+			<div class="input-section">
+				<div class="line ui-helper-clearfix">
+					<p class="input-float">
+						<label>number:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= phones[i].phone %>" />
+					</p>
+					<p class="input-float">
+						<label>label:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= phones[i].label %>" />
+					</p>
+				</div>
+			</div>
+			<% } %>
+
+			<div class="form-sub-section-footer-ctn ui-helper-clearfix"
+					 title="Add another phone number."
+					 onclick="app.expandForm(this.parentNode.children[1])">
+				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+					<span class="ui-icon ui-icon-circle-plus"></span>
+				</p>
+				<span>Add another phone number.</span>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/html" id="customer-emails_template">
+		<% var i = 0, len = emails.length; %>
+		<div class="form-sub-section">
+			<div class="form-sub-section-head-ctn">
+				<h4 class="form-sub-section-header">Email Addresses</h4>
+			</div>
+
+			<% for (; i < len; i += 1) { %>
+			<div class="input-section">
+				<div class="line ui-helper-clearfix">
+					<p class="input-float">
+						<label>email:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= emails[i].email %>" />
+					</p>
+					<p class="input-float">
+						<label>label:</label>
+						<input class="clean-text-input" type="text"
+							value="<%= emails[i].label %>" />
+					</p>
+				</div>
+			</div>
+			<% } %>
+
+			<div class="form-sub-section-footer-ctn ui-helper-clearfix"
+					 title="Add another email address."
+					 onclick="app.expandForm(this.parentNode.children[1])">
+				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+					<span class="ui-icon ui-icon-circle-plus"></span>
+				</p>
+				<span>Add another email address.</span>
+			</div>
+		</div>
+	</script>
+	<!-- end templates -->
 </body>
 </html>
