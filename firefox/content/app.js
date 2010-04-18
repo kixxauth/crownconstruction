@@ -85,7 +85,7 @@ var APP = (function APP_init() {
               zIndex: 1000,
               close: cc
             });
-        }
+        },
 
         deck: function (cc, name) {
           NOT_IMP();
@@ -94,10 +94,10 @@ var APP = (function APP_init() {
       };
   
   // Bind the jModad extensions.
-  jMonad.extend(jMonad_extensions);
+  //jMonad.extend(jMonad_extensions);
 
   widgets.job_form = (function () {
-    var self;
+    var self = {};
 
     self.update = function job_form_update(data) {
       NOT_IMP();
@@ -333,6 +333,7 @@ var APP = (function APP_init() {
     return true;
   };
 
+	/*
   DCube("#FIREWORKS:"+ self.appName())
     .get("memcache")
     .then(
@@ -343,6 +344,7 @@ var APP = (function APP_init() {
         log.warn("The application cache on DCube is not reachable.");
         jMonad.broadcast("app-cache");
       });
+			*/
 
   return self;
 }());
@@ -350,6 +352,7 @@ var APP = (function APP_init() {
 jQuery(function () {
 
   // The application cache was retrieved.
+		/*
   jMonad.observeOnce("app-cache", function (app_cache) {
       if (app_cache && app_cache.users && app_cache.users.length) {
         jMonad("main")
@@ -365,5 +368,8 @@ jQuery(function () {
   jMonad.observe("network-offline", function handle_offline() {
       NOT_IMP();
     });
+		*/
+
+	jQuery('#tabs').tabs();
 });
 
