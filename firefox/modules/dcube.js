@@ -1,4 +1,30 @@
-//
+/*
+
+Licensed under The MIT License
+==============================
+
+Copyright (c) 2010 Fireworks Technology Projects Inc.
+[www.fireworksproject.com](http://www.fireworksproject.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+*/
 
 /*jslint
 onevar: true,
@@ -10,8 +36,7 @@ bitwise: true,
 regexp: true,
 strict: true,
 newcap: false,
-immed: true,
-maxlen: 80
+immed: true
 */
 
 /*global
@@ -25,18 +50,12 @@ dump: false
 // For Mozilla JavaScript modules system.
 var EXPORTED_SYMBOLS = ["exports"];
 
-// If we are in the Mozilla module system we need to add some boilerplate to be
-// CommonJS complient. This is obviously an ugly hack to allow integration with
-// legacy code that uses the Mozilla module system.
-function require(id) {
-	var m = Components.utils.import(
-			"resource://chrometest/resources/"+ id +".js", null);
-	return ((typeof m.exports === "object") ? m.exports : m);
-}
-
 var exports = {};
 var module = {id: "dcube"};
 
+///////////////////////////////////////////////////////////////////////////////
+
+// Handy utility.
 var setTimeout = (function () {
 	var timer = Components.classes["@mozilla.org/timer;1"]
 			.createInstance(Components.interfaces.nsITimer);
@@ -48,13 +67,13 @@ var setTimeout = (function () {
 	};
 }());
 
-///////////////////////////////////////////////////////////////////////////////
-
 
 var DEBUG = false,
 	DOMAIN = "http://localhost",
+	DB,
 	LOG,
 	ENQ,
+	SHA1,
 	PROMISE,
 	XHR,
 	JSONRequest,
@@ -63,7 +82,7 @@ var DEBUG = false,
 	CXN,
 	USER,
 	$N = {}, $A = [], $F = function(){},
-	isObject, isArray, confirmObject, confirmArray, confirmFunc;
+	isin, isObject, isArray, confirmObject, confirmArray, confirmFunc;
 
 // Used throughout this module to inform the interface of exceptions that are
 // not expected.  These exceptions should always be logged internally.
@@ -190,10 +209,10 @@ exports.domain = function domain_accessor(x) {
 exports.user = (function () {
 	var users = {};
 
-	return function (username, passkey) {
+	return function (username, passkey, force) {
 		username = validate_username(username);
 
-		if (!users[username]) {
+		if (!users[username] || force) {
 			if (typeof passkey !== "function") {
 				passkey = validate_passkey(passkey);
 			}
@@ -245,14 +264,10 @@ exports.connect = (function () {
 		username = validate_username(username);
 		return PROMISE(function (fulfill, except, progress) {
 			if (!connections[dbname +":"+ username]) {
-				exports.user(username, passkey)(
-					function (user) {
-					 user.connect(dbname)(
-							function (cxn) {
-								fulfill(connections[dbname +":"+ username] = cxn);
-							}, except, progress);
-					},
-					except, progress);
+				exports.user(username, passkey).connect(dbname)(
+					function (cxn) {
+						fulfill(connections[dbname +":"+ username] = cxn);
+					}, except, progress);
 			}
 			else {
 				fulfill(connections[dbname +":"+ username]);
@@ -276,7 +291,7 @@ exports.createUser = function pub_createUser(username, passkey) {
 				},
 				function (response) {
 					if (response.head.status === 201) {
-						exports.user(username, passkey)
+						exports.user(username, passkey, true)
 							.init(response.head.authorization[1],
 								response.head.authorization[2])(
 									function (user) {
@@ -331,6 +346,13 @@ exports.query = function query_constructor() {
 	self.query = function query_query() {
 		var stmts = [];
 		return {
+			kind: function q_kind(kind) {
+				if (typeof kind !== "string") {
+					throw new Error("query.query.kind(); kind() takes a string.");
+				}
+				return this.eq('kind', kind);
+			},
+
 			eq: function q_eq(a, b) {
 				if (typeof a !== "string" && typeof a !== "number") {
 					throw new Error("query.query.eq(); "+
@@ -399,6 +421,491 @@ exports.query = function query_constructor() {
 
 	return self;
 };
+
+DB = (function () {
+	var cache = {}, models = {}, uid;
+
+	function entity(spec, mapper) {
+		var update;
+
+		function update_array(a, b) {
+			a = isArray(a) ? a : [];
+			var i = 0, len = b.length;
+			for (; i < len; i += 1) {
+				a[i] = update(a[i], b[i]);
+			}
+			return a;
+		}
+
+		function update_object(a, b) {
+			a = isObject(a) ? a : {};
+			var p;
+			for (p in b) {
+				if (isin(b, p)) {
+					a[p] = update(a[p], b[p]);
+				}
+			}
+			return a;
+		}
+
+		update = function (a, b) {
+			if (isArray(b)) {
+				return update_array(a, b);
+			}
+			if (isObject(b)) {
+				return update_object(a, b);
+			}
+			return (a = b);
+		};
+
+		return function (method) {
+			switch (method) {
+
+			case 'key':
+				return spec.key;
+
+			case 'entity':
+				// Return a cheap copy.
+				return JSON.parse(JSON.stringify(spec.data));
+
+			case 'indexes':
+				// Return a cheap copy.
+				return JSON.parse(JSON.stringify(spec.indexes));
+
+			case 'update':
+				spec.data = mapper(update(spec.data, arguments[1]));
+				return JSON.parse(JSON.stringify(spec.data));
+
+			case 'delete':
+				spec.data = spec.indexes = null;
+				return true;
+
+			default:
+				throw new Error('Invalid entity method: '+ method);
+			}
+		};
+	}
+
+	function db(connection) {
+		var self = {},
+		promised_results = [],
+		fulfilled_results = [],
+		request = connection.request();
+
+		function create(kind) {
+			var ent = models[kind]();
+			return (cache[ent('key')] = ent);
+		}
+
+		function get(key, cb) {
+			if (cache[key]) {
+				fulfilled_results.push(function () {
+					cb(cache[key]);
+				});
+			}
+			else {
+				request.get(key);
+				promised_results.push(cb);
+			}
+			return self;
+		}
+
+		function put(ent, cb) {
+			request.put(ent('key'), ent('entity'), ent('indexes'));
+			promised_results.push(cb);
+			return self;
+		}
+
+		function del(key, cb) {
+			cache[key]('delete');
+			delete cache[key];
+			request.remove(key);
+			promised_results.push(cb);
+			return self;
+		}
+
+		function query() {
+			var q = request.query(), append = q.append;
+			q.append = function (cb) {
+				append();
+				promised_results.push(cb);
+				return self;
+			};
+			return q;
+		}
+
+		function update_entity(item, cb) {
+			var ent;
+			try {
+				if (!cache[item.key]) {
+					ent = models[item.indexes.kind](
+						item.key, item.entity, item.indexes);
+					cache[item.key] = ent;
+				}
+				else {
+					cache[item.key]('update', item.entity);
+				}
+			} catch (e) {
+				LOG.warn('Unable to handle DCube results for '+
+					JSON.stringify(item));
+				LOG.error(e);
+			}
+			cb(cache[item.key] || null);
+		}
+
+		function go(errback) {
+			var this_results = promised_results,
+				this_fulfilled_results = fulfilled_results;
+
+			function make_push_result(results) {
+				return function (r) {
+					results.push(r);
+				};
+			}
+
+			request.send()(
+				function (response) {
+					var i = 0, item, status, action,
+						n = 0, qresults, push_result, p, indexes;
+					for (; i < response.length; i += 1) {
+						item = response[i];
+						action = item.action;
+						status = item.status;
+						if (action === 'get') {
+							if (status === 200) {
+								update_entity(item, this_results[i]);
+							}
+							else {
+								this_results[i](null);
+							}
+						}
+						else if (action === 'put') {
+							if (status === 200 || status === 201) {
+								update_entity(item, this_results[i]);
+							}
+							else {
+								this_results[i](null);
+							}
+						}
+						else if (action === 'delete') {
+							this_results[i](status === 204);
+							// cache already deleted before remote request was made.
+						}
+						else if (action === 'query') {
+							qresults = [];
+							push_result = make_push_result(qresults);
+							if (status !== 200) {
+								this_results[i](qresults);
+								return;
+							}
+							indexes = {};
+							for (n = 0; n < item.results.length; n += 1) {
+								for (p in item.results[n]) {
+									if (item.results[n].hasOwnProperty(p) &&
+											p !== 'key' && p !== 'entity') {
+										indexes[p] = item.results[n][p];
+									}
+								}
+								update_entity({
+									key: item.results[n].key,
+									entity: item.results[n].entity,
+									indexes: indexes
+								}, push_result);
+							}
+							this_results[i](qresults);
+						}
+						else {
+							LOG.warn('DB.go():: Unknown query response action: "'+ action +'".');
+							errback(offline_Exception());
+						}
+					}
+
+					for (i = 0; i < this_fulfilled_results.length; i += 1) {
+						this_fulfilled_results[i]();
+					}
+
+				}, errback);
+			promised_results = [];
+			fulfilled_results = [];
+			request = connection.request();
+		}
+
+		self.create = create;
+		self.get = get;
+		self.put = put;
+		self.del = del;
+		self.query = query;
+		self.go = go;
+		return self;
+	}
+
+	db.model = function (kind, fn) {
+		var model,
+			map_model;
+
+		if (typeof kind !== 'string') {
+			throw new Error(
+					"db.model(); First param must be a string.");
+		}
+		if (typeof fn !== 'function') {
+			throw new Error(
+					"db.model(); Second param must be a function.");
+		}
+
+		map_model = (function () {
+			var map_list, map_dict, gen_map, map_it;
+
+			function index_it(index_to, idx_dict) {
+				var id = index_to[0], val = index_to[1], i = 0, isarr;
+
+				if (typeof id !== 'string') {
+					throw new Error(
+							'map_model(); Invalid index name: '+ id); 
+				}
+				isarr = isArray(val);
+				if (typeof val !== 'string' && typeof val !== 'number' && !isarr) {
+					throw new Error('map_model(); Invalid index property: '+
+							(isarr ? JSON.stringify(val) : val)); 
+				}
+
+				if (isarr) {
+					for (; i < val.length; i += 1) {
+						if (typeof val !== 'string' && typeof val !== 'number') {
+							throw new Error(
+									'map_model(); Invalid index property: '+ val); 
+						}
+					}
+				}
+				idx_dict[id] = val;
+			}
+
+			map_list = function (m, x, idx) {
+				x = isArray(x) ? x : m.coerce(x);
+				if (!x.length) {
+					x[0] = m.tree.coerce();
+				}
+
+				return x.map(function (item) {
+					return gen_map(m.tree, item, idx);
+				});
+			};
+
+			map_dict = function (m, x, idx) {
+				x = isObject(x) ? x : m.coerce(x);
+				var p;
+
+				for (p in m.tree) {
+					if (m.tree.hasOwnProperty(p)) {
+						x[p] = gen_map(m.tree[p], x[p], idx);
+					}
+				}
+				return x;
+			};
+
+			gen_map = function (m, x, idx) {
+				var type = m.type;
+
+				if (type === 'dict') {
+					x = map_dict(m, x, idx);
+				}
+				else if (type === 'list') {
+					x = map_list(m, x, idx);
+				}
+				else if (type === 'number') {
+					x = (typeof x === 'number' ? x : m.coerce(x));
+				}
+				else if (type === 'string') {
+					x = (typeof x === 'string' ? x : m.coerce(x));
+				}
+				else if (type === 'boolean') {
+					x = (typeof x === 'boolean' ? x : m.coerce(x));
+				}
+
+				if (typeof m.index === 'function') {
+					index_it(m.index(x), idx);
+				}
+				return x;
+			};
+
+			map_it = function (m, x, idx) {
+				x = isObject(x) ? x : {};
+				var p;
+				for (p in m) {
+					if (m.hasOwnProperty(p)) {
+						x[p] = gen_map(m[p], x[p], idx);
+					}
+				}
+				return x;
+			};
+
+			return map_it;
+		}());
+
+		function literal(opt, spec) {
+			var prop = {},
+				coerce = opt.coerce,
+				index = opt.index;
+
+			prop.type = spec.type;
+
+			prop.coerce = (typeof coerce === 'function' ?
+					coerce : spec.coerce);
+
+			if (typeof index === 'function') {
+				prop.index = index;
+			}
+
+			return prop;
+		}
+
+		function string_property(opt) {
+			opt = isObject(opt) ? opt : {};
+			var def = (typeof opt.def === 'string') ? opt.def : '';
+			return literal(opt,
+				{
+					type: 'string',
+					
+					coerce: function (val) {
+						return (typeof val === 'string') ? val : def;
+					}
+				});
+		}
+
+		function number_property(opt) {
+			opt = isObject(opt) ? opt : {};
+			var def = ((typeof opt.def === 'number' && !isNaN(opt.def)) ?
+				opt.def : 0);
+			return literal(opt,
+				{
+					type: 'number',
+					
+					coerce: function (val) {
+						return (typeof val === 'number' && !isNaN(val)) ? val : def;
+					}
+				});
+		}
+
+		function bool_property(opt) {
+			opt = isObject(opt) ? opt : {};
+			var def = (typeof opt.def === 'boolean') ? opt.def : false;
+			return literal(opt,
+				{
+					type: 'boolean',
+					
+					coerce: function (val) {
+						return (typeof val === 'boolean') ? val : def;
+					}
+				});
+		}
+
+		function list_property(prop, opt) {
+			opt = isObject(opt) ? opt : {};
+			var def = (isArray(opt.def) ? opt.def : []),
+				coerce = opt.coerce,
+				index = opt.index;
+
+			return {
+				type: 'list',
+				tree: prop,
+
+				coerce: ((typeof coerce === 'function') ?
+					coerce :
+					function (val) {
+						return isArray(val) ? val : def;
+					}),
+
+				index: ((typeof index === 'function') ? index : null)
+			};
+		}
+
+		function dict_property(props, opt) {
+			opt = isObject(opt) ? opt : {};
+			var def = (isObject(opt.def) ? opt.def : {}),
+				coerce = opt.coerce,
+				index = opt.index;
+
+			return {
+				type: 'dict',
+				tree: props,
+
+				coerce: (typeof coerce === 'function' ? coerce :
+					function (val) {
+						return isArray(val) ? val : def;
+					}),
+
+				index: ((typeof index === 'function') ? index : null)
+			};
+		}
+
+		model = fn({
+			str: string_property,
+			num: number_property,
+			bool: bool_property,
+			list: list_property,
+			dict: dict_property
+		});
+
+		// Make a uid generator.
+		function uid_generator(prefix, hash) {
+			if (typeof prefix === 'function') {
+				hash = prefix;
+				prefix = '';
+			}
+			prefix = (typeof prefix === 'string') ? prefix : '';
+
+			var counter = 0,
+				time_string = new Date().getTime();
+
+			return  ((typeof hash === 'function') ? 
+				function () {
+					return hash(prefix + (counter += 1) + time_string);
+				} :
+				function () {
+					return prefix + (counter += 1) + time_string;
+				});
+		}
+
+		uid = uid_generator(SHA1);
+
+		// Base model constructor which returns an entity object.
+		function self(key, ent, idx) {
+			if (!isObject(ent)) {
+				ent = {};
+			}
+			if (!isObject(idx)) {
+				idx = {};
+			}
+
+			idx.kind = kind;
+			ent = map_model(model, ent, idx);
+
+			function mapper(data) {
+				return map_model(model, data, idx);
+			}
+
+			if (key) {
+				return entity({key: key, data: ent, indexes: idx}, mapper);
+			}
+			return entity({key: uid(), data: ent, indexes: idx}, mapper);
+		}
+
+		models[kind] = self;
+	};
+
+	return db;
+}());
+
+exports.db = (function () {
+	function db(dbname, username, passkey) {
+		return PROMISE(function (fulfilled, except) {
+			exports.connect(dbname, username, passkey)(
+				function (cxn) { fulfilled(DB(cxn)); }, except);
+		});
+	}
+	db.model = DB.model;
+	return db;
+}());
+
 
 LOG = {
 	debug: function log_debug(msg) {
@@ -530,7 +1037,7 @@ PROMISE = (function () {
 	};
 }());
 
-function SHA1(target) {
+SHA1 = function (target) {
 	var uc = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
 			createInstance(Components.interfaces.nsIScriptableUnicodeConverter),
 		hasher = Components.classes["@mozilla.org/security/hash;1"].
@@ -554,7 +1061,7 @@ function SHA1(target) {
 		.map.call(hash, function (x){ return x.charCodeAt(0); })
 		.map(toHexString)
 		.join("");
-}
+};
 
 /**
  * Returns a function that does XMLHttpRequest.
@@ -735,7 +1242,8 @@ REQ = (function () {
 				authorization: response.head.authorization || $A,
 				status: response.head.status || 0
 			},
-			body: (isObject(response.body) ? response.body : null)
+			body: ((response.body && typeof response.body === 'object') ?
+				response.body : null)
 		};
 	}
 
@@ -905,7 +1413,7 @@ CXN = function (dbname, request) {
 };
 
 USER = function (username, passkey) {
-	var self = {}, transaction = null;
+	var self = {}, transaction = null, user_init_1;
 
 	function user_Exception(message) {
 		var self = new Error(message || "unkown");
@@ -967,38 +1475,7 @@ USER = function (username, passkey) {
 	// Constructor
 	// The user has been removed.
 	function user_removed_4() {
-
-		self.get = function get() {
-			throw user_Exception("user removed");
-		};
-
-		self.update = function update() {
-			throw user_Exception("user removed");
-		};
-
-		self.connect = function connect() {
-			throw user_Exception("user removed");
-		};
-
-		self.remove = function remove() {
-			throw user_Exception("user removed");
-		};
-
-		self.createDatabase = function createDatabase() {
-			throw user_Exception("user removed");
-		};
-
-		self.removeDatabase = function removeDatabase() {
-			throw user_Exception("user removed");
-		};
-
-		self.getDatabase = function getDatabase() {
-			throw user_Exception("user removed");
-		};
-
-		self.updateDatabase = function updateDatabase() {
-			throw user_Exception("user removed");
-		};
+		user_init_1();
 	}
 
 	// Constructor
@@ -1054,7 +1531,7 @@ USER = function (username, passkey) {
 					function (response) {
 						if (response.head.authorization.length === 3 &&
 								!authenticated(spec, response.head.authorization)) {
-							LOG.warn("CXN::user_request(); invalid credentials");
+							LOG.warn("USER::user_request(); invalid credentials");
 							commit_txn();
 							eb(user_Exception("invalid credentials"));
 							return;
@@ -1063,13 +1540,13 @@ USER = function (username, passkey) {
 						cb(response);
 					},
 					function (ex) {
-						LOG.warn("CXN::user_request(); "+ ex);
+						LOG.warn("USER::user_request(); "+ ex);
 						commit_txn();
 						eb(offline_Exception());
 					});
 				} catch (e) {
 					// REQ will throw an error if the URL is malformed
-					LOG.warn("CXN::user_request(); "+ e);
+					LOG.warn("USER::user_request(); "+ e);
 					commit_txn();
 					eb(offline_Exception());
 				}
@@ -1305,7 +1782,7 @@ USER = function (username, passkey) {
 
 	// Constructor.
 	// Initialize user.
-	function user_init_1() {
+	user_init_1 = function () {
 
 		function ping(cb, eb) {
 			try {
@@ -1405,10 +1882,14 @@ USER = function (username, passkey) {
 				});
 			});
 		};
-	}
+	};
 
 	user_init_1();
 	return self;
+};
+
+isin = function (x, p) {
+	return Object.prototype.hasOwnProperty.call(x, p);
 };
 
 isObject = function isObject(x) {
