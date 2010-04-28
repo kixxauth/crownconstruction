@@ -15,6 +15,17 @@
   <script src="main.js" type="application/javascript;version=1.7"></script>
 </head>
 <body>
+
+	<p>Username:
+	<input id="username" type="text" />
+	</p>
+	<p>Passkey:
+	<input id="passkey" type="password" />
+	</p>
+	<p>
+	<button onclick="APP.start()">start</button>
+	</p>
+
 	<div id="tabs">
 		<ul>
 			<li><a href="#tab-customers">customers</a></li>
@@ -34,22 +45,23 @@
 
 	<!-- templates -->
 	<script type="text/html" id="customer-names_template">
-		<% var i = 0, len = names.length; %>
+		<% var i = 0, len = names.length, name; %>
 		<div class="form-sub-section">
 			<div class="form-sub-section-head-ctn">
 				<h4 class="form-sub-section-header">Names</h4>
 			</div>
 
 			<% for (; i < len; i += 1) { %>
+			<% name = names[i];  %>
 			<div class="input-section">
 				<div class="line ui-helper-clearfix">
 					<p class="input-float"><label>last:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= names[i].last %>" />
+							name="<%= name.last.path %>" value="<%= name.last.value %>" />
 					</p>
 					<p class="input-float"><label>first:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= names[i].first %>" />
+							name="<%= name.first.path %>" value="<%= name.first.value %>" />
 					</p>
 				</div>
 			</div>
@@ -68,36 +80,37 @@
 	</script>
 
 	<script type="text/html" id="customer-addresses_template">
-		<% var i = 0, len = addresses.length; %>
+		<% var i = 0, len = addresses.length, address; %>
 		<div class="form-sub-section">
 			<div class="form-sub-section-head-ctn">
 				<h4 class="form-sub-section-header">Addresses</h4>
 			</div>
 
 			<% for (; i < len; i += 1) { %>
+			<% address = addresses[i]; %>
 			<div class="input-section">
 				<div class="line">
 					<p>
 						<label>street:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= addresses[i].street %>" />
+							name="<%= address.street.path %>" value="<%= address.street.value %>" />
 					</p>
 				</div>
 				<div class="line ui-helper-clearfix">
 					<p class="input-float">
 						<label>city:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= addresses[i].city %>" />
+							name="<%= address.city.path %>" value="<%= address.city.value %>" />
 					</p>
 					<p class="input-float">
 						<label>state:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= addresses[i].state %>" />
+							name="<%= address.state.path %>" value="<%= address.state.value %>" />
 					</p>
 					<p class="input-float">
 						<label>zip:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= addresses[i].zip %>" />
+							name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
 					</p>
 				</div>
 			</div>
@@ -115,24 +128,25 @@
 	</script>
 
 	<script type="text/html" id="customer-phones_template">
-		<% var i = 0, len = phones.length; %>
+		<% var i = 0, len = phones.length, phone; %>
 		<div class="form-sub-section">
 			<div class="form-sub-section-head-ctn">
 				<h4 class="form-sub-section-header">Phone Numbers</h4>
 			</div>
 
 			<% for (; i < len; i += 1) { %>
+			<% phone = phones[i]; %>
 			<div class="input-section">
 				<div class="line ui-helper-clearfix">
 					<p class="input-float">
 						<label>number:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= phones[i].phone %>" />
+							name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
 					</p>
 					<p class="input-float">
 						<label>label:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= phones[i].label %>" />
+							name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
 					</p>
 				</div>
 			</div>
@@ -150,24 +164,25 @@
 	</script>
 
 	<script type="text/html" id="customer-emails_template">
-		<% var i = 0, len = emails.length; %>
+		<% var i = 0, len = emails.length, email; %>
 		<div class="form-sub-section">
 			<div class="form-sub-section-head-ctn">
 				<h4 class="form-sub-section-header">Email Addresses</h4>
 			</div>
 
 			<% for (; i < len; i += 1) { %>
+			<% email = emails[i]; %>
 			<div class="input-section">
 				<div class="line ui-helper-clearfix">
 					<p class="input-float">
 						<label>email:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= emails[i].email %>" />
+							name="<%= email.email.path %>" value="<%= email.email.value %>" />
 					</p>
 					<p class="input-float">
 						<label>label:</label>
 						<input class="clean-text-input" type="text"
-							value="<%= emails[i].label %>" />
+							name="<%= email.label.path %>" value="<%= email.label.value %>" />
 					</p>
 				</div>
 			</div>

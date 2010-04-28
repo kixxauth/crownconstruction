@@ -39,68 +39,13 @@ immed: true */
 Components: false,
 window: false,
 jQuery: false,
-jMonad: false
+_: false
 */
 
 "use strict";
 
-(function (window, undef) {
-
-// Ghetto require function.
-function require(id) {
-  var m = Components.utils.import(
-      "resource://crownconstruction/modules/"+ id +".js", null);
-  return ((typeof m.exports === "object") ? m.exports : m);
-}
-
-var LOG,
-	LOGGING = require("logging"),
-	CACHE = require("cache"),
-	DCube = require("dcube"),
-	DECK,
-	SIGS,
-	WIDGETS,
-	jQ,
-	BBQ,
-	U = _.noConflict(),
-	jMon = jMonad(),
-	TPL,
-	$N = {}, $A = [], $F = function(){},
-	isObject, isArray, confirmObject, confirmArray, confirmFunc;
-
-function isin(x, y) {
-	return Object.prototype.hasOwnProperty.call(x, y);
-}
-
-TPL = (function () {
-	var templates = {};
-
-	return function (id, data) {
-		if (!isin(templates, id)) {
-			templates[id] = U.template(jQ('#'+ id).html());
-		}
-		return templates[id](data);
-	};
-}());
-
-LOG = (function () {
-	var d = new Date();
-	return LOGGING.getLogger("CC_ERM_"+
-		(d.getMonth() +1) +"-"+
-		d.getDate() +"-"+
-		d.getHours() +":"+
-		d.getMinutes() +":"+
-		d.getSeconds());
-}());
-
-DCube.logger(LOG);
-
-// Function
-DECK = (function () {
-}());
-
 // Module
-SIGS = (function () {
+var SIGS = (function (undef) {
 
 	var signals = (function () {
 		var sigs = {};
@@ -337,186 +282,421 @@ SIGS = (function () {
 
 }());
 
-///////////////////////////////////////////////////////////////////////////////
-// Data
-// ----
+var APP = (function (window) {
 
-function prop(x, def) {
-	x = confirmArray(x);
-	var i = 0, len = x.length || 1;
-	for (; i < len; i += 1) {
-		x[i] = isObject(x[i]) || def;
+	// Ghetto require function.
+	function require(id) {
+		var m = Components.utils.import(
+				"resource://crownconstruction/modules/"+ id +".js", null);
+		return ((typeof m.exports === "object") ? m.exports : m);
 	}
-	return x;
-}
 
-function customer(names, addresses, phones, emails) {
-	var self = {};
+	var app = {},
+		LOG,
+		JQ,
+		DCUBE = require('dcube'),
+		MODELS,
+		WIDGETS = {},
+		VIEW;
 
-	names = prop(names, {last: '', first: ''});
-	addresses = prop(addresses, {street: '', city: '', state: '', zip: ''});
-	phones = prop(phones, {phone: '', label: ''});
-	emails = prop(emails, {email: '', label: ''});
+	// Handy utility.
+	function isin(x, y) {
+		return Object.prototype.hasOwnProperty.call(x, y);
+	}
 
-	self.names = names;
-	self.addresses = addresses;
-	self.phones = phones;
-	self.emails = emails;
-	return self;
-}
+	// Make a uid generator.
+	function uid_generator(prefix, hash) {
+		if (typeof prefix === 'function') {
+			hash = prefix;
+			prefix = '';
+		}
+		prefix = (typeof prefix === 'string') ? prefix : '';
 
-///////////////////////////////////////////////////////////////////////////////
-// Widgets
-// -------
+		var counter = 0,
+			time_string = new Date().getTime();
 
-// Module Constructor.
-function mod_widgets(deparam) {
-	var self = {}, widgets = {};
+		return  ((typeof hash === 'function') ? 
+			function () {
+				return hash(prefix + (counter += 1) + time_string);
+			} :
+			function () {
+				return prefix + (counter += 1) + time_string;
+			});
+	}
 
-	function widget_constructor(widget) {
-		var overridden_update = widget.update,
-			current_state_string;
+	LOG = (function () {
+		var d = new Date();
+		return require("logging")
+			.getLogger("CC_ERM_"+
+				(d.getMonth() +1) +"-"+
+				d.getDate() +"-"+
+				d.getHours() +":"+
+				d.getMinutes() +":"+
+				d.getSeconds());
+	}());
 
-		widget.update = function (new_state_string) {
-			if (new_state_string === current_state_string) {
-				return;
-			}
-			var parts = new_state_string.split('?'),
-				hash = parts[0],
-				params = deparam(parts[1]);
+	// Templating.
+	function template(id, data) {
+		return _.template(document.getElementById(id).innerHTML, data);
+	}
 
-			overridden_update(hash, params);
+	/////////////////////////////////////////////////////////////////////////////
+	// DCube Models
+	// ------------
+	MODELS = (function () {
+		var models = {};
+
+		function index_last_name(val) {
+			return ['last_name', val];
+		}
+
+		models.customer = function (db) {
+			return {
+				names: db.list(
+					db.dict({
+						first: db.str(),
+						last: db.str({index: index_last_name})
+					})
+				),
+				addresses: db.list(
+					db.dict({
+						street: db.str(),
+						city: db.str(),
+						state: db.str(),
+						zip: db.str()
+					})
+				),
+				phones: db.list(
+					db.dict({
+						phone: db.str(),
+						label: db.str()
+					})
+				),
+				emails: db.list(
+					db.dict({
+						email: db.str(),
+						label: db.str()
+					})
+				)
+			};
 		};
 
-		widgets[widget.id] = widget;
-		return widget;
-	}
+		return models;
+	}());
 
-	function has_widget(id) {
-		return isin(widgets, id);
-	}
+	/////////////////////////////////////////////////////////////////////////////
+	// BBQ Widgets
+	// -----------
+	WIDGETS.customers_tab_widget = function (db, construct_view) {
+		var self = {id: "tab-customers"},
+			actions;
 
-	function each(fn) {
-		var id;
-		for (id in widgets) {
-			if(isin(widgets, id)) {
-				fn(widgets[id]);
+		actions = {
+
+			'find': function () {
+				alert('find');
+			},
+
+			'new': function () {
+				var customer = db.create('customer'),
+					view = construct_view(customer('key'), customer('entity')),
+					dict = view.dict, view = view.view;
+
+				//dump('#new\n');
+				//dump(' entity -> '+ JSON.stringify(customer('entity')) +'\n\n');
+
+				//var view = construct_view(customer('key'), customer('entity'));
+				//dump(' view -> '+ JSON.stringify(view) +'\n\n');
+
+				JQ('#customer_form')
+					.html(
+							template('customer-names_template', view) +
+							template('customer-addresses_template', view) +
+							template('customer-phones_template', view) +
+							template('customer-emails_template', view));
+			}
+		};
+
+		self.update = function (hash, params) {
+			actions[hash](params);
+		};
+
+		return self;
+	};
+
+	/////////////////////////////////////////////////////////////////////////////
+	// VIEW Module
+	// -----------
+	function view_module(widget_constructors, log) {
+		var mod = {},
+			mod_widgets,
+			jq,
+			bbq;
+
+		function widgets_module_constructor(deparam) {
+			var self = {}, widgets = {};
+
+			function widget_constructor(widget) {
+				var overridden_update = widget.update,
+					current_state_string;
+
+				widget.update = function (new_state_string) {
+					if (new_state_string === current_state_string) {
+						return;
+					}
+					current_state_string = new_state_string;
+
+					var parts = new_state_string.split('?'),
+						hash = parts[0],
+						params = deparam(parts[1]);
+					overridden_update(hash, params);
+				};
+
+				widgets[widget.id] = widget;
+				return widget;
+			}
+
+			function has_widget(id) {
+				return isin(widgets, id);
+			}
+
+			function each(fn) {
+				var id;
+				for (id in widgets) {
+					if(isin(widgets, id)) {
+						fn(widgets[id]);
+					}
+				}
+			}
+
+			self.hasWidget = has_widget;
+			self.widget = widget_constructor;
+			self.each = each;
+			return self;
+		}
+
+		function construct_view(key_str, data) {
+			var rv = {dict: {}, view: {}};
+
+			function mapper(x, dict, result, parts) {
+				var p;
+				for (p in x) {
+					if (isin(x, p)) {
+
+						parts[p] = parts.slice();
+						parts[p].push(p);
+
+						if (isNaN(+p)) {
+							result[p] = [];
+						}
+						else {
+							result[p] = {};
+						}
+
+						if (typeof x[p] === 'object') {
+							arguments.callee(x[p], dict, result[p], parts[p]);
+						}
+						else {
+							result[p] = {};
+							result[p].path = parts[p].join('.');
+							result[p].value = x[p];
+
+							parts[p].pop();
+							dict[parts[p].join('.')] = x;
+						}
+					}
+				}
+			}
+
+			mapper(data, rv.dict, rv.view, [key_str]);
+			return rv;
+		}
+
+		mod.DOM_ready = function(jquery) {
+			jq = jquery; bbq = jq.bbq;
+			
+			// For all links inside a .bbq widget, push the appropriate state onto the
+			// history when clicked.
+			jq('.bbq a[href^=#]').live('click', function(e){
+				var state = {},
+					
+					// Get the id of this .bbq widget.
+					id = jq(this).closest('.bbq').attr('id'),
+					
+					// Get the url from the link's href attribute, stripping any leading #.
+					url = jq(this).attr('href').replace(/^#/, '');
+
+				// Make sure there is a widget object with this id.
+				if (!mod_widgets.hasWidget(id)) {
+					log.warn('No widget with id "'+ id +'".');
+				}
+				
+				// Set the state.
+				state[id] = url;
+				bbq.pushState(state);
+				
+				// And finally, prevent the default link click behavior by returning false.
+				return false;
+			});
+
+			jq(window).bind('hashchange', function(e) {
+				mod_widgets.each(function (widget) {
+					widget.update(e.getState(widget.id) || '');
+				});
+			});
+		};
+
+		mod.db = function (db) {
+			mod_widgets = (function () {
+				var w,
+
+					self = widgets_module_constructor(function (params) {
+						return jq.deparam.querystring(params, true);
+					});
+
+				for (w in widget_constructors) {
+					if (isin(widget_constructors, w)) {
+						self.widget(widget_constructors[w](db, construct_view));
+					}
+				}
+				return self;
+			}());
+		};
+
+		return mod;
+	}
+	VIEW = view_module(WIDGETS, LOG);
+
+	XXX = (function (data) {
+		var mod = {},
+			jq,
+			bbq,
+			views = {},
+			html_class = 'bbqpork',
+			reflow_selector = ('.'+ html_class),
+			mod_widgets,
+			construct_view;
+
+		construct_view = (function () {
+
+			function construct(kind, id) {
+				var view,
+					callbacks = {},
+					model = data(kind, id);
+
+				id = model.key();
+				view = model.value();
+
+				view.register = function (path, fn) {
+					callbacks[path] = callbacks[path] || {};
+					callbacks[path][fn] = fn;
+				};
+
+				view.update = function (path, value) {
+					dump(path +":"+ value +"\n");
+					return true;
+				};
+
+				dump("construct:"+ id +"\n");
+				views[id] = view;
+				return view;
+			}
+
+			return function (kind, id) {
+				if (!id) {
+					construct(kind);
+				}
+				else if (!isin(views, id)) {
+					construct(kind, id);
+				}
+				return views[id];
+			};
+		}());
+
+		function when_reflow() {
+			var elements = {},
+
+				uid = uid_generator(),
+
+				registers = {
+					INPUT: function (element) {
+						var parts = element.name.split(':'),
+							key = parts[0], path = parts[1],
+							view = views[key],
+							update = view.update,
+							el = jq(element), update_val = el.val,
+
+							view_register = function (value) {
+								update_val(value);
+							};
+
+						el.keyup(function (ev) {
+							var me = jq(this), maybe_ok, maybe_invalid;
+							maybe_invalid = maybe_ok = update(path, me.val());
+							if (maybe_ok !== true) {
+								me.addClass('invalid_input');
+								// Do something with maybe_invalid message.
+							}
+						});
+
+						view.register(path, view_register);
+
+						return function () {
+							view.ignore(view_register);
+						};
+					}
+				};
+
+			jq(reflow_selector).each(function (idx) {
+				dump(this.tagName +":"+ this.id +":"+ this.name +'\n');
+				//registers[this.tagName](this);
+				var id = this.id;
+				if(!id || !isin(elements, id)) {
+					id = uid();
+					elements[id] = registers[this.tagName](this);
+					this.id = id;
+				}
+			});
+		}
+	}());
+
+	// Fire it up.
+	jQuery(function (jquery) {
+		JQ = jquery;
+		VIEW.DOM_ready(jquery);
+		JQ('#tabs').tabs();
+	});
+
+	// TODO: Temporary -- testing.
+	function init_db(username, passkey) {
+		var m;
+		DCUBE
+			.debug(true)
+			.domain('fireworks-skylight.appspot.com');
+
+		for (m in MODELS) {
+			if (isin(MODELS, m)) {
+				DCUBE.db.model(m, MODELS[m]);
 			}
 		}
+		DCUBE.db('crown_construction_sandbox', username, passkey)(
+			function (x) {
+				VIEW.db(x);
+				alert('db ready');
+			},
+			function (x) {
+				LOG.error(x);
+				alert('db connection error: '+ x);
+			});
 	}
 
-	self.hasWidget = has_widget;
-	self.widget = widget_constructor;
-	self.each = each;
-	return self;
-}
+	// TODO: Temporary -- testing.
+	app.start = function () {
+		// TODO:
+		init_db(JQ('#username').val(), JQ('#passkey').val());
+	}
 
-WIDGETS = mod_widgets(function (params) {
-	return jQ.deparam.querystring(params, true);
-});
-
-function customers_tab_widget() {
-	var self = {id: "tab-customers"},
-
-		actions;
-
-	actions = {
-
-		'find': function () {
-			alert('find');
-		},
-
-		'new': function () {
-			var x = customer();
-
-			jQ('#customer_form')
-				.html(
-						TPL('customer-names_template', x) +
-						TPL('customer-addresses_template', x) +
-						TPL('customer-phones_template', x) +
-						TPL('customer-emails_template', x));
-		}
-	};
-
-	self.update = function (hash, params) {
-		actions[hash](params);
-	};
-
-	return self;
-}
-
-function make_widgets() {
-	WIDGETS.widget(customers_tab_widget());
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-isObject = function isObject(x) {
-	return ((x && Object.prototype.toString.call(x) === "[object Object]") ?
-			x : false);
-};
-
-isArray = function isArray(x) {
-	return ((x && Object.prototype.toString.call(x) === "[object Array]") ?
-			x : false);
-};
-
-confirmObject = function confirmObject(x) {
-	return isObject(x) ? x : $N;
-};
-
-confirmArray = function confirmArray(x) {
-	return isArray(x) ? x : $A;
-};
-
-confirmFunc = function confirmFunc(x) {
-	return typeof x === "function" ? x : $F;
-};
-
-function init() {
-	LOG.info("init()");
-	make_widgets();
-
-	jQ('#tabs').tabs();
-  
-  // For all links inside a .bbq widget, push the appropriate state onto the
-  // history when clicked.
-  jQ('.bbq a[href^=#]').live('click', function(e){
-    var state = {},
-      
-      // Get the id of this .bbq widget.
-      id = jQ(this).closest('.bbq').attr('id'),
-      
-      // Get the url from the link's href attribute, stripping any leading #.
-      url = jQ(this).attr('href').replace(/^#/, '');
-
-		// Make sure there is a widget object with this id.
-		if (!WIDGETS.hasWidget(id)) {
-			LOG.warn('No widget with id "'+ id +'".');
-		}
-    
-    // Set the state.
-    state[id] = url;
-    BBQ.pushState(state);
-    
-    // And finally, prevent the default link click behavior by returning false.
-    return false;
-  });
-
-	jQ(window).bind('hashchange', function(e) {
-		WIDGETS.each(function (widget) {
-			widget.update(e.getState(widget.id) || '');
-		});
-	});
-}
-
-jQuery(function (x) {
-	jQ = x;
-	BBQ = jQ.bbq;
-	SIGS.broadcast("DOM_ready");
-});
-
-SIGS.wait_and(init, "DOM_ready", 700);
+	return app;
 
 }(window));
 
