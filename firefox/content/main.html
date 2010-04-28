@@ -17,13 +17,16 @@
 <body>
 
 	<p>Username:
-	<input id="username" type="text" />
+	<input id="username" name="username" class="bbqpork" type="text" />
 	</p>
 	<p>Passkey:
-	<input id="passkey" type="password" />
+	<input id="passkey" name="passkey" class="bbqpork" type="password" />
 	</p>
 	<p>
 	<button onclick="APP.start()">start</button>
+	</p>
+	<p>
+	<button onclick="APP.commit()">commit</button>
 	</p>
 
 	<div id="tabs">
@@ -56,11 +59,11 @@
 			<div class="input-section">
 				<div class="line ui-helper-clearfix">
 					<p class="input-float"><label>last:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= name.last.path %>" value="<%= name.last.value %>" />
 					</p>
 					<p class="input-float"><label>first:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= name.first.path %>" value="<%= name.first.value %>" />
 					</p>
 				</div>
@@ -92,24 +95,24 @@
 				<div class="line">
 					<p>
 						<label>street:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= address.street.path %>" value="<%= address.street.value %>" />
 					</p>
 				</div>
 				<div class="line ui-helper-clearfix">
 					<p class="input-float">
 						<label>city:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= address.city.path %>" value="<%= address.city.value %>" />
 					</p>
 					<p class="input-float">
 						<label>state:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= address.state.path %>" value="<%= address.state.value %>" />
 					</p>
 					<p class="input-float">
 						<label>zip:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
 					</p>
 				</div>
@@ -140,12 +143,12 @@
 				<div class="line ui-helper-clearfix">
 					<p class="input-float">
 						<label>number:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
 					</p>
 					<p class="input-float">
 						<label>label:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
 					</p>
 				</div>
@@ -176,12 +179,12 @@
 				<div class="line ui-helper-clearfix">
 					<p class="input-float">
 						<label>email:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= email.email.path %>" value="<%= email.email.value %>" />
 					</p>
 					<p class="input-float">
 						<label>label:</label>
-						<input class="clean-text-input" type="text"
+						<input class="clean-text-input bbqpork" type="text"
 							name="<%= email.label.path %>" value="<%= email.label.value %>" />
 					</p>
 				</div>

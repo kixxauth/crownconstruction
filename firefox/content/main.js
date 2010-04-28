@@ -399,21 +399,57 @@ var APP = (function (window) {
 
 			'new': function () {
 				var customer = db.create('customer'),
-					view = construct_view(customer('key'), customer('entity')),
-					dict = view.dict, view = view.view;
+					data = customer('entity'),
+					view = construct_view(customer('key'), data),
+					dict = view.dict, view = view.view,
+					form = JQ('#customer_form')
+						.html(
+								template('customer-names_template', view) +
+								template('customer-addresses_template', view) +
+								template('customer-phones_template', view) +
+								template('customer-emails_template', view));
 
-				//dump('#new\n');
-				//dump(' entity -> '+ JSON.stringify(customer('entity')) +'\n\n');
+				JQ(window).bind('global_commit', function () {
+					customer('update', data);
+					db.put(customer, function (x) {
+						customer = x;
+						// TODO: Save notifications.
+						alert('saved');
+					});
+				});
 
-				//var view = construct_view(customer('key'), customer('entity'));
-				//dump(' view -> '+ JSON.stringify(view) +'\n\n');
+				//dump('\n'+ JSON.stringify(dict) +'\n');
+				function validator_for(path) {
+					var data_path = path.split('.'),
+						field = data_path.pop();
+					data_path = data_path.join('.');
 
-				JQ('#customer_form')
-					.html(
-							template('customer-names_template', view) +
-							template('customer-addresses_template', view) +
-							template('customer-phones_template', view) +
-							template('customer-emails_template', view));
+					return function (ev) {
+						dict[data_path][field] = this.value;
+					};
+
+					/*
+					if (/.names.[0-9]+.last/.test(path)) {
+						return function (ev) {
+						};
+					}
+					if (/.names.[0-9]+.first/.test(path)) {
+					}
+					if (/.addresses.[0-9]+.street/.test(path)) {
+					}
+					if (/.addresses.[0-9]+.city/.test(path)) {
+					}
+					if (/.addresses.[0-9]+.state/.test(path)) {
+					}
+					if (/.addresses.[0-9]+.zip/.test(path)) {
+					}
+					*/
+				}
+
+				JQ('.bbqpork', form).each(function (i, el) {
+					//dump(this.name +'\n');
+					JQ(el).bind('keyup', validator_for(el.name));
+				});
 			}
 		};
 
@@ -559,6 +595,15 @@ var APP = (function (window) {
 						self.widget(widget_constructors[w](db, construct_view));
 					}
 				}
+
+				jq(window).bind('make_commit', function (ev) {
+					db.go(function (x) {
+						LOG.err(x);
+						// TODO: proper error handling.
+						alert('commit error:\n'+ x);
+					});
+				});
+				
 				return self;
 			}());
 		};
@@ -566,99 +611,6 @@ var APP = (function (window) {
 		return mod;
 	}
 	VIEW = view_module(WIDGETS, LOG);
-
-	XXX = (function (data) {
-		var mod = {},
-			jq,
-			bbq,
-			views = {},
-			html_class = 'bbqpork',
-			reflow_selector = ('.'+ html_class),
-			mod_widgets,
-			construct_view;
-
-		construct_view = (function () {
-
-			function construct(kind, id) {
-				var view,
-					callbacks = {},
-					model = data(kind, id);
-
-				id = model.key();
-				view = model.value();
-
-				view.register = function (path, fn) {
-					callbacks[path] = callbacks[path] || {};
-					callbacks[path][fn] = fn;
-				};
-
-				view.update = function (path, value) {
-					dump(path +":"+ value +"\n");
-					return true;
-				};
-
-				dump("construct:"+ id +"\n");
-				views[id] = view;
-				return view;
-			}
-
-			return function (kind, id) {
-				if (!id) {
-					construct(kind);
-				}
-				else if (!isin(views, id)) {
-					construct(kind, id);
-				}
-				return views[id];
-			};
-		}());
-
-		function when_reflow() {
-			var elements = {},
-
-				uid = uid_generator(),
-
-				registers = {
-					INPUT: function (element) {
-						var parts = element.name.split(':'),
-							key = parts[0], path = parts[1],
-							view = views[key],
-							update = view.update,
-							el = jq(element), update_val = el.val,
-
-							view_register = function (value) {
-								update_val(value);
-							};
-
-						el.keyup(function (ev) {
-							var me = jq(this), maybe_ok, maybe_invalid;
-							maybe_invalid = maybe_ok = update(path, me.val());
-							if (maybe_ok !== true) {
-								me.addClass('invalid_input');
-								// Do something with maybe_invalid message.
-							}
-						});
-
-						view.register(path, view_register);
-
-						return function () {
-							view.ignore(view_register);
-						};
-					}
-				};
-
-			jq(reflow_selector).each(function (idx) {
-				dump(this.tagName +":"+ this.id +":"+ this.name +'\n');
-				//registers[this.tagName](this);
-				var id = this.id;
-				if(!id || !isin(elements, id)) {
-					id = uid();
-					elements[id] = registers[this.tagName](this);
-					this.id = id;
-				}
-			});
-		}
-	}());
 
 	// Fire it up.
 	jQuery(function (jquery) {
@@ -694,7 +646,12 @@ var APP = (function (window) {
 	app.start = function () {
 		// TODO:
 		init_db(JQ('#username').val(), JQ('#passkey').val());
-	}
+	};
+
+	// TODO: Temporary -- testing.
+	app.commit = function () {
+		JQ(window).trigger('global_commit').trigger('make_commit');
+	};
 
 	return app;
 
