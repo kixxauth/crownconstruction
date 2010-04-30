@@ -426,7 +426,10 @@ DB = (function () {
 	var cache = {}, models = {}, uid;
 
 	function entity(spec, mapper) {
-		var update;
+		var key = spec.key,
+			struct = JSON.parse(JSON.stringify(spec.data)),
+			index = JSON.parse(JSON.stringify(spec.indexes)),
+			update;
 
 		function update_array(a, b) {
 			a = isArray(a) ? a : [];
@@ -462,22 +465,22 @@ DB = (function () {
 			switch (method) {
 
 			case 'key':
-				return spec.key;
+				return key;
 
 			case 'entity':
 				// Return a cheap copy.
-				return JSON.parse(JSON.stringify(spec.data));
+				return JSON.parse(JSON.stringify(struct));
 
 			case 'indexes':
 				// Return a cheap copy.
-				return JSON.parse(JSON.stringify(spec.indexes));
+				return JSON.parse(JSON.stringify(index));
 
 			case 'update':
-				spec.data = mapper(update(spec.data, arguments[1]));
-				return JSON.parse(JSON.stringify(spec.data));
+				struct = mapper(update(struct, arguments[1]), index);
+				return JSON.parse(JSON.stringify(struct));
 
 			case 'delete':
-				spec.data = spec.indexes = null;
+				struct = index = null;
 				return true;
 
 			default:
@@ -535,15 +538,16 @@ DB = (function () {
 		}
 
 		function update_entity(item, cb) {
-			var ent;
+			var ent, parsed_entity = JSON.parse(item.entity);
+
 			try {
 				if (!cache[item.key]) {
 					ent = models[item.indexes.kind](
-						item.key, item.entity, item.indexes);
+						item.key, parsed_entity, item.indexes);
 					cache[item.key] = ent;
 				}
 				else {
-					cache[item.key]('update', item.entity);
+					cache[item.key]('update', parsed_entity);
 				}
 			} catch (e) {
 				LOG.warn('Unable to handle DCube results for '+
@@ -581,7 +585,7 @@ DB = (function () {
 						}
 						else if (action === 'put') {
 							if (status === 200 || status === 201) {
-								update_entity(item, this_results[i]);
+								this_results[i](cache[item.key]);
 							}
 							else {
 								this_results[i](null);
@@ -594,25 +598,26 @@ DB = (function () {
 						else if (action === 'query') {
 							qresults = [];
 							push_result = make_push_result(qresults);
-							if (status !== 200) {
-								this_results[i](qresults);
-								return;
-							}
-							indexes = {};
-							for (n = 0; n < item.results.length; n += 1) {
-								for (p in item.results[n]) {
-									if (item.results[n].hasOwnProperty(p) &&
-											p !== 'key' && p !== 'entity') {
-										indexes[p] = item.results[n][p];
+							if (status === 200) {
+								indexes = {};
+								for (n = 0; n < item.results.length; n += 1) {
+									for (p in item.results[n]) {
+										if (item.results[n].hasOwnProperty(p) &&
+												p !== 'key' && p !== 'entity') {
+											indexes[p] = item.results[n][p];
+										}
 									}
+									update_entity({
+										key: item.results[n].key,
+										entity: item.results[n].entity,
+										indexes: indexes
+									}, push_result);
 								}
-								update_entity({
-									key: item.results[n].key,
-									entity: item.results[n].entity,
-									indexes: indexes
-								}, push_result);
+								this_results[i](qresults);
 							}
-							this_results[i](qresults);
+							else {
+								this_results[i](qresults);
+							}
 						}
 						else {
 							LOG.warn('DB.go():: Unknown query response action: "'+ action +'".');
@@ -680,9 +685,9 @@ DB = (function () {
 			}
 
 			map_list = function (m, x, idx) {
-				x = isArray(x) ? x : m.coerce(x);
+				x = isArray(x) ? x : m.def;
 				if (!x.length) {
-					x[0] = m.tree.coerce();
+					x[0] = m.tree.def;
 				}
 
 				return x.map(function (item) {
@@ -691,7 +696,7 @@ DB = (function () {
 			};
 
 			map_dict = function (m, x, idx) {
-				x = isObject(x) ? x : m.coerce(x);
+				x = isObject(x) ? x : m.def;
 				var p;
 
 				for (p in m.tree) {
@@ -712,13 +717,13 @@ DB = (function () {
 					x = map_list(m, x, idx);
 				}
 				else if (type === 'number') {
-					x = (typeof x === 'number' ? x : m.coerce(x));
+					x = (typeof x === 'number' ? x : m.def);
 				}
 				else if (type === 'string') {
-					x = (typeof x === 'string' ? x : m.coerce(x));
+					x = (typeof x === 'string' ? x : m.def);
 				}
 				else if (type === 'boolean') {
-					x = (typeof x === 'boolean' ? x : m.coerce(x));
+					x = (typeof x === 'boolean' ? x : m.def);
 				}
 
 				if (typeof m.index === 'function') {
@@ -743,18 +748,13 @@ DB = (function () {
 
 		function literal(opt, spec) {
 			var prop = {},
-				coerce = opt.coerce,
 				index = opt.index;
 
 			prop.type = spec.type;
-
-			prop.coerce = (typeof coerce === 'function' ?
-					coerce : spec.coerce);
-
+			prop.def = spec.def;
 			if (typeof index === 'function') {
 				prop.index = index;
 			}
-
 			return prop;
 		}
 
@@ -764,10 +764,7 @@ DB = (function () {
 			return literal(opt,
 				{
 					type: 'string',
-					
-					coerce: function (val) {
-						return (typeof val === 'string') ? val : def;
-					}
+					def: def
 				});
 		}
 
@@ -778,10 +775,7 @@ DB = (function () {
 			return literal(opt,
 				{
 					type: 'number',
-					
-					coerce: function (val) {
-						return (typeof val === 'number' && !isNaN(val)) ? val : def;
-					}
+					def: def
 				});
 		}
 
@@ -791,48 +785,30 @@ DB = (function () {
 			return literal(opt,
 				{
 					type: 'boolean',
-					
-					coerce: function (val) {
-						return (typeof val === 'boolean') ? val : def;
-					}
+					def: def
 				});
 		}
 
 		function list_property(prop, opt) {
 			opt = isObject(opt) ? opt : {};
-			var def = (isArray(opt.def) ? opt.def : []),
-				coerce = opt.coerce,
-				index = opt.index;
+			var index = opt.index;
 
 			return {
 				type: 'list',
 				tree: prop,
-
-				coerce: ((typeof coerce === 'function') ?
-					coerce :
-					function (val) {
-						return isArray(val) ? val : def;
-					}),
-
+				def: [],
 				index: ((typeof index === 'function') ? index : null)
 			};
 		}
 
 		function dict_property(props, opt) {
 			opt = isObject(opt) ? opt : {};
-			var def = (isObject(opt.def) ? opt.def : {}),
-				coerce = opt.coerce,
-				index = opt.index;
+			var index = opt.index;
 
 			return {
 				type: 'dict',
+				def: {},
 				tree: props,
-
-				coerce: (typeof coerce === 'function' ? coerce :
-					function (val) {
-						return isArray(val) ? val : def;
-					}),
-
 				index: ((typeof index === 'function') ? index : null)
 			};
 		}
@@ -879,8 +855,8 @@ DB = (function () {
 			idx.kind = kind;
 			ent = map_model(model, ent, idx);
 
-			function mapper(data) {
-				return map_model(model, data, idx);
+			function mapper(data, index) {
+				return map_model(model, data, index);
 			}
 
 			if (key) {
