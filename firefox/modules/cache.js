@@ -49,13 +49,16 @@ var EXPORTED_SYMBOLS = ["exports"],
 // CommonJS complient. This is obviously an ugly hack to allow integration with
 // legacy code that uses the Mozilla module system.
 if (Components) {
-  var require = Components.utils.import(
-        "resource://crownconstruction/modules/boot.js", null).require;
+	function require(id) {
+		var m = Components.utils.import(
+				"resource://crownconstruction/modules/"+ id +".js", null);
+		return ((typeof m.exports === "object") ? m.exports : m);
+	}
   var exports = {};
   var module = {id: "cache"};
 }
 
-PROMISE = require("promise");
+PROMISE = require("promise").promise;
 
 CACHE = (function () {
 	var memo = {}, self = {}, stacks = {}, done, next;

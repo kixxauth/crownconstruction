@@ -42,15 +42,16 @@ Components: false
 "use strict";
 
 // For Mozilla JavaScript modules system.
-var EXPORTED_SYMBOLS = ["exports"],
+var EXPORTED_SYMBOLS = ["exports"];
+var exports = {};
 
-		exports = (function () {
-			var tm = Components.classes["@mozilla.org/thread-manager;1"].
-							 getService(Components.interfaces.nsIThreadManager);
+exports.enqueue = (function () {
+	var tm = Components.classes["@mozilla.org/thread-manager;1"].
+					 getService(Components.interfaces.nsIThreadManager);
 
-			return function global_queue(fn) {
-				tm.mainThread.dispatch({run: fn},
-					Components.interfaces.nsIThread.DISPATCH_NORMAL);
-			};
-		}());
+	return function global_queue(fn) {
+		tm.mainThread.dispatch({run: fn},
+			Components.interfaces.nsIThread.DISPATCH_NORMAL);
+	};
+}());
 

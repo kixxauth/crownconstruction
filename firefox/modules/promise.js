@@ -54,7 +54,7 @@ if (Components) {
   var module = {id: "promise"};
 }
 
-ENQ = require("queue");
+ENQ = require("queue").enqueue;
 
 
 PROMISE = (function () {
@@ -155,5 +155,5 @@ PROMISE = (function () {
 	};
 }());
 
-exports = PROMISE;
+exports.promise = PROMISE;
 
