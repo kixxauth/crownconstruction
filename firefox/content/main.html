@@ -201,6 +201,22 @@
 			</div>
 		</div>
 	</script>
+
+	<script type="text/html" id="customer-results_template">
+		<% var key, customer; %>
+		<ul>
+			<% for (key in customers) { %>
+			<% if (Object.prototype.hasOwnProperty.call(customers, key)) { %>
+			<% customer = customers[key]; %>
+			<li>
+				<a href="#show?key=<%= key %>"><%= customer.lastname %></a>
+			</li>
+			<% } %>
+			<% } %>
+		</ul>
+	</script>
+
 	<!-- end templates -->
+
 </body>
 </html>

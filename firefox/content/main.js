@@ -294,6 +294,7 @@ var APP = (function (window) {
 	var app = {},
 		LOG,
 		JQ,
+		CACHE = require('cache'),
 		DCUBE = require('dcube'),
 		MODELS,
 		WIDGETS = {},
@@ -384,24 +385,76 @@ var APP = (function (window) {
 		return models;
 	}());
 
+	function customer_index_builder(db) {
+
+		function make_tables(data, tables) {
+			var i = 0, len = data.length,
+					key;
+
+			tables = tables || {};
+
+			for (; i < len; i +=1) {
+				key = data[i]('key');
+				tables[key] = {lastname: data[i]('entity').names[0].last, key: key};
+			}
+			return tables;
+		}
+
+		CACHE.atomic('customer_index')(function (txn) {
+
+			function cb(results) {
+				txn('set', make_tables(results));
+				txn('commit');
+			}
+
+			function eb(x) {
+				LOG.error(x);
+				txn('commit');
+				// TODO: Better error handling.
+				alert('Error getting customer index:\n'+ x);
+			}
+
+			if (!txn('get')) {
+
+				db.query()
+					.kind('customer')
+					.append(cb)
+					.go(eb);
+			}
+			else {
+				txn('commit');
+			}
+		});
+
+		return function (cb, customer_entity) {
+			CACHE.atomic('customer_index')(function (txn) {
+				var tables = txn('get');
+				if (customer_entity) {
+					tables = make_tables([customer_entity], tables);
+					txn('set', tables);
+				}
+				txn('commit');
+				cb(tables);
+			});
+		};
+	}
+
 	/////////////////////////////////////////////////////////////////////////////
 	// BBQ Widgets
 	// -----------
 	WIDGETS.customers_tab_widget = function (db, construct_view) {
 		var self = {id: "tab-customers"},
-			actions;
+			actions,
+			customer_index = customer_index_builder(db),
+			show_customer;
 
-		actions = {
+		show_customer = (function () {
+			var unbind_commit = function () {};
 
-			'find': function () {
-				alert('find');
-			},
-
-			'new': function () {
-				var customer = db.create('customer'),
-					data = customer('entity'),
-					view = construct_view(customer('key'), data),
-					dict = view.dict, view = view.view,
+			return function (entity) {
+				var data = entity('entity'),
+					data_view = construct_view(entity('key'), data),
+					dict = data_view.dict, view = data_view.view,
 					form = JQ('#customer_form')
 						.html(
 								template('customer-names_template', view) +
@@ -409,14 +462,24 @@ var APP = (function (window) {
 								template('customer-phones_template', view) +
 								template('customer-emails_template', view));
 
-				JQ(window).bind('global_commit', function () {
-					customer('update', data);
-					db.put(customer, function (x) {
-						customer = x;
-						// TODO: Save notifications.
-						alert('saved');
+				function global_commit() {
+					entity('update', data);
+					db.put(entity, function (x) {
+						entity = x;
+						customer_index(function (tables) {
+							// TODO: Save notifications.
+							// There could possibly be more than 1 save event,
+							// even on the same entity.
+							alert('saved');
+						}, entity);
 					});
-				});
+				}
+
+				unbind_commit();
+				JQ(window).bind('global_commit', global_commit);
+				unbind_commit = function () {
+					JQ(window).unbind('global_commit', global_commit);
+				};
 
 				//dump('\n'+ JSON.stringify(dict) +'\n');
 				function validator_for(path) {
@@ -450,6 +513,30 @@ var APP = (function (window) {
 					//dump(this.name +'\n');
 					JQ(el).bind('keyup', validator_for(el.name));
 				});
+			}
+		}());
+
+		actions = {
+
+			'find': function () {
+				customer_index(function (tables) {
+					var list = JQ('#customer_form')
+						.html(
+							template('customer-results_template', {customers: tables}));
+				});
+			},
+
+			'show': function (params) {
+				db.get(params.key, function (customer) {
+					show_customer(customer);
+				}).go(function (x) {
+					LOG.error(x);
+					LOG.warn('Could not show customer '+ params.key);
+				});
+			},
+
+			'new': function () {
+				show_customer(db.create('customer'));
 			}
 		};
 
