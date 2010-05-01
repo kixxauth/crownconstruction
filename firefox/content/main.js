@@ -462,6 +462,8 @@ var APP = (function (window) {
 								template('customer-phones_template', view) +
 								template('customer-emails_template', view));
 
+				//dump('\nview ->\n'+ JSON.stringify(view) +'\n');
+
 				function global_commit() {
 					entity('update', data);
 					db.put(entity, function (x) {
@@ -509,9 +511,20 @@ var APP = (function (window) {
 					*/
 				}
 
+				
+
 				JQ('.bbqpork', form).each(function (i, el) {
 					//dump(this.name +'\n');
 					JQ(el).bind('keyup', validator_for(el.name));
+				});
+
+				JQ('.bbqbeef', form).each(function (i, el) {
+					JQ(el).click(function () {
+						//dump('\n # data_type '+ JQ(this).attr('name') +'\n');
+						data[JQ(this).attr('name')].push(null);
+						entity('update', data);
+						show_customer(entity);
+					});
 				});
 			}
 		}());
