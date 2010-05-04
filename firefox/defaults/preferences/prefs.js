@@ -7,3 +7,6 @@ pref("extensions.crownconstruction.dbname",
 pref("extensions.crownconstruction.sandboxdbname",
     "crown_construction_sandbox");
 
+pref("extensions.crownconstruction.debug",
+    false);
+

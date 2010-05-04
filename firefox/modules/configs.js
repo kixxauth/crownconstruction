@@ -44,6 +44,9 @@ let configs =
       case "data-url":
         return this.getPreferences().getValue(PREF_DATA_DOMAIN, "");
 
+      case "debug":
+        return this.getPreferences().getValue(PREF_DEBUG, "");
+
       case "dbname":
         return this.getPreferences().getValue(PREF_DBNAME, "");
 

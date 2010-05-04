@@ -16,19 +16,78 @@
 </head>
 <body>
 
-	<p>Username:
-	<input id="username" name="username" class="bbqpork" type="text" />
-	</p>
-	<p>Passkey:
-	<input id="passkey" name="passkey" class="bbqpork" type="password" />
-	</p>
-	<p>
-	<button onclick="APP.start()">start</button>
-	</p>
-	<p>
-	<button onclick="APP.commit()">commit</button>
-	</p>
+<div id="init-decks" style="display:block">
+	<img src="img/weblogo.gif" width="291" height="120" />
+	<div id="init_progress_bar"></div>
+	<div id="login_busy_spinner" style="display:none">
+		<img src="css/images/ui-anim_basic_16x16.gif" width="16" height="16" />
+	</div>
 
+
+	<!-- blank deck -->
+	<div id="deck-0" style="display:block">
+		<div id="login_offline-dialog" style="display:none">
+			<p>
+				The Crown Construction ERM cannot connect to the Internet. Try to visit a
+				popular web page in your web browser to see if you have an internet
+				connection. If you have lost connection, you'll need to get it back
+				before trying to log in again.
+			</p>
+		</div>
+
+		<div id="login_unexpected-dialog" style="display:none">
+			<p>
+				A problem has been detected but the cause cannot be determined. The error
+				message has already been logged to the black box to help diagnose the
+				problem.  The best thing to do at this point is to contact a support
+				person.
+			</p>
+		</div>
+
+		<div id="login_null_db-dialog" style="display:none">
+			<p>
+				The database you are trying to reach does not exist. If you think this might
+				be an error, please contact a support person.
+			</p>
+		</div>
+
+	</div>
+	<!-- end deck-0 -->
+
+	<!-- choose user deck -->
+	<div id="deck-1" style="display:none">
+		<h3>Choose a logged in user...</h3>
+		<div id="user_list"></div>
+		<h3>or...</h3>
+		<a id="show_login" href="#">login a different user.</a>
+	</div>
+	<!-- end deck-1 -->
+
+	<!-- login deck -->
+	<div id="deck-2" style="display:none">
+		<form id="login">
+			<p><label id="label-username" for="username" class="login-normal">username:</label>
+			<input id="username" name="username" class="login-normal" type="text" />
+			<span id="warn-username" style="display:inline"></span>
+			</p>
+			<p><label id="label-passkey"  for="passkey" class="login-normal">passkey:</label>
+			<input id="passkey" name="passkey" class="login-normal" type="password" />
+			<span id="warn-passkey" style="display:inline"></span>
+			</p>
+			<p>
+			<input id="login-button" type="submit" value="login" />
+			<label id="label-username" for="use-fake-db" class="login-normal">use fake database:</label>
+			<input id="use-fake-db" name="use-fake-db" type="checkbox" />
+			</p>
+			<p id="warn-login"></p>
+		</form>
+	</div>
+	<!-- end deck-2 -->
+
+</div><!-- end init-decks -->
+
+<!-- main app -->
+<div id="main" style="display:none">
 	<div id="tabs">
 		<ul>
 			<li><a href="#tab-customers">customers</a></li>
@@ -42,180 +101,261 @@
 			<div id="customer_form">
 			</div>
 		</div>
-		<div id="tab-jobs">
+		<div id="tab-jobs" class="bbq">
+			<ul>
+				<li><a href="#new">new job</a></li>
+				<li><a href="#find">find job</a></li>
+			</ul>
+			<div id="job_form">
+			</div>
 		</div>
 	</div>
+</div>
+<!-- end main -->
 
-	<!-- templates -->
-	<script type="text/html" id="customer-names_template">
-		<% var i = 0, len = names.length, name; %>
-		<div class="form-sub-section">
-			<div class="form-sub-section-head-ctn">
-				<h4 class="form-sub-section-header">Names</h4>
-			</div>
-
-			<% for (; i < len; i += 1) { %>
-			<% name = names[i];  %>
-			<div class="input-section">
-				<div class="line ui-helper-clearfix">
-					<p class="input-float"><label>last:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= name.last.path %>" value="<%= name.last.value %>" />
-					</p>
-					<p class="input-float"><label>first:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= name.first.path %>" value="<%= name.first.value %>" />
-					</p>
-				</div>
-			</div>
-			<% } %>
-
-			<div class="bbqbeef form-sub-section-footer-ctn ui-helper-clearfix"
-					 title="Add another contact person." name="names">
-				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-					<span class="ui-icon ui-icon-circle-plus"></span>
-				</p>
-				<span>Add another contact person.</span>
-			</div>
-
+<!-- templates -->
+<script type="text/html" id="customer_names-template">
+	<% var i = 0, len = names.length, name; %>
+	<div class="form-sub-section">
+		<div class="form-sub-section-head-ctn">
+			<h4 class="form-sub-section-header">Names</h4>
 		</div>
-	</script>
 
-	<script type="text/html" id="customer-addresses_template">
-		<% var i = 0, len = addresses.length, address; %>
-		<div class="form-sub-section">
-			<div class="form-sub-section-head-ctn">
-				<h4 class="form-sub-section-header">Addresses</h4>
-			</div>
-
-			<% for (; i < len; i += 1) { %>
-			<% address = addresses[i]; %>
-			<div class="input-section">
-				<div class="line">
-					<p>
-						<label>street:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= address.street.path %>" value="<%= address.street.value %>" />
-					</p>
-				</div>
-				<div class="line ui-helper-clearfix">
-					<p class="input-float">
-						<label>city:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= address.city.path %>" value="<%= address.city.value %>" />
-					</p>
-					<p class="input-float">
-						<label>state:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= address.state.path %>" value="<%= address.state.value %>" />
-					</p>
-					<p class="input-float">
-						<label>zip:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
-					</p>
-				</div>
-			</div>
-			<% } %>
-
-			<div class="form-sub-section-footer-ctn ui-helper-clearfix"
-					 title="Add another customer address."
-					 onclick="app.expandForm(this.parentNode.children[1])">
-				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-					<span class="ui-icon ui-icon-circle-plus"></span>
+		<% for (; i < len; i += 1) { %>
+		<% name = names[i];  %>
+		<div class="input-section">
+			<div class="line ui-helper-clearfix">
+				<p class="input-float"><label>last:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= name.last.path %>" value="<%= name.last.value %>" />
 				</p>
-				<span>Add another customer address.</span>
+				<p class="input-float"><label>first:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= name.first.path %>" value="<%= name.first.value %>" />
+				</p>
 			</div>
 		</div>
-	</script>
+		<% } %>
 
-	<script type="text/html" id="customer-phones_template">
-		<% var i = 0, len = phones.length, phone; %>
-		<div class="form-sub-section">
-			<div class="form-sub-section-head-ctn">
-				<h4 class="form-sub-section-header">Phone Numbers</h4>
-			</div>
+		<div class="bbqbeef form-sub-section-footer-ctn ui-helper-clearfix"
+				 title="Add another contact person." name="names">
+			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+				<span class="ui-icon ui-icon-circle-plus"></span>
+			</p>
+			<span>Add another contact person.</span>
+		</div>
 
-			<% for (; i < len; i += 1) { %>
-			<% phone = phones[i]; %>
-			<div class="input-section">
-				<div class="line ui-helper-clearfix">
-					<p class="input-float">
-						<label>number:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
-					</p>
-					<p class="input-float">
-						<label>label:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
-					</p>
-				</div>
-			</div>
-			<% } %>
+	</div>
+</script>
 
-			<div class="form-sub-section-footer-ctn ui-helper-clearfix"
-					 title="Add another phone number."
-					 onclick="app.expandForm(this.parentNode.children[1])">
-				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-					<span class="ui-icon ui-icon-circle-plus"></span>
+<script type="text/html" id="customer_addresses-template">
+	<% var i = 0, len = addresses.length, address; %>
+	<div class="form-sub-section">
+		<div class="form-sub-section-head-ctn">
+			<h4 class="form-sub-section-header">Addresses</h4>
+		</div>
+
+		<% for (; i < len; i += 1) { %>
+		<% address = addresses[i]; %>
+		<div class="input-section">
+			<div class="line">
+				<p>
+					<label>street:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= address.street.path %>" value="<%= address.street.value %>" />
 				</p>
-				<span>Add another phone number.</span>
+			</div>
+			<div class="line ui-helper-clearfix">
+				<p class="input-float">
+					<label>city:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= address.city.path %>" value="<%= address.city.value %>" />
+				</p>
+				<p class="input-float">
+					<label>state:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= address.state.path %>" value="<%= address.state.value %>" />
+				</p>
+				<p class="input-float">
+					<label>zip:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
+				</p>
 			</div>
 		</div>
-	</script>
+		<% } %>
 
-	<script type="text/html" id="customer-emails_template">
-		<% var i = 0, len = emails.length, email; %>
-		<div class="form-sub-section">
-			<div class="form-sub-section-head-ctn">
-				<h4 class="form-sub-section-header">Email Addresses</h4>
-			</div>
+		<div class="form-sub-section-footer-ctn ui-helper-clearfix"
+				 title="Add another customer address."
+				 onclick="app.expandForm(this.parentNode.children[1])">
+			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+				<span class="ui-icon ui-icon-circle-plus"></span>
+			</p>
+			<span>Add another customer address.</span>
+		</div>
+	</div>
+</script>
 
-			<% for (; i < len; i += 1) { %>
-			<% email = emails[i]; %>
-			<div class="input-section">
-				<div class="line ui-helper-clearfix">
-					<p class="input-float">
-						<label>email:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= email.email.path %>" value="<%= email.email.value %>" />
-					</p>
-					<p class="input-float">
-						<label>label:</label>
-						<input class="clean-text-input bbqpork" type="text"
-							name="<%= email.label.path %>" value="<%= email.label.value %>" />
-					</p>
-				</div>
-			</div>
-			<% } %>
+<script type="text/html" id="customer_phones-template">
+	<% var i = 0, len = phones.length, phone; %>
+	<div class="form-sub-section">
+		<div class="form-sub-section-head-ctn">
+			<h4 class="form-sub-section-header">Phone Numbers</h4>
+		</div>
 
-			<div class="form-sub-section-footer-ctn ui-helper-clearfix"
-					 title="Add another email address."
-					 onclick="app.expandForm(this.parentNode.children[1])">
-				<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-					<span class="ui-icon ui-icon-circle-plus"></span>
+		<% for (; i < len; i += 1) { %>
+		<% phone = phones[i]; %>
+		<div class="input-section">
+			<div class="line ui-helper-clearfix">
+				<p class="input-float">
+					<label>number:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
 				</p>
-				<span>Add another email address.</span>
+				<p class="input-float">
+					<label>label:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
+				</p>
 			</div>
 		</div>
-	</script>
+		<% } %>
 
-	<script type="text/html" id="customer-results_template">
-		<% var key, customer; %>
-		<ul>
-			<% for (key in customers) { %>
-			<% if (Object.prototype.hasOwnProperty.call(customers, key)) { %>
-			<% customer = customers[key]; %>
-			<li>
-				<a href="#show?key=<%= key %>"><%= customer.lastname %></a>
-			</li>
-			<% } %>
-			<% } %>
-		</ul>
-	</script>
+		<div class="form-sub-section-footer-ctn ui-helper-clearfix"
+				 title="Add another phone number."
+				 onclick="app.expandForm(this.parentNode.children[1])">
+			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+				<span class="ui-icon ui-icon-circle-plus"></span>
+			</p>
+			<span>Add another phone number.</span>
+		</div>
+	</div>
+</script>
 
-	<!-- end templates -->
+<script type="text/html" id="customer_emails-template">
+	<% var i = 0, len = emails.length, email; %>
+	<div class="form-sub-section">
+		<div class="form-sub-section-head-ctn">
+			<h4 class="form-sub-section-header">Email Addresses</h4>
+		</div>
+
+		<% for (; i < len; i += 1) { %>
+		<% email = emails[i]; %>
+		<div class="input-section">
+			<div class="line ui-helper-clearfix">
+				<p class="input-float">
+					<label>email:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= email.email.path %>" value="<%= email.email.value %>" />
+				</p>
+				<p class="input-float">
+					<label>label:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= email.label.path %>" value="<%= email.label.value %>" />
+				</p>
+			</div>
+		</div>
+		<% } %>
+
+		<div class="form-sub-section-footer-ctn ui-helper-clearfix"
+				 title="Add another email address."
+				 onclick="app.expandForm(this.parentNode.children[1])">
+			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
+				<span class="ui-icon ui-icon-circle-plus"></span>
+			</p>
+			<span>Add another email address.</span>
+		</div>
+	</div>
+</script>
+
+<script type="text/html" id="customer_results-template">
+	<% var key, customer; %>
+	<ul>
+		<% for (key in customers) { %>
+		<% if (Object.prototype.hasOwnProperty.call(customers, key)) { %>
+		<% customer = customers[key]; %>
+		<li>
+			<a href="#show?key=<%= key %>"><%= customer.lastname %></a>
+		</li>
+		<% } %>
+		<% } %>
+	</ul>
+</script>
+
+<script type="text/html" id="job_header-template">
+	<div class="form-sub-section">
+		<div class="form-sub-section-head-ctn">
+			<h4 class="form-sub-section-header">Job Header</h4>
+		</div>
+
+		<div class="input-section">
+			<div class="line ui-helper-clearfix">
+				<p class="input-float">
+					<span>job ID:</span>
+					<span class="computed">job<%= id.value %></span>
+				</p>
+				<p class="input-float">
+					<span>cost of contract:</span>
+					<span name="cost-of-contract" class="computed">0</span>
+				</p>
+			</div>
+			<div class="line ui-helper-clearfix">
+				<p class="input-float">
+					<label>start by:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= startdate.path %>" value="<%= startdate.value %>" />
+				</p>
+				<p class="input-float">
+					<label>complete:</label>
+					<input class="clean-text-input bbqpork" type="text"
+						name="<%= completedate.path %>" value="<%= completedate.value %>" />
+				</p>
+			</div>
+		</div>
+	</div>
+</script>
+
+<script type="text/html" id="job_results-template">
+	<% var key, job; %>
+	<ul>
+		<% for (key in jobs) { %>
+		<% if (Object.prototype.hasOwnProperty.call(jobs, key)) { %>
+		<% job = jobs[key]; %>
+		<li>
+			<a href="#show?key=<%= key %>"><%= job.id %></a>
+		</li>
+		<% } %>
+		<% } %>
+	</ul>
+</script>
+
+<script type="text/html" id="new_job_customer_results-template">
+	<% var key, customer; %>
+	<ul>
+		<% for (key in customers) { %>
+		<% if (Object.prototype.hasOwnProperty.call(customers, key)) { %>
+		<% customer = customers[key]; %>
+		<li>
+			<a href="#new?key=<%= key %>"><%= customer.lastname %></a>
+		</li>
+		<% } %>
+		<% } %>
+	</ul>
+</script>
+
+<script type="text/html" id="user_list-template">
+	<% var user, i = 0, len = users.length; %>
+	<ul>
+		<% for (; i < len; i += 1) { %>
+		<% user = users[i]; %>
+		<li>
+			<a href="<%= user.dbname %>/<%= user.username %>"><%= user.username %></a>
+		</li>
+		<% } %>
+	</ul>
+</script>
+
+<!-- end templates -->
 
 </body>
 </html>

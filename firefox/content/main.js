@@ -38,6 +38,7 @@ immed: true */
 /*global
 Components: false,
 window: false,
+document: false,
 jQuery: false,
 _: false
 */
@@ -274,7 +275,7 @@ var SIGS = (function (undef) {
 
 		// The first parameter is a continuation callback function. The rest of the
 		// params may be a combination of signal names and observer callback
-		// functions.  As soon as all of the signals has fired, or have already
+		// functions.  As soon as all of the signals have fired, or have already
 		// been fired, all the callbacks are invoked with the signal parameters.
 		// The continuation is called last without any arguments passed.
 		wait_and: wait_and
@@ -294,35 +295,20 @@ var APP = (function (window) {
 	var app = {},
 		LOG,
 		JQ,
+		DECK,
 		CACHE = require('cache'),
-		DCUBE = require('dcube'),
+		CONF = require('configs'),
+		DB,
 		MODELS,
 		WIDGETS = {},
-		VIEW;
+		VIEW,
+		customer_index,
+		job_index,
+		login;
 
 	// Handy utility.
 	function isin(x, y) {
 		return Object.prototype.hasOwnProperty.call(x, y);
-	}
-
-	// Make a uid generator.
-	function uid_generator(prefix, hash) {
-		if (typeof prefix === 'function') {
-			hash = prefix;
-			prefix = '';
-		}
-		prefix = (typeof prefix === 'string') ? prefix : '';
-
-		var counter = 0,
-			time_string = new Date().getTime();
-
-		return  ((typeof hash === 'function') ? 
-			function () {
-				return hash(prefix + (counter += 1) + time_string);
-			} :
-			function () {
-				return prefix + (counter += 1) + time_string;
-			});
 	}
 
 	LOG = (function () {
@@ -340,6 +326,53 @@ var APP = (function (window) {
 	function template(id, data) {
 		return _.template(document.getElementById(id).innerHTML, data);
 	}
+
+	// JUI Progress Bar
+	function timed_progress_bar(id, time, cb) {
+		var pb = JQ('#'+ id),
+			start = new Date().getTime(),
+			done = start + time;
+
+		pb.progressbar({value: 0});
+
+		function loopy() {
+			window.setTimeout(function () {
+				var now = new Date().getTime(); 
+				if (now < done) {
+					pb.progressbar('value', (100 - Math.floor(((done - now) / time) * 100)));
+					loopy();
+				}
+				else {
+					pb.hide();
+					cb();
+				}
+			}, 0);
+		}
+		loopy();
+	}
+
+	// Tell the user we're working here.
+	function busy_spinner(id) {
+		var spinner = JQ('#'+ id).show();
+		return function () {
+			spinner.hide();
+		};
+	}
+
+	DECK = (function () {
+		var mod = {}, current_deck;
+
+		mod.swap = function (i) {
+			if (i === current_deck) {
+				return;
+			}
+			JQ('#deck-'+ current_deck).hide();
+			JQ('#deck-'+ i).show();
+			current_deck = i;
+		};
+
+		return mod;
+	}());
 
 	/////////////////////////////////////////////////////////////////////////////
 	// DCube Models
@@ -379,6 +412,15 @@ var APP = (function (window) {
 						label: db.str()
 					})
 				)
+			};
+		};
+
+		models.job = function (db) {
+			return {
+				customer: db.str(),
+				id: db.str(),
+				startdate: db.str(),
+				completedate: db.str()
 			};
 		};
 
@@ -439,33 +481,90 @@ var APP = (function (window) {
 		};
 	}
 
+	function job_index_builder(db) {
+
+		function make_tables(data, tables) {
+			var i = 0, len = data.length,
+					key;
+
+			tables = tables || {};
+
+			for (; i < len; i +=1) {
+				key = data[i]('key');
+				tables[key] = {key: key, id: data[i]('entity').id};
+			}
+			return tables;
+		}
+
+		CACHE.atomic('job_index')(function (txn) {
+
+			function cb(results) {
+				txn('set', make_tables(results));
+				txn('commit');
+			}
+
+			function eb(x) {
+				LOG.error(x);
+				txn('commit');
+				// TODO: Better error handling.
+				alert('Error getting job index:\n'+ x);
+			}
+
+			if (!txn('get')) {
+
+				db.query()
+					.kind('job')
+					.append(cb)
+					.go(eb);
+			}
+			else {
+				txn('commit');
+			}
+		});
+
+		return function (cb, job_entity) {
+			CACHE.atomic('job_index')(function (txn) {
+				var tables = txn('get');
+				if (job_entity) {
+					tables = make_tables([job_entity], tables);
+					txn('set', tables);
+				}
+				txn('commit');
+				cb(tables);
+			});
+		};
+	}
+
 	/////////////////////////////////////////////////////////////////////////////
 	// BBQ Widgets
 	// -----------
 	WIDGETS.customers_tab_widget = function (db, construct_view) {
 		var self = {id: "tab-customers"},
 			actions,
-			customer_index = customer_index_builder(db),
 			show_customer;
+
+		customer_index = customer_index_builder(db);
 
 		show_customer = (function () {
 			var unbind_commit = function () {};
 
 			return function (entity) {
-				var data = entity('entity'),
+				var bound = false, 
+					data = entity('entity'),
 					data_view = construct_view(entity('key'), data),
 					dict = data_view.dict, view = data_view.view,
 					form = JQ('#customer_form')
 						.html(
-								template('customer-names_template', view) +
-								template('customer-addresses_template', view) +
-								template('customer-phones_template', view) +
-								template('customer-emails_template', view));
+								template('customer_names-template', view) +
+								template('customer_addresses-template', view) +
+								template('customer_phones-template', view) +
+								template('customer_emails-template', view));
 
 				//dump('\nview ->\n'+ JSON.stringify(view) +'\n');
 
 				function global_commit() {
 					entity('update', data);
+					unbind_commit();
 					db.put(entity, function (x) {
 						entity = x;
 						customer_index(function (tables) {
@@ -478,10 +577,14 @@ var APP = (function (window) {
 				}
 
 				unbind_commit();
-				JQ(window).bind('global_commit', global_commit);
-				unbind_commit = function () {
-					JQ(window).unbind('global_commit', global_commit);
-				};
+				function bind() {
+					JQ(window).bind('global_commit', global_commit);
+					unbind_commit = function () {
+						JQ(window).unbind('global_commit', global_commit);
+						bound = false;
+					};
+					bound = true;
+				}
 
 				//dump('\n'+ JSON.stringify(dict) +'\n');
 				function validator_for(path) {
@@ -490,6 +593,9 @@ var APP = (function (window) {
 					data_path = data_path.join('.');
 
 					return function (ev) {
+						if (!bound) {
+							bind();
+						}
 						dict[data_path][field] = this.value;
 					};
 
@@ -526,16 +632,16 @@ var APP = (function (window) {
 						show_customer(entity);
 					});
 				});
-			}
+			};
 		}());
 
 		actions = {
 
 			'find': function () {
 				customer_index(function (tables) {
-					var list = JQ('#customer_form')
+					JQ('#customer_form')
 						.html(
-							template('customer-results_template', {customers: tables}));
+							template('customer_results-template', {customers: tables}));
 				});
 			},
 
@@ -550,6 +656,192 @@ var APP = (function (window) {
 
 			'new': function () {
 				show_customer(db.create('customer'));
+			}
+		};
+
+		self.update = function (hash, params) {
+			actions[hash](params);
+		};
+
+		return self;
+	};
+
+	WIDGETS.jobs_tab_widget = function (db, construct_view) {
+		var self = {id: "tab-jobs"},
+			actions,
+			show_job;
+
+		job_index = job_index_builder(db);
+
+		show_job = (function () {
+			var unbind_commit = function () {};
+
+			return function (job) {
+			 var job_data = job('entity');
+						
+				db.get(job_data.customer, function (customer) {
+					var bound = false,
+
+						customer_data = customer('entity'),
+
+						job_data_view = construct_view(
+							job('key'), job_data),
+
+						customer_data_view = construct_view(
+							customer('key'), customer_data),
+
+						job_dict = job_data_view.dict,
+						job_view = job_data_view.view,
+						customer_dict = customer_data_view.dict,
+						customer_view = customer_data_view.view,
+
+						form = JQ('#job_form')
+							.html(
+									template('job_header-template', job_view) +
+									template('customer_names-template', customer_view) +
+									template('customer_addresses-template', customer_view) +
+									template('customer_phones-template', customer_view) +
+									template('customer_emails-template', customer_view));
+
+					//dump('\nview ->\n'+ JSON.stringify(view) +'\n');
+
+					function global_commit() {
+						job('update', job_data);
+						customer('update', customer_data);
+						unbind_commit();
+						db.put(customer, function (x) {
+							customer = x;
+							customer_index(function (tables) {
+								// TODO: Save notifications.
+								// There could possibly be more than 1 save event,
+								// even on the same entity.
+								alert('saved customer');
+							}, customer);
+						});
+						db.put(job, function (x) {
+							job = x;
+							job_index(function (tables) {
+								// TODO: Save notifications.
+								// There could possibly be more than 1 save event,
+								// even on the same entity.
+								alert('saved customer');
+							}, job);
+						});
+					}
+
+					unbind_commit();
+					function bind() {
+						JQ(window).bind('global_commit', global_commit);
+						unbind_commit = function () {
+							JQ(window).unbind('global_commit', global_commit);
+							bound = false;
+						};
+						bound = true;
+					}
+
+					//dump('\n'+ JSON.stringify(dict) +'\n');
+					function validator_for(path) {
+						var data_path = path.split('.'),
+							field = data_path.pop(),
+							key = data_path[0],
+							dict;
+
+						data_path = data_path.join('.');
+						dict = key === job('key') ? job_dict : customer_dict;
+
+						return function (ev) {
+							if (!bound) {
+								bind();
+							}
+							dict[data_path][field] = this.value;
+						};
+
+						/*
+						if (/.names.[0-9]+.last/.test(path)) {
+							return function (ev) {
+							};
+						}
+						if (/.names.[0-9]+.first/.test(path)) {
+						}
+						if (/.addresses.[0-9]+.street/.test(path)) {
+						}
+						if (/.addresses.[0-9]+.city/.test(path)) {
+						}
+						if (/.addresses.[0-9]+.state/.test(path)) {
+						}
+						if (/.addresses.[0-9]+.zip/.test(path)) {
+						}
+						*/
+					}
+
+					
+
+					JQ('.bbqpork', form).each(function (i, el) {
+						//dump(this.name +'\n');
+						JQ(el).bind('keyup', validator_for(el.name));
+					});
+
+					JQ('.bbqbeef', form).each(function (i, el) {
+						JQ(el).click(function () {
+							//dump('\n # data_type '+ JQ(this).attr('name') +'\n');
+							var parts = JQ(this).attr('name').split('.'),
+								kind = parts[0], property = parts[1];
+
+							if (kind === 'job') {
+								job_data[property].push(null);
+								job('update', job_data);
+							}
+							else if (kind === 'customer') {
+								customer_data[property].push(null);
+								customer('update', customer_data);
+							}
+							show_job(job);
+						});
+					});
+				})
+				.go(function (x) {
+					// TODO: Better error handling.
+					LOG.error(x);
+					LOG.warn('Could not get customer '+ job_data.customer);
+				});
+			};
+		}());
+
+		actions = {
+
+			'find': function () {
+				job_index(function (tables) {
+					JQ('#job_form')
+						.html(
+							template('job_results-template', {jobs: tables}));
+				});
+			},
+
+			'show': function (params) {
+				db.get(params.key, function (job) {
+					show_job(job);
+				}).go(function (x) {
+					// TODO: Better error handling.
+					LOG.error(x);
+					LOG.warn('Could not show job '+ params.key);
+				});
+			},
+
+			'new': function (params) {
+				var job;
+
+				if (params.key) {
+					job = db.create('job');
+					job('update', {customer: params.key});
+					show_job(job);
+				}
+				else {
+					customer_index(function (tables) {
+						JQ('#job_form')
+							.html(
+								template('new_job_customer_results-template', {customers: tables}));
+					});
+				}
 			}
 		};
 
@@ -577,7 +869,8 @@ var APP = (function (window) {
 					current_state_string;
 
 				widget.update = function (new_state_string) {
-					if (new_state_string === current_state_string) {
+					if (!new_state_string ||
+						new_state_string === current_state_string) {
 						return;
 					}
 					current_state_string = new_state_string;
@@ -712,41 +1005,300 @@ var APP = (function (window) {
 	}
 	VIEW = view_module(WIDGETS, LOG);
 
-	// Fire it up.
-	jQuery(function (jquery) {
-		JQ = jquery;
-		VIEW.DOM_ready(jquery);
-		JQ('#tabs').tabs();
-	});
+	DB = (function () {
+		var mod = {}, 
+			dcube = require('dcube');
 
-	// TODO: Temporary -- testing.
-	function init_db(username, passkey) {
-		var m;
-		DCUBE
-			.debug(true)
-			.domain('fireworks-skylight.appspot.com');
+		mod.init = function (domain, models, debug) {
+			var m;
 
-		for (m in MODELS) {
-			if (isin(MODELS, m)) {
-				DCUBE.db.model(m, MODELS[m]);
+			dcube
+				.debug(debug)
+				.domain(domain);
+
+			for (m in models) {
+				if (isin(models, m)) {
+					dcube.db.model(m, models[m]);
+				}
 			}
-		}
-		DCUBE.db('crown_construction_sandbox', username, passkey)(
-			function (x) {
-				VIEW.db(x);
-				alert('db ready');
-			},
-			function (x) {
-				LOG.error(x);
-				alert('db connection error: '+ x);
-			});
+		};
+
+		mod.connect = function (db, username, passkey, cb, eb) {
+			dcube.db(db, username, passkey)(cb, eb);
+		};
+
+		mod.validate_passkey = function (passkey) {
+			return dcube.validatePasskey(passkey);
+		};
+
+		mod.validate_username = function (username) {
+			return dcube.validateUsername(username);
+		};
+
+		return mod;
+	}());
+
+	function check_user_cache(cb) {
+		CACHE.atomic('current_usrs')(function (txn) {
+			var users = txn('get');
+			txn('commit');
+			cb(users || []);
+		});
 	}
 
-	// TODO: Temporary -- testing.
-	app.start = function () {
-		// TODO:
-		init_db(JQ('#username').val(), JQ('#passkey').val());
-	};
+	login = (function () {
+		var mod = {},
+			login_shown = false,
+			remove_spinner;
+
+		function dialog(id, title) {
+			JQ('#'+ id)
+				.dialog({
+					modal: true,
+					draggable: false,
+					resizeable: false,
+					width: 600,
+					title: title,
+					buttons: {
+						'Quit': function() { 
+							JQ(this).dialog('close');
+							window.location.href =
+								'chrome://crownconstruction/content/quit.html';
+						}, 
+						'Try Again': function() { 
+							JQ(this).dialog('close');
+							remove_spinner = busy_spinner('login_busy_spinner');
+							mod.authenticate(
+								JQ('#username').val(), JQ('#passkey').val());
+						}, 
+						'Start Over': function() { 
+							JQ(this).dialog('close');
+							window.location.href =
+								'chrome://crownconstruction/content/main.html';
+						} 
+					}
+				});
+		}
+
+		function validate_username(un) {
+			try {
+				DB.validate_username(un);
+			} catch (e) {
+				switch (e.message) {
+				case 'too short':
+					JQ('#warn-username')
+						.html('A username must have at least one character.')
+						.show();
+					break;
+				case 'too long':
+					JQ('#warn-username')
+						.html('A username must not contain more than 70 characters.')
+						.show();
+					break;
+				case 'invalid characters':
+					JQ('#warn-username')
+						.html('A username may only contain the '+
+							'characters a-z, A-Z, 0-9, and _.')
+						.show();
+					break;
+				default:
+					LOG.warn('Unexpected username validation error '+ e.message);
+				}
+				return false;
+			}
+			return un;
+		}
+
+		function validate_passkey(pk) {
+			try {
+				DB.validate_passkey(pk);
+			} catch (e) {
+				switch (e.message) {
+				case 'too short':
+					JQ('#warn-passkey')
+						.html('A passkey must have at least 4 characters.')
+						.show();
+					break;
+				case 'too long':
+					JQ('#warn-passkey')
+						.html('A passkey must not contain more than 140 characters.')
+						.show();
+					break;
+				default:
+					LOG.warn('Unexpected passkey validation error '+ e.message);
+				}
+				return false;
+			}
+			return pk;
+		}
+
+		mod.authenticate = function (username, passkey, db_name) {
+			var	remove_spinner = busy_spinner('login_busy_spinner');
+
+			db_name = db_name || (JQ('#use-fake-db').attr('checked') ?
+					CONF.get('sandbox-dbname') : CONF.get('dbname'));
+
+
+			DB.connect(db_name, username, passkey,
+				function (db) {
+					VIEW.db(db);
+					CACHE.atomic('current_usrs')(function (txn) {
+						var users = txn('get') || [], notin = true, i = 0;
+
+						for (; i < users.length; i += 1) {
+							if (username === users[i].username &&
+									db_name === users[i].dbname) {
+								notin = false;
+								break;
+							}
+						}
+
+						if (notin) {
+							users.push({username: username, dbname: db_name});
+						}
+
+						txn('set', users);
+						txn('commit');
+						remove_spinner();
+						JQ('#tabs').tabs();
+						JQ('#init-decks').hide();
+						JQ('#main').show();
+					});
+				},
+				function (ex) {
+					remove_spinner();
+
+					if (ex.name === 'DCubeOffline') {
+						dialog('login_offline-dialog', 'Internet Connection Problem');
+						return;
+					}
+
+					switch (ex.name +': '+ ex.message) {
+					case 'DCubeUserError: user does not exist':
+						JQ('#warn-username')
+							.html('This username does not exist on this system.')
+							.show();
+						mod.show();
+						break;
+					case 'DCubeUserError: database does not exist':
+						dialog('login_null_db-dialog', 'Database Error');
+						break;
+					case 'DCubeUserError: invalid passkey':
+						JQ('#warn-login')
+							.html('The username or password is invalid. If you think '+
+									'this might be an error, please contact a support person.')
+							.show();
+						mod.show();
+						break;
+					default:
+						LOG.warn('Unexpected exception in main.js::login();'+ ex);
+						dialog('login_unexpected-dialog', 'Unexpected Problem');
+					}
+				});
+		};
+
+		mod.show = function (focus) {
+			var un_el = JQ('#username'),
+				pk_el = JQ('#passkey');
+			if (login_shown) {
+				return;
+			}
+			login_shown = true;
+
+			un_el.bind('keyup', function (ev) {
+				validate_username(this.value);
+			});
+
+			JQ('#login-button').click(function (ev) {
+				var username = un_el.val(),
+					passkey = pk_el.val();
+				JQ('#warn-username').hide();
+				JQ('#warn-passkey').hide();
+				JQ('#warn-login').hide();
+
+				if (!validate_username(username)) {
+					return false;
+				}
+
+				if (!validate_passkey(passkey)) {
+					return false;
+				}
+
+				mod.authenticate(username, passkey);
+				return false;
+			});
+
+			DECK.swap(2);
+			if (focus === 'passkey') {
+				pk_el.focus();
+			}
+			else {
+				un_el.focus();
+			}
+		};
+
+		return mod;
+	}());
+
+	// Init the 'loading' message UI.
+	SIGS.observe_once('dom_ready', function () {
+		DECK.swap(0);
+		JQ('#deck-0_message').html('Loading...');
+
+		// The time delay *must always* be longer than the time taken
+		// to open the shared user cache.
+		timed_progress_bar('init_progress_bar', 1200, function () {
+			SIGS.broadcast('init_progress_bar');
+		});
+
+		// Init the VIEW DOM
+		VIEW.DOM_ready(JQ);
+	});
+
+	// Set DB options
+	DB.init(CONF.get('data-url'), MODELS, CONF.get('debug'));
+
+	// Check the shared cache for users who are already logged in.
+	check_user_cache(function (users) {
+		SIGS.broadcast('user_cache', users);
+	});
+
+	// Get started after the user cache has been checked and the progress
+	// indicator has completed.
+	SIGS.observe_once('user_cache', function (users) {
+		SIGS.observe_once('init_progress_bar', function () {
+			if (!users.length) {
+				login.show();
+				return;
+			}
+
+			var list = JQ('#user_list')
+				.html(template('user_list-template', {users: users}));
+			JQ('a', list).each(function (i, el) {
+				el = JQ(el);
+
+				var parts = el.attr('href').split('/'),
+					dbname = parts[0],
+					username = parts[1];
+
+				el.click(function (ev) {
+					login.authenticate(username, null, dbname);
+					return false;
+				});
+			});
+			JQ('#show_login').click(function (ev) {
+				login.show();
+				return false;
+			});
+			DECK.swap(1);
+		});
+	});
+
+	// Fire up jQuery.
+	jQuery(function (jquery) {
+		JQ = jquery;
+		SIGS.broadcast('dom_ready');
+	});
 
 	// TODO: Temporary -- testing.
 	app.commit = function () {
