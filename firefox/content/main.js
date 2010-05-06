@@ -351,14 +351,6 @@ var APP = (function (window) {
 		loopy();
 	}
 
-	// Tell the user we're working here.
-	function busy_spinner(id) {
-		var spinner = JQ('#'+ id).show();
-		return function () {
-			spinner.hide();
-		};
-	}
-
 	DECK = (function () {
 		var mod = {}, current_deck;
 
@@ -1048,8 +1040,17 @@ var APP = (function (window) {
 
 	login = (function () {
 		var mod = {},
-			login_shown = false,
 			remove_spinner;
+
+		// Tell the user we're working here.
+		function busy_spinner(id) {
+			var button = JQ('#login-button').hide();
+			var spinner = JQ('#login_busy_spinner').show();
+			return function () {
+				spinner.hide();
+				button.show();
+			};
+		}
 
 		function dialog(id, title) {
 			JQ('#'+ id)
@@ -1067,9 +1068,7 @@ var APP = (function (window) {
 						}, 
 						'Try Again': function() { 
 							JQ(this).dialog('close');
-							remove_spinner = busy_spinner('login_busy_spinner');
-							mod.authenticate(
-								JQ('#username').val(), JQ('#passkey').val());
+							mod.show();
 						}, 
 						'Start Over': function() { 
 							JQ(this).dialog('close');
@@ -1132,12 +1131,8 @@ var APP = (function (window) {
 			return pk;
 		}
 
-		mod.authenticate = function (username, passkey, db_name) {
-			var	remove_spinner = busy_spinner('login_busy_spinner');
-
-			db_name = db_name || (JQ('#use-fake-db').attr('checked') ?
-					CONF.get('sandbox-dbname') : CONF.get('dbname'));
-
+		mod.authenticate = function (db_name, username, passkey) {
+			var	remove_spinner = busy_spinner();
 
 			DB.connect(db_name, username, passkey,
 				function (db) {
@@ -1199,19 +1194,31 @@ var APP = (function (window) {
 
 		mod.show = function (focus) {
 			var un_el = JQ('#username'),
-				pk_el = JQ('#passkey');
-			if (login_shown) {
-				return;
-			}
-			login_shown = true;
+				pk_el = JQ('#passkey'),
+				watch_keypress,
+				do_login;
 
 			un_el.bind('keyup', function (ev) {
-				validate_username(this.value);
+				if (ev.keyCode === 13) {
+					return false;
+				}
+				if (validate_username(this.value)) {
+					JQ('#warn-username').hide();
+				}
 			});
 
-			JQ('#login-button').click(function (ev) {
+			watch_keypress = function (ev) {
+				if (ev.keyCode === 13) {
+					do_login(ev);
+					return false;
+				}
+			}
+
+			do_login = function (ev) {
 				var username = un_el.val(),
-					passkey = pk_el.val();
+					passkey = pk_el.val(),
+					db_name;
+
 				JQ('#warn-username').hide();
 				JQ('#warn-passkey').hide();
 				JQ('#warn-login').hide();
@@ -1224,9 +1231,17 @@ var APP = (function (window) {
 					return false;
 				}
 
-				mod.authenticate(username, passkey);
+				db_name = db_name || (JQ('#use-fake-db').attr('checked') ?
+						CONF.get('sandbox-dbname') : CONF.get('dbname'));
+
+				JQ('#login-button').unbind('click', do_login);
+				JQ(window).unbind('keydown', watch_keypress);
+				mod.authenticate(db_name, username, passkey);
 				return false;
-			});
+			}
+
+			JQ('#login-button').click(do_login);
+			JQ(window).bind('keydown', watch_keypress);
 
 			DECK.swap(2);
 			if (focus === 'passkey') {
@@ -1282,7 +1297,7 @@ var APP = (function (window) {
 					username = parts[1];
 
 				el.click(function (ev) {
-					login.authenticate(username, null, dbname);
+					login.authenticate(dbname, username);
 					return false;
 				});
 			});

@@ -17,40 +17,14 @@
 <body>
 
 <div id="init-decks" style="display:block">
-	<img src="img/weblogo.gif" width="291" height="120" />
-	<div id="init_progress_bar"></div>
-	<div id="login_busy_spinner" style="display:none">
-		<img src="css/images/ui-anim_basic_16x16.gif" width="16" height="16" />
-	</div>
-
+	<img id="weblogo" src="img/weblogo.gif" width="291" height="120" />
+	<h1 class="top">Enterprise</h1>
+	<h1>Resource</h1>
+	<h1>Management system</h1>
 
 	<!-- blank deck -->
 	<div id="deck-0" style="display:block">
-		<div id="login_offline-dialog" style="display:none">
-			<p>
-				The Crown Construction ERM cannot connect to the Internet. Try to visit a
-				popular web page in your web browser to see if you have an internet
-				connection. If you have lost connection, you'll need to get it back
-				before trying to log in again.
-			</p>
-		</div>
-
-		<div id="login_unexpected-dialog" style="display:none">
-			<p>
-				A problem has been detected but the cause cannot be determined. The error
-				message has already been logged to the black box to help diagnose the
-				problem.  The best thing to do at this point is to contact a support
-				person.
-			</p>
-		</div>
-
-		<div id="login_null_db-dialog" style="display:none">
-			<p>
-				The database you are trying to reach does not exist. If you think this might
-				be an error, please contact a support person.
-			</p>
-		</div>
-
+		<div id="init_progress_bar"></div>
 	</div>
 	<!-- end deck-0 -->
 
@@ -66,28 +40,80 @@
 	<!-- login deck -->
 	<div id="deck-2" style="display:none">
 		<form id="login">
-			<p><label id="label-username" for="username" class="login-normal">username:</label>
-			<input id="username" name="username" class="login-normal" type="text" />
-			<span id="warn-username" style="display:inline"></span>
-			</p>
-			<p><label id="label-passkey"  for="passkey" class="login-normal">passkey:</label>
-			<input id="passkey" name="passkey" class="login-normal" type="password" />
-			<span id="warn-passkey" style="display:inline"></span>
-			</p>
-			<p>
-			<input id="login-button" type="submit" value="login" />
-			<label id="label-username" for="use-fake-db" class="login-normal">use fake database:</label>
-			<input id="use-fake-db" name="use-fake-db" type="checkbox" />
-			</p>
-			<p id="warn-login"></p>
+			<table>
+				<tr class="login_input_line">
+					<td>
+						<label id="label-username" for="username" class="login-normal">Username:</label>
+					</td>
+					<td>
+						<input id="username" name="username" class="login-normal" type="text" />
+					</td>
+					<td>
+						<span id="warn-username" class="login-warning"></span>
+					</td>
+				</tr>
+				<tr class="login_input_line">
+					<td>
+						<label id="label-passkey" for="passkey" class="login-normal">Passkey:</label>
+					</td>
+					<td>
+						<input id="passkey" name="passkey" class="login-normal" type="password" />
+					</td>
+					<td>
+						<span id="warn-passkey" class="login-warning"></span>
+					</td>
+				</tr>
+				<tr id="login_submit_line">
+					<td>
+						<input id="login-button" type="submit" value="Login" />
+						<img id="login_busy_spinner" style="display:none"
+							src="css/images/ui-anim_basic_16x16.gif" width="16" height="16" />
+					</td>
+					<td colspan="2">
+						<label id="label-db" for="use-fake-db">Use fake database:</label>
+						<input id="use-fake-db" name="use-fake-db" type="checkbox" />
+					</td>
+				</tr>
+			</table>
+			<p id="warn-login" class="login-warning"></p>
 		</form>
 	</div>
 	<!-- end deck-2 -->
+
+	<div id="login_offline-dialog" class="dialog" style="display:none">
+		<p class="dialog-content">
+			The Crown Construction ERM cannot connect to the Internet. Try to visit a
+			popular web page in your web browser to see if you have an internet
+			connection. If you have lost connection, you'll need to get it back
+			before trying to log in again.
+		</p>
+	</div>
+
+	<div id="login_unexpected-dialog" class="dialog"  style="display:none">
+		<p class="dialog-content">
+			A problem has been detected but the cause cannot be determined. The error
+			message has already been logged to the black box to help diagnose the
+			problem.  The best thing to do at this point is to contact a support
+			person.
+		</p>
+	</div>
+
+	<div id="login_null_db-dialog" class="dialog"  style="display:none">
+		<p class="dialog-content">
+			The database you are trying to reach does not exist. If you think this might
+			be an error, please contact a support person.
+		</p>
+	</div>
 
 </div><!-- end init-decks -->
 
 <!-- main app -->
 <div id="main" style="display:none">
+	<div class="ui-widget-header ui-corner-all">
+		<ul>
+			<li><span>customers</span></li>
+		</ul>
+	</div>
 	<div id="tabs">
 		<ul>
 			<li><a href="#tab-customers">customers</a></li>
