@@ -5,22 +5,21 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Crown Construction ERM</title>
-  <link type="text/css" href="css/start/jquery-ui-1.8rc3.custom.css" rel="stylesheet" />	
+  <link type="text/css" href="css/jui/jquery-ui-1.8.1.custom.css" rel="stylesheet" />	
   <link type="text/css" href="css/main.css" rel="stylesheet" />	
   <script src="jquery-1.4.2.min.js" type="application/javascript"></script>
-  <script src="jquery-ui-1.8rc3.custom.min.js" type="application/javascript"></script>
+  <script src="jquery-ui-1.8.1.custom.min.js" type="application/javascript"></script>
 	<script type="text/javascript" src="jquery.ba-bbq.js"></script>
   <script src="underscore.js" type="application/javascript"></script>
   <script src="resource://crownconstruction/modules/jmonad.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript;version=1.7"></script>
 </head>
 <body>
-
-<div id="init-decks" style="display:block">
-	<img id="weblogo" src="img/weblogo.gif" width="291" height="120" />
-	<h1 class="top">Enterprise</h1>
-	<h1>Resource</h1>
-	<h1>Management system</h1>
+<div id="init-decks" class="ui-corner-all" style="display:block">
+	<div id="login-header" class="ui-corner-all">
+		<img id="weblogo" src="img/weblogo.gif" width="291" height="120" />
+		<h1 class="ui-corner-bottom">Enterprise Resource Management System</h1>
+	</div>
 
 	<!-- blank deck -->
 	<div id="deck-0" style="display:block">
@@ -29,43 +28,45 @@
 	<!-- end deck-0 -->
 
 	<!-- choose user deck -->
-	<div id="deck-1" style="display:none">
+	<div id="deck-1" class="ui-corner-all" style="display:none">
 		<h3>Choose a logged in user...</h3>
 		<div id="user_list"></div>
 		<h3>or...</h3>
-		<a id="show_login" href="#">login a different user.</a>
+		<button id="show_login" class="ui-corner-all">Login a different user.</button>
 	</div>
 	<!-- end deck-1 -->
 
 	<!-- login deck -->
-	<div id="deck-2" style="display:none">
+	<div id="deck-2" class="ui-corner-all" style="display:none">
 		<form id="login">
 			<table>
-				<tr class="login_input_line">
+				<tr class="login-input-line">
 					<td>
-						<label id="label-username" for="username" class="login-normal">Username:</label>
+						<label id="label-username" for="username" class="login login-normal">Username:</label>
 					</td>
 					<td>
-						<input id="username" name="username" class="login-normal" type="text" />
+						<input id="username" name="username" class="login login-normal" type="text" />
 					</td>
 					<td>
 						<span id="warn-username" class="login-warning"></span>
 					</td>
 				</tr>
-				<tr class="login_input_line">
+				<tr class="login-input-line">
 					<td>
-						<label id="label-passkey" for="passkey" class="login-normal">Passkey:</label>
+						<label id="label-passkey" for="passkey" class="login login-normal">Passkey:</label>
 					</td>
 					<td>
-						<input id="passkey" name="passkey" class="login-normal" type="password" />
+						<input id="passkey" name="passkey" class="login login-normal" type="password" />
 					</td>
 					<td>
 						<span id="warn-passkey" class="login-warning"></span>
 					</td>
 				</tr>
-				<tr id="login_submit_line">
+				<tr id="login-submit-line">
 					<td>
-						<input id="login-button" type="submit" value="Login" />
+						<button id="login-button" class="ui-corner-all" type="submit">
+							Login
+						</button>
 						<img id="login_busy_spinner" style="display:none"
 							src="css/images/ui-anim_basic_16x16.gif" width="16" height="16" />
 					</td>
@@ -375,13 +376,12 @@
 		<% for (; i < len; i += 1) { %>
 		<% user = users[i]; %>
 		<li>
-			<a href="<%= user.dbname %>/<%= user.username %>"><%= user.username %></a>
+			<a class="button ui-corner-all" href="<%= user.dbname %>/<%= user.username %>"><%= user.username %></a>
 		</li>
 		<% } %>
 	</ul>
 </script>
 
 <!-- end templates -->
-
 </body>
 </html>
