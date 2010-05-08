@@ -476,7 +476,8 @@ DB = (function () {
 				return JSON.parse(JSON.stringify(index));
 
 			case 'update':
-				struct = mapper(update(struct, arguments[1]), index);
+				struct = JSON.parse(JSON.stringify(
+							mapper(update(struct, arguments[1]), index)));
 				return JSON.parse(JSON.stringify(struct));
 
 			case 'delete':
@@ -559,7 +560,18 @@ DB = (function () {
 
 		function go(errback) {
 			var this_results = promised_results,
-				this_fulfilled_results = fulfilled_results;
+				this_fulfilled_results = fulfilled_results,
+				i = 0;
+
+			if (!promised_results.length) {
+				setTimeout(function () {
+					for (; i < this_fulfilled_results.length; i += 1) {
+						this_fulfilled_results[i]();
+					}
+				}, 0);
+				fulfilled_results = [];
+				return;
+			}
 
 			function make_push_result(results) {
 				return function (r) {
