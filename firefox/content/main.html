@@ -110,30 +110,28 @@
 
 <!-- main app -->
 <div id="main" style="display:none">
-	<div class="ui-widget-header ui-corner-all">
-		<ul>
-			<li><span>customers</span></li>
-		</ul>
-	</div>
+	<ul id="toolbar">
+		<li><button>No changes.</button></li>
+	</ul>
 	<div id="tabs">
 		<ul>
 			<li><a href="#tab-customers">customers</a></li>
 			<li><a href="#tab-jobs">jobs</a></li>
 		</ul>
 		<div id="tab-customers" class="bbq">
-			<ul>
-				<li><a href="#new">new customer</a></li>
+			<ul class="actions">
 				<li><a href="#find">find customer</a></li>
+				<li><a href="#new">new customer</a></li>
 			</ul>
-			<div id="customer_form">
+			<div id="customer_form" class="tabpanel">
 			</div>
 		</div>
 		<div id="tab-jobs" class="bbq">
-			<ul>
-				<li><a href="#new">new job</a></li>
+			<ul class="actions">
 				<li><a href="#find">find job</a></li>
+				<li><a href="#new">new job</a></li>
 			</ul>
-			<div id="job_form">
+			<div id="job_form" class="tabpanel">
 			</div>
 		</div>
 	</div>
@@ -143,155 +141,144 @@
 <!-- templates -->
 <script type="text/html" id="customer_names-template">
 	<% var i = 0, len = names.length, name; %>
-	<div class="form-sub-section">
-		<div class="form-sub-section-head-ctn">
-			<h4 class="form-sub-section-header">Names</h4>
-		</div>
+	<div class="form-sub-section ui-corner-all">
+		<h4 class="form-sub-section-header ui-corner-top">Names</h4>
 
 		<% for (; i < len; i += 1) { %>
 		<% name = names[i];  %>
-		<div class="input-section">
+		<div class="input-section ui-corner-all">
 			<div class="line ui-helper-clearfix">
-				<p class="input-float"><label>last:</label>
-					<input class="clean-text-input bbqpork" type="text"
+				<p class="input-float"><label class="live-label">last:</label>
+					<input size="30" class="clean-text-input bbqpork" type="text"
 						name="<%= name.last.path %>" value="<%= name.last.value %>" />
 				</p>
-				<p class="input-float"><label>first:</label>
-					<input class="clean-text-input bbqpork" type="text"
+			</div>
+			<div class="line ui-helper-clearfix">
+				<p class="input-float"><label class="live-label">first:</label>
+					<input size="30" class="clean-text-input bbqpork" type="text"
 						name="<%= name.first.path %>" value="<%= name.first.value %>" />
 				</p>
 			</div>
 		</div>
 		<% } %>
 
-		<div class="bbqbeef form-sub-section-footer-ctn ui-helper-clearfix"
+		<button class="bbqbeef form-sub-section-footer-ctn button ui-corner-all"
 				 title="Add another contact person." name="names">
-			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-				<span class="ui-icon ui-icon-circle-plus"></span>
-			</p>
-			<span>Add another contact person.</span>
-		</div>
+			<span class="ui-icon ui-icon-circle-plus"></span>
+			Add another contact person.
+		</button>
 
 	</div>
 </script>
 
 <script type="text/html" id="customer_addresses-template">
 	<% var i = 0, len = addresses.length, address; %>
-	<div class="form-sub-section">
-		<div class="form-sub-section-head-ctn">
-			<h4 class="form-sub-section-header">Addresses</h4>
-		</div>
+	<div class="form-sub-section ui-corner-all">
+		<h4 class="form-sub-section-header ui-corner-top">Addresses</h4>
 
 		<% for (; i < len; i += 1) { %>
 		<% address = addresses[i]; %>
-		<div class="input-section">
+		<div class="input-section ui-corner-all">
 			<div class="line">
 				<p>
-					<label>street:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">street:</label>
+					<input size="30" class="clean-text-input bbqpork" type="text"
 						name="<%= address.street.path %>" value="<%= address.street.value %>" />
 				</p>
 			</div>
 			<div class="line ui-helper-clearfix">
 				<p class="input-float">
-					<label>city:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">city:</label>
+					<input size="30" class="clean-text-input bbqpork" type="text"
 						name="<%= address.city.path %>" value="<%= address.city.value %>" />
 				</p>
+			</div>
+			<div class="line ui-helper-clearfix">
 				<p class="input-float">
-					<label>state:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">state:</label>
+					<input size="2" class="clean-text-input bbqpork" type="text"
 						name="<%= address.state.path %>" value="<%= address.state.value %>" />
 				</p>
 				<p class="input-float">
-					<label>zip:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">zip:</label>
+					<input size="16" class="clean-text-input bbqpork" type="text"
 						name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
 				</p>
 			</div>
 		</div>
 		<% } %>
 
-		<div class="form-sub-section-footer-ctn ui-helper-clearfix"
-				 title="Add another customer address."
-				 onclick="app.expandForm(this.parentNode.children[1])">
-			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-				<span class="ui-icon ui-icon-circle-plus"></span>
-			</p>
-			<span>Add another customer address.</span>
-		</div>
+		<button class="bbqbeef form-sub-section-footer-ctn button ui-corner-all"
+				 title="Add another customer address." name="addresses">
+			<span class="ui-icon ui-icon-circle-plus"></span>
+			Add another customer address.
+		</button>
 	</div>
 </script>
 
 <script type="text/html" id="customer_phones-template">
 	<% var i = 0, len = phones.length, phone; %>
-	<div class="form-sub-section">
-		<div class="form-sub-section-head-ctn">
-			<h4 class="form-sub-section-header">Phone Numbers</h4>
-		</div>
+	<div class="form-sub-section ui-corner-all">
+		<h4 class="form-sub-section-header ui-corner-top">Phone Numbers</h4>
 
 		<% for (; i < len; i += 1) { %>
 		<% phone = phones[i]; %>
-		<div class="input-section">
+		<div class="input-section ui-corner-all">
 			<div class="line ui-helper-clearfix">
 				<p class="input-float">
-					<label>number:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">number:</label>
+					<input size="24" class="clean-text-input bbqpork" type="text"
 						name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
 				</p>
+			</div>
+			<div class="line ui-helper-clearfix">
 				<p class="input-float">
-					<label>label:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">label:</label>
+					<input size="24" class="clean-text-input bbqpork" type="text"
 						name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
 				</p>
 			</div>
 		</div>
 		<% } %>
 
-		<div class="form-sub-section-footer-ctn ui-helper-clearfix"
-				 title="Add another phone number."
-				 onclick="app.expandForm(this.parentNode.children[1])">
-			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-				<span class="ui-icon ui-icon-circle-plus"></span>
-			</p>
-			<span>Add another phone number.</span>
-		</div>
+		<button class="bbqbeef form-sub-section-footer-ctn button ui-corner-all"
+				 title="Add another phone number." name="phones">
+			<span class="ui-icon ui-icon-circle-plus"></span>
+			Add another phone number.
+		</button>
 	</div>
 </script>
 
 <script type="text/html" id="customer_emails-template">
 	<% var i = 0, len = emails.length, email; %>
-	<div class="form-sub-section">
-		<div class="form-sub-section-head-ctn">
-			<h4 class="form-sub-section-header">Email Addresses</h4>
-		</div>
+	<div class="form-sub-section ui-corner-all">
+		<h4 class="form-sub-section-header ui-corner-top">Email Addresses</h4>
 
 		<% for (; i < len; i += 1) { %>
 		<% email = emails[i]; %>
-		<div class="input-section">
+		<div class="input-section ui-corner-all">
 			<div class="line ui-helper-clearfix">
 				<p class="input-float">
-					<label>email:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">email:</label>
+					<input size="24" class="clean-text-input bbqpork" type="text"
 						name="<%= email.email.path %>" value="<%= email.email.value %>" />
 				</p>
+			</div>
+			<div class="line ui-helper-clearfix">
 				<p class="input-float">
-					<label>label:</label>
-					<input class="clean-text-input bbqpork" type="text"
+					<label class="live-label">label:</label>
+					<input size="24" class="clean-text-input bbqpork" type="text"
 						name="<%= email.label.path %>" value="<%= email.label.value %>" />
 				</p>
 			</div>
 		</div>
 		<% } %>
 
-		<div class="form-sub-section-footer-ctn ui-helper-clearfix"
-				 title="Add another email address."
-				 onclick="app.expandForm(this.parentNode.children[1])">
-			<p class="add-input ui-ex-hover ui-state-default ui-corner-all">
-				<span class="ui-icon ui-icon-circle-plus"></span>
-			</p>
-			<span>Add another email address.</span>
-		</div>
+		<button class="bbqbeef form-sub-section-footer-ctn button ui-corner-all"
+				 title="Add another email address." name="emails">
+			<span class="ui-icon ui-icon-circle-plus"></span>
+			Add another email address.
+		</button>
 	</div>
 </script>
 
@@ -315,7 +302,7 @@
 			<h4 class="form-sub-section-header">Job Header</h4>
 		</div>
 
-		<div class="input-section">
+		<div class="input-section ui-corner-all">
 			<div class="line ui-helper-clearfix">
 				<p class="input-float">
 					<span>job ID:</span>

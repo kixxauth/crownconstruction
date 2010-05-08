@@ -7,6 +7,7 @@
 body {
 	font-family: Verdana,Arial,sans-serif;
 	background: #000000 url(images/wooden_plank_bg.jpg) repeat-x fixed;
+	margin-bottom: 20px;
 }
 
 table {
@@ -25,12 +26,12 @@ div {
 }
 
 button, .button {
-	border: 1px solid #ddd;
-	background: #479433 url(jui/images/ui-bg_highlight-soft_50_479433_1x100.png) 50% 50% repeat-x;
-	padding: 0.3em 0.5em 0.3em 0.5em;
+	border: 1px solid #d3d3d3;
+	background: #479433 url(images/button-bg.png) 50% 50% repeat-x;
+	padding: 0.4em 0.5em 0.3em 0.5em;
 	font-weight: bold;
-	color: #ffffff;
 	cursor: pointer;
+	color: #fff;
 }
 
 a.button {
@@ -38,7 +39,15 @@ a.button {
 }
 
 button:hover, .button:hover {
-	border: 1px solid #999;
+	border-color: #e3e3e3;
+	color: #eee;
+	background-color: #378423;
+}
+
+button:focus, .button:focus {
+	background-color: #67b453;
+	border-color: #aaa;
+	outline: none;
 }
 
 #init-decks {
@@ -107,10 +116,19 @@ button:hover, .button:hover {
 	display: block;
 	width: 50%;
 	padding-left: 1.5em;
+	background-color: #3e6a99;
+}
+
+#user_list>ul>li>a.button:focus {
+	background-color: #5e8ab9;
+}
+
+#user_list>ul>li>a.button:hover {
+	background-color: #2e5a89;
 }
 
 #show_login {
-	font-size: 18;
+	font-size: 18px;
 }
 
 .login-input-line {
@@ -167,5 +185,111 @@ label.login {
 #warn-login {
 	margin: 2em 0 0 2em;
 	width: 80%;
+}
+
+#toolbar {
+	background: transparent;
+}
+
+#tabs {
+	background: #000;
+	padding: 0 0 2em;
+	min-height: 700px;
+	width: 90%;
+	margin: 0.5em 0 0 5%;
+}
+
+#tabs>ul {
+	border-top: none;
+	border-right: none;
+	border-left: none;
+}
+
+#tab-customers, #tab-jobs {
+	padding: 0;
+}
+
+.actions {
+	margin: 0.5em 0 0 0.5em;
+}
+
+.actions>li {
+	float: left;
+	margin-left: 2em;
+}
+
+.tabpanel {
+	clear: both;
+}
+
+.left-col {
+	float: left;
+	width: 50%;
+	margin-left: 1.5%;
+}
+
+.right-col {
+	float: right;
+	width: 45%;
+	margin-right: 1.5%;
+}
+
+.form-sub-section {
+	margin-top: 2em;
+	border: 1px solid #d3d3d3;
+	background: #f9f9f9;
+}
+
+.input-section {
+	background: #fff;
+	margin: 0 0 0.8em 2%;
+	width: 95%;
+	border: 1px solid #ddd;
+	padding: 0.3em 0 0.2em 0.3em;
+}
+
+.line {
+	height: 1.5em;
+}
+
+.input-float {
+	float: left;
+	margin-right: 1em;
+}
+
+.live-label {
+	font-size: 0.9em;
+	margin-right: 0.3em;
+	color: #555;
+	text-transform: capitalize;
+}
+
+.clean-text-input {
+	background: transparent;
+	border: none;
+	color: #000;
+}
+
+.clean-text-input:focus {
+	border-bottom: 2px dotted #aaa;
+}
+
+.form-sub-section-header {
+	padding: 0.2em 0 0.1em 0.5em;
+	margin-bottom: 0.7em;
+	color: #333;
+}
+
+.form-sub-section-footer-ctn.button {
+	width: 95.5%;
+	margin: 0 0 0.3em 2%;
+	padding: 0.2em 0 0.1em 0;
+	text-align: left;
+	font-size: 0.8em;
+}
+
+.form-sub-section-footer-ctn .ui-icon {
+	float: left;
+	margin-right: 0.5em;
 }
 

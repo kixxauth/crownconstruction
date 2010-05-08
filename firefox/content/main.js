@@ -540,19 +540,50 @@ var APP = (function (window) {
 		show_customer = (function () {
 			var unbind_commit = function () {};
 
-			return function (entity) {
+			return function (entity, focus) {
 				var bound = false, 
 					data = entity('entity'),
 					data_view = construct_view(entity('key'), data),
 					dict = data_view.dict, view = data_view.view,
 					form = JQ('#customer_form')
-						.html(
-								template('customer_names-template', view) +
-								template('customer_addresses-template', view) +
-								template('customer_phones-template', view) +
-								template('customer_emails-template', view));
+						.html('<div class="left-col"></div><div class="right-col"></div>');
 
+				JQ('.left-col', form)
+					.html(
+						template('customer_names-template', view) +
+						template('customer_addresses-template', view));
+				JQ('.right-col', form)
+					.html(
+						template('customer_phones-template', view) +
+						template('customer_emails-template', view));
 				//dump('\nview ->\n'+ JSON.stringify(view) +'\n');
+
+				window.setTimeout(function () {
+					switch (focus) {
+					case 'names':
+						JQ("input[name='"+
+							view.names[view.names.length -1].last.path +
+							"']").focus();
+						break;
+					case 'addresses':
+						JQ("input[name='"+
+							view.addresses[view.addresses.length -1].street.path +
+							"']").focus();
+						break;
+					case 'phones':
+						JQ("input[name='"+
+							view.phones[view.phones.length -1].phone.path +
+							"']").focus();
+						break;
+					case 'emails':
+						JQ("input[name='"+
+							view.emails[view.emails.length -1].email.path +
+							"']").focus();
+						break;
+					default:
+						JQ("input[name='"+ view.names[0].last.path +"']").focus();
+					}
+				}, 0);
 
 				function global_commit() {
 					entity('update', data);
@@ -609,8 +640,6 @@ var APP = (function (window) {
 					*/
 				}
 
-				
-
 				JQ('.bbqpork', form).each(function (i, el) {
 					//dump(this.name +'\n');
 					JQ(el).bind('keyup', validator_for(el.name));
@@ -618,10 +647,11 @@ var APP = (function (window) {
 
 				JQ('.bbqbeef', form).each(function (i, el) {
 					JQ(el).click(function () {
+						var name = JQ(this).attr('name');
 						//dump('\n # data_type '+ JQ(this).attr('name') +'\n');
-						data[JQ(this).attr('name')].push(null);
+						data[name].push(null);
 						entity('update', data);
-						show_customer(entity);
+						show_customer(entity, name);
 					});
 				});
 			};
@@ -1156,6 +1186,7 @@ var APP = (function (window) {
 						txn('commit');
 						remove_spinner();
 						JQ('#tabs').tabs();
+						JQ(window).trigger('hashchange');
 						JQ('#init-decks').hide();
 						JQ('#main').show();
 					});
@@ -1289,18 +1320,24 @@ var APP = (function (window) {
 
 			var list = JQ('#user_list')
 				.html(template('user_list-template', {users: users}));
-			JQ('a', list).each(function (i, el) {
-				el = JQ(el);
 
-				var parts = el.attr('href').split('/'),
-					dbname = parts[0],
-					username = parts[1];
+			window.setTimeout(function () {
+				JQ('a', list)
+					.each(function (i, el) {
+						el = JQ(el);
 
-				el.click(function (ev) {
-					login.authenticate(dbname, username);
-					return false;
-				});
-			});
+						var parts = el.attr('href').split('/'),
+							dbname = parts[0],
+							username = parts[1];
+
+						el.click(function (ev) {
+							login.authenticate(dbname, username);
+							return false;
+						});
+					})
+					.focus();
+			}, 0);
+
 			JQ('#show_login').click(function (ev) {
 				login.show();
 				return false;
