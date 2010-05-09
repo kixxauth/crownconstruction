@@ -110,26 +110,32 @@
 
 <!-- main app -->
 <div id="main" style="display:none">
-	<ul id="toolbar">
-		<li><button>No changes.</button></li>
-	</ul>
-	<div id="tabs">
-		<ul>
-			<li><a href="#tab-customers">customers</a></li>
-			<li><a href="#tab-jobs">jobs</a></li>
+	<div id="notify-unsaved" class="ui-corner-bl" style="display:none">
+		<span></span>
+		<h3>Unsaved changes.</h3>
+		Press shift+enter or click here to save.
+	</div>
+	<div id="tabs" class="bbq ui-widget ui-widget-content ui-corner-bottom">
+		<ul id="tab-nav">
+			<li>
+				<a href="#customers" class="ui-corner-top">customers</a>
+			</li>
+			<li>
+				<a href="#jobs" class="ui-corner-top">jobs</a>
+			</li>
 		</ul>
-		<div id="tab-customers" class="bbq">
+		<div id="tab-customers" class="tab bbq">
 			<ul class="actions">
-				<li><a href="#find">find customer</a></li>
-				<li><a href="#new">new customer</a></li>
+				<li><span class="ui-icon ui-icon-newwin"></span><a href="#new">New</a></li>
+				<li><span class="ui-icon ui-icon-zoomin"></span><a href="#find">Find</a></li>
 			</ul>
 			<div id="customer_form" class="tabpanel">
 			</div>
 		</div>
-		<div id="tab-jobs" class="bbq">
+		<div id="tab-jobs" class="tab bbq">
 			<ul class="actions">
-				<li><a href="#find">find job</a></li>
-				<li><a href="#new">new job</a></li>
+				<li><span class="ui-icon ui-icon-newwin"></span><a href="#new">New</a></li>
+				<li><span class="ui-icon ui-icon-zoomin"></span><a href="#find">Find</a></li>
 			</ul>
 			<div id="job_form" class="tabpanel">
 			</div>

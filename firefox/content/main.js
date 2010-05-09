@@ -283,7 +283,7 @@ var SIGS = (function (undef) {
 
 }());
 
-var APP = (function (window) {
+(function (window) {
 
 	// Ghetto require function.
 	function require(id) {
@@ -292,8 +292,7 @@ var APP = (function (window) {
 		return ((typeof m.exports === "object") ? m.exports : m);
 	}
 
-	var app = {},
-		LOG,
+	var LOG,
 		JQ,
 		DECK,
 		CACHE = require('cache'),
@@ -312,14 +311,21 @@ var APP = (function (window) {
 	}
 
 	LOG = (function () {
-		var d = new Date();
-		return require("logging")
-			.getLogger("CC_ERM_"+
-				(d.getMonth() +1) +"-"+
-				d.getDate() +"-"+
-				d.getHours() +":"+
-				d.getMinutes() +":"+
-				d.getSeconds());
+		var d = new Date(),
+			debug = CONF.get('debug'),
+			logging = require("logging"),
+			logger;
+
+		if (debug) {
+			logging.debug(debug);
+		}
+		logger = logging.getLogger("CC_ERM_"+
+			(d.getMonth() +1) +"-"+
+			d.getDate() +"-"+
+			d.getHours() +":"+
+			d.getMinutes() +":"+
+			d.getSeconds());
+		return logger;
 	}());
 
 	// Templating.
@@ -530,6 +536,31 @@ var APP = (function (window) {
 	/////////////////////////////////////////////////////////////////////////////
 	// BBQ Widgets
 	// -----------
+	WIDGETS.tabs_widget = function (db, construct_view) {
+		var self = {id: "tabs"},
+				tabs = JQ('#tabs>ul>li>a'),
+				tab_panels = JQ('#tabs>div'),
+				deselect = function () {};
+
+		tab_panels.hide();
+
+		self.update = function (hash, params) {
+			var tab = tabs.filter("[href='#"+ hash +"']"),
+				tab_panel = tab_panels.filter("[id$='"+ hash +"']");
+
+			deselect();
+			tab.addClass('selected');
+			tab_panel.show();
+
+			deselect = function () {
+				tab.removeClass('selected');
+				tab_panel.hide();
+			};
+		};
+
+		return self;
+	};
+
 	WIDGETS.customers_tab_widget = function (db, construct_view) {
 		var self = {id: "tab-customers"},
 			actions,
@@ -545,6 +576,7 @@ var APP = (function (window) {
 					data = entity('entity'),
 					data_view = construct_view(entity('key'), data),
 					dict = data_view.dict, view = data_view.view,
+					diff = JSON.stringify(dict), mutated,
 					form = JQ('#customer_form')
 						.html('<div class="left-col"></div><div class="right-col"></div>');
 
@@ -588,13 +620,10 @@ var APP = (function (window) {
 				function global_commit() {
 					entity('update', data);
 					unbind_commit();
+					mutated(true);
 					db.put(entity, function (x) {
 						entity = x;
 						customer_index(function (tables) {
-							// TODO: Save notifications.
-							// There could possibly be more than 1 save event,
-							// even on the same entity.
-							alert('saved');
 						}, entity);
 					});
 				}
@@ -609,6 +638,20 @@ var APP = (function (window) {
 					bound = true;
 				}
 
+				mutated = (function () {
+					var showing = false;
+					return function (hide){
+						if (hide) {
+							JQ('#notify-unsaved').slideUp();
+						}
+						else if (diff !== JSON.stringify(dict)) {
+							JQ('#notify-unsaved').slideDown();
+							return true;
+						}
+						JQ('#notify-unsaved').slideUp();
+					};
+				}());
+
 				//dump('\n'+ JSON.stringify(dict) +'\n');
 				function validator_for(path) {
 					var data_path = path.split('.'),
@@ -616,10 +659,11 @@ var APP = (function (window) {
 					data_path = data_path.join('.');
 
 					return function (ev) {
-						if (!bound) {
+						dict[data_path][field] = this.value;
+						var changed = mutated();
+						if (!bound && changed) {
 							bind();
 						}
-						dict[data_path][field] = this.value;
 					};
 
 					/*
@@ -1185,7 +1229,14 @@ var APP = (function (window) {
 						txn('set', users);
 						txn('commit');
 						remove_spinner();
-						JQ('#tabs').tabs();
+
+						function commit() {
+							JQ(window)
+								.trigger('global_commit')
+								.trigger('make_commit');
+						}
+
+						JQ('#notify-unsaved').click(commit);
 						JQ(window).trigger('hashchange');
 						JQ('#init-decks').hide();
 						JQ('#main').show();
@@ -1351,13 +1402,6 @@ var APP = (function (window) {
 		JQ = jquery;
 		SIGS.broadcast('dom_ready');
 	});
-
-	// TODO: Temporary -- testing.
-	app.commit = function () {
-		JQ(window).trigger('global_commit').trigger('make_commit');
-	};
-
-	return app;
 
 }(window));
 

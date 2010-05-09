@@ -55,7 +55,7 @@ button:focus, .button:focus {
 	width: 700px;
 	height: 600px;
 	position: absolute;
-	top: 50%;
+	top: 44%;
 	left: 50%;
 	margin-top: -300px;
 	margin-left: -350px;
@@ -187,39 +187,137 @@ label.login {
 	width: 80%;
 }
 
-#toolbar {
-	background: transparent;
+#notify-unsaved {
+	position: fixed;
+	top: 0;
+	right: 0;
+	z-index: 1;
+	border: 1px solid #fcefa1;
+	background: #ffeb9c;
+	color: #222;
+	padding: .2em .5em;
+	width: 24em;
+	font-size: .8em;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+#notify-unsaved:hover {
+	background-color: #ffdf3f;
+}
+
+#notify-unsaved>span {
+	display: block;
+	width: 16px;
+	height: 16px;
+	background: transparent url(jui/images/ui-icons_2e83ff_256x240.png) -16px -144px;
+	float: left;
+	margin: 0.1em 0.3em 0 0;
+}
+
+#notify-unsaved>p {
 }
 
 #tabs {
-	background: #000;
 	padding: 0 0 2em;
+	border-top: none;
 	min-height: 700px;
-	width: 90%;
-	margin: 0.5em 0 0 5%;
+	width: 94%;
+	margin: 0 0 0 3%;
 }
 
 #tabs>ul {
-	border-top: none;
-	border-right: none;
-	border-left: none;
+	border-bottom: 1px solid #777;
+	background: #3e6a99 url(jui/images/ui-bg_glass_25_3e6a99_1x400.png) 50% 50% repeat-x;
+	position: fixed;
+	width: 89.43%; /* hackish */
+	margin: 0;
+	padding: .2em .2em 0;
+	overflow: hidden;
 }
 
-#tab-customers, #tab-jobs {
-	padding: 0;
-}
-
-.actions {
-	margin: 0.5em 0 0 0.5em;
-}
-
-.actions>li {
+#tabs>ul>li {
+	list-style: none;
 	float: left;
-	margin-left: 2em;
+	margin: 0 .2em 1px 0;
+	padding: 0;
+	white-space: nowrap;
+}
+
+#tabs>ul>li>a {
+	background: #3e6a99 url(images/button-bg.png) 50% 50% repeat-x;
+	border-top: 1px solid #d3d3d3;
+	border-left: 1px solid #d3d3d3;
+	border-right: 1px solid #d3d3d3;
+	float: left;
+	padding: .3em .8em;
+	text-decoration: none;
+	color: #fff;
+}
+
+#tabs>ul>li>a:focus {
+	background-color: #5e8ab9;
+	border-color: #aaa;
+	outline: none;
+}
+
+#tabs>ul>li>a:hover {
+	border-color: #e3e3e3;
+	color: #eee;
+	background-color: #1e4a79;
+}
+
+#tabs>ul>li>a.selected {
+	background-color: #378423;
+}
+
+#tabs>ul>li>a.selected:focus {
+	outline: none;
+	border-color: #d3d3d3;
+}
+
+#tabs>ul>li>a.selected:hover {
+	cursor: default;
+	border-color: #d3d3d3;
+	color: #fff;
+}
+
+.tab {
+	padding: 0;
+	min-height: 700px;
+}
+
+ul.actions {
+	list-style-type: none;
+	width: 100%;
+	position: fixed;
+	top: 83%;
+	left: -45%;
+	-webkit-transform: rotate(-90deg); 
+	-moz-transform: rotate(-90deg);
+}
+
+ul.actions>li {
+	font-size: 1.2em;
+	float: right;
+	margin-right: 2em;
+}
+
+ul.actions>li>span {
+	float: left;
+	margin: 0.2em 0.4em 0 0;
+}
+
+ul.actions>li>a {
+	text-decoration: none;
 }
 
 .tabpanel {
-	clear: both;
+	margin-top: 1em;
+}
+
+#customer_form, #job_form {
+	margin-left: 3.5%;
 }
 
 .left-col {
