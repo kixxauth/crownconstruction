@@ -1,48 +1,5 @@
 <?xml version="1.0"?>
-
-<?xml-stylesheet href="chrome://crownconstruction/content/toolbar/toolbarbutton.css" type="text/css"?>
-<?xml-stylesheet href="chrome://crownconstruction/content/css/styles.css" type="text/css"?>
-
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
 <script type="application/javascript;version=1.7"
   src="chrome://crownconstruction/content/overlay.js"/>
-
-<toolbarpalette id="BrowserToolbarPalette">
-  <toolbarbutton id="crownconstruction-toolbarbutton"
-    class="toolbarbutton-1 chromeclass-toolbar-additional"
-    label="Crown Construction ERM"
-    tooltiptext="Crown Construction ERM"
-    oncommand="crownconstruction.onToolbarButton();"/>
-</toolbarpalette>
-
-<popupset id="mainPopupSet">
-  <panel id="crownconstruction-login-panel">
-    <hbox>
-    <div id="crownconstruction-login-panel-box"
-      xmlns="http://www.w3.org/1999/xhtml">
-      <!--
-      <p onclick="crownconstruction.onUserSetup()">
-        Click here to set up your user account.
-      </p>
-      -->
-      <p>
-        username <input id="crownconstruction-username-input" type="text"/>
-      </p>
-      <p>
-        password <input id="crownconstruction-password-input" type="password"/>
-      </p>
-      <p>
-        Press enter to enter or esc to cancel.
-      </p>
-
-      <div id="crownconstruction-warnbox" style="display: none;">
-        <div id="crownconstruction-warnbox-content">
-        </div>
-      </div>
-    </div>
-  </hbox>
-  </panel>
-</popupset>
-
 </overlay>

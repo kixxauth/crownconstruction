@@ -382,6 +382,10 @@ var SIGS = (function (undef) {
 			return ['last_name', val];
 		}
 
+		function index_customer_key(val) {
+			return ['customer', val];
+		}
+
 		models.customer = function (db) {
 			return {
 				names: db.list(
@@ -415,10 +419,73 @@ var SIGS = (function (undef) {
 
 		models.job = function (db) {
 			return {
-				customer: db.str(),
-				id: db.str(),
+				customer: db.str({index: index_customer_key}),
+				strname: db.str(),
+				sale_by: db.str(),
+				estimate_by: db.str(),
+				production_by: db.str(),
+				estimate_date: db.str(),
+				roundtrip_miles: db.num(),
+				allotted_miles: db.num(),
 				startdate: db.str(),
-				completedate: db.str()
+				completedate: db.str(),
+				contractdate: db.str(),
+				description: db.str(),
+				taxlabor: db.num(),
+				estimated_profit: db.num(),
+				payments: db.list(
+					db.dict({
+						due: db.str(),
+						memo: db.str(),
+						amount: db.str()
+					})
+				),
+				jobs: db.list(
+					db.dict({
+						type: db.str(),
+						retail: db.str(),
+						amount: db.str(),
+						foreman: db.str(),
+						mandays: db.num()
+					})
+				),
+				direct_pays: db.list(db.str()),
+				handoff: db.dict({scheduled: db.str(), completed: db.str()}),
+				walkthrough: db.dict({scheduled: db.str(), completed: db.str()}),
+				special_orders: db.list(db.dict({
+					description: db.str(),
+					vendor: db.str(),
+					ordered_by: db.str(),
+					order_date: db.str(),
+					delivery_date: db.str()
+				})),
+				sub_contractors: db.list(db.dict({
+					description: db.str(),
+					task: db.str(),
+					phone: db.str(),
+					quote: db.str(),
+					startdate: db.str()
+				})),
+				siding: db.dict({
+					squares: db.num(),
+					type: db.str(),
+					style: db.str(),
+					brand: db.str(),
+					color: db.str(),
+					trim_color: db.str()
+				}),
+				roofing: db.dict({
+					squares: db.num(),
+					type: db.str(),
+					style: db.str(),
+					brand: db.str(),
+					color: db.str(),
+					tearoff: db.bool()
+				}),
+				ufpo: db.str(),
+				permits: db.list(db.dict({
+					type: db.str(), date_received: db.str(), phone: db.str()
+				}))
 			};
 		};
 
@@ -489,7 +556,7 @@ var SIGS = (function (undef) {
 
 			for (; i < len; i +=1) {
 				key = data[i]('key');
-				tables[key] = {key: key, id: data[i]('entity').id};
+				tables[key] = {key: key, id: data[i]('entity').strname};
 			}
 			return tables;
 		}
@@ -752,46 +819,22 @@ var SIGS = (function (undef) {
 
 						job_data_view = construct_view(
 							job('key'), job_data),
-
-						customer_data_view = construct_view(
-							customer('key'), customer_data),
-
 						job_dict = job_data_view.dict,
 						job_view = job_data_view.view,
-						customer_dict = customer_data_view.dict,
-						customer_view = customer_data_view.view,
+						diff = JSON.stringify(job_dict), mutated,
 
 						form = JQ('#job_form')
-							.html(
-									template('job_header-template', job_view) +
-									template('customer_names-template', customer_view) +
-									template('customer_addresses-template', customer_view) +
-									template('customer_phones-template', customer_view) +
-									template('customer_emails-template', customer_view));
+							.html('<div class="left-col"></div><div class="right-col"></div>');
 
-					//dump('\nview ->\n'+ JSON.stringify(view) +'\n');
+					dump('\nview ->\n'+ JSON.stringify(job_view) +'\n');
 
 					function global_commit() {
 						job('update', job_data);
-						customer('update', customer_data);
 						unbind_commit();
-						db.put(customer, function (x) {
-							customer = x;
-							customer_index(function (tables) {
-								// TODO: Save notifications.
-								// There could possibly be more than 1 save event,
-								// even on the same entity.
-								alert('saved customer');
-							}, customer);
-						});
+						mutated(true);
 						db.put(job, function (x) {
 							job = x;
-							job_index(function (tables) {
-								// TODO: Save notifications.
-								// There could possibly be more than 1 save event,
-								// even on the same entity.
-								alert('saved customer');
-							}, job);
+							job_index(function (tables) {}, job);
 						});
 					}
 
@@ -805,21 +848,33 @@ var SIGS = (function (undef) {
 						bound = true;
 					}
 
+					mutated = (function () {
+						var showing = false;
+						return function (hide){
+							if (hide) {
+								JQ('#notify-unsaved').slideUp();
+							}
+							else if (diff !== JSON.stringify(dict)) {
+								JQ('#notify-unsaved').slideDown();
+								return true;
+							}
+							JQ('#notify-unsaved').slideUp();
+						};
+					}());
+
 					//dump('\n'+ JSON.stringify(dict) +'\n');
 					function validator_for(path) {
 						var data_path = path.split('.'),
-							field = data_path.pop(),
-							key = data_path[0],
-							dict;
-
+							field = data_path.pop();
 						data_path = data_path.join('.');
-						dict = key === job('key') ? job_dict : customer_dict;
+
 
 						return function (ev) {
-							if (!bound) {
+							dict[data_path][field] = this.value;
+							var changed = mutated();
+							if (!bound && changed) {
 								bind();
 							}
-							dict[data_path][field] = this.value;
 						};
 
 						/*
@@ -849,18 +904,9 @@ var SIGS = (function (undef) {
 
 					JQ('.bbqbeef', form).each(function (i, el) {
 						JQ(el).click(function () {
-							//dump('\n # data_type '+ JQ(this).attr('name') +'\n');
-							var parts = JQ(this).attr('name').split('.'),
-								kind = parts[0], property = parts[1];
-
-							if (kind === 'job') {
-								job_data[property].push(null);
-								job('update', job_data);
-							}
-							else if (kind === 'customer') {
-								customer_data[property].push(null);
-								customer('update', customer_data);
-							}
+							var name = JQ(this).attr('name');
+							job_data[property].push(null);
+							job('update', job_data);
 							show_job(job);
 						});
 					});

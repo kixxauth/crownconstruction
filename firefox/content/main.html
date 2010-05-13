@@ -8,11 +8,38 @@
   <link type="text/css" href="css/jui/jquery-ui-1.8.1.custom.css" rel="stylesheet" />	
   <link type="text/css" href="css/main.css" rel="stylesheet" />	
   <script src="jquery-1.4.2.min.js" type="application/javascript"></script>
+	<!--
   <script src="jquery-ui-1.8.1.custom.min.js" type="application/javascript"></script>
 	<script type="text/javascript" src="jquery.ba-bbq.js"></script>
   <script src="underscore.js" type="application/javascript"></script>
   <script src="resource://crownconstruction/modules/jmonad.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript;version=1.7"></script>
+	-->
+  <script type="application/javascript;version=1.7">
+    $(function () {
+
+      function channel_listener(evt) {
+        dump($(this).attr('x-response') +'\n');
+      }
+
+      $(window).bind('x-channelopen', function () {
+        var channel = $('channel'),
+
+          messageEvent = document.createEvent('Event'),
+
+          request = JSON.stringify({
+            resource: 'cache/users',
+            method: 'get'
+          });
+
+        channel.bind('x-response', channel_listener);
+        channel.bind('x-request', function () { dump('sent request\n'); });
+        channel.attr('x-request', request);
+        messageEvent.initEvent('x-request', true, true);
+        channel[0].dispatchEvent(messageEvent);
+      });
+    });
+  </script>
 </head>
 <body>
 <div id="init-decks" class="ui-corner-all" style="display:block">
