@@ -1,175 +1,191 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
-
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Crown Construction ERM</title>
-  <link type="text/css" href="css/jui/jquery-ui-1.8.1.custom.css" rel="stylesheet" />	
+  <link type="text/css" href="css/reset.css" rel="stylesheet" />	
   <link type="text/css" href="css/main.css" rel="stylesheet" />	
   <script src="jquery-1.4.2.min.js" type="application/javascript"></script>
-	<!--
-  <script src="jquery-ui-1.8.1.custom.min.js" type="application/javascript"></script>
-	<script type="text/javascript" src="jquery.ba-bbq.js"></script>
+  <script src="jquery.ba-bbq.js" type="application/javascript"></script>
   <script src="underscore.js" type="application/javascript"></script>
   <script src="resource://crownconstruction/modules/jmonad.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript;version=1.7"></script>
-	-->
-  <script type="application/javascript;version=1.7">
-    $(function () {
-
-      function channel_listener(evt) {
-        dump($(this).attr('x-response') +'\n');
-      }
-
-      $(window).bind('x-channelopen', function () {
-        var channel = $('channel'),
-
-          messageEvent = document.createEvent('Event'),
-
-          request = JSON.stringify({
-            resource: 'cache/users',
-            method: 'get'
-          });
-
-        channel.bind('x-response', channel_listener);
-        channel.bind('x-request', function () { dump('sent request\n'); });
-        channel.attr('x-request', request);
-        messageEvent.initEvent('x-request', true, true);
-        channel[0].dispatchEvent(messageEvent);
-      });
-    });
-  </script>
 </head>
 <body>
-<div id="init-decks" class="ui-corner-all" style="display:block">
-	<div id="login-header" class="ui-corner-all">
-		<img id="weblogo" src="img/weblogo.gif" width="291" height="120" />
-		<h1 class="ui-corner-bottom">Enterprise Resource Management System</h1>
-	</div>
+<div id="deck">
 
-	<!-- blank deck -->
-	<div id="deck-0" style="display:block">
-		<div id="init_progress_bar"></div>
-	</div>
-	<!-- end deck-0 -->
+  <div id="frame-connections" style="display:none">
+  </div>
 
-	<!-- choose user deck -->
-	<div id="deck-1" class="ui-corner-all" style="display:none">
-		<h3>Choose a logged in user...</h3>
-		<div id="user_list"></div>
-		<h3>or...</h3>
-		<button id="show_login" class="ui-corner-all">Login a different user.</button>
-	</div>
-	<!-- end deck-1 -->
+  <div id="frame-login" style="display:none">
+    <form id="login" method="post">
+      <img id="weblogo" src="img/weblogo.gif" width="275" height="110" />
+      <h1 class="login">Enterprise Resource Management</h1>
+      <p class="login">
+        <label id="label-username" for="username" class="login">Username:</label>
+        <input id="username" name="username" class="login" type="text" />
+      </p>
+      <p class="login">
+        <label id="label-passkey" for="passkey" class="login">Passkey:</label>
+        <input id="passkey" name="passkey" class="login" type="password" />
+      </p>
+      <p class="login">
+        <button id="login-button">Login</button>
+        <label id="label-db" for="use-fake-db" class="login">Use fake database:</label>
+        <input id="use-fake-db" name="use-fake-db" type="checkbox" class="login" />
+      </p>
+      <p id="warn-login" class="login-warning"></p>
+    </form>
+  </div>
 
-	<!-- login deck -->
-	<div id="deck-2" class="ui-corner-all" style="display:none">
-		<form id="login">
-			<table>
-				<tr class="login-input-line">
-					<td>
-						<label id="label-username" for="username" class="login login-normal">Username:</label>
-					</td>
-					<td>
-						<input id="username" name="username" class="login login-normal" type="text" />
-					</td>
-					<td>
-						<span id="warn-username" class="login-warning"></span>
-					</td>
-				</tr>
-				<tr class="login-input-line">
-					<td>
-						<label id="label-passkey" for="passkey" class="login login-normal">Passkey:</label>
-					</td>
-					<td>
-						<input id="passkey" name="passkey" class="login login-normal" type="password" />
-					</td>
-					<td>
-						<span id="warn-passkey" class="login-warning"></span>
-					</td>
-				</tr>
-				<tr id="login-submit-line">
-					<td>
-						<button id="login-button" class="ui-corner-all" type="submit">
-							Login
-						</button>
-						<img id="login_busy_spinner" style="display:none"
-							src="css/images/ui-anim_basic_16x16.gif" width="16" height="16" />
-					</td>
-					<td colspan="2">
-						<label id="label-db" for="use-fake-db">Use fake database:</label>
-						<input id="use-fake-db" name="use-fake-db" type="checkbox" />
-					</td>
-				</tr>
-			</table>
-			<p id="warn-login" class="login-warning"></p>
-		</form>
-	</div>
-	<!-- end deck-2 -->
+  <ul class="bbq navigation" id="main-navigation" style="display:none">
+    <li class="navigation section">
+      <button class="navigation section">+</button>
+      <a href="#customers">Customers</a>
+      <ul class="navigation options" style="display:none">
+        <li class="navigation sub-section"><a href="#customer-search">Search</a></li>
+      </ul>
+    </li>
+  </ul>
 
-	<div id="login_offline-dialog" class="dialog" style="display:none">
-		<p class="dialog-content">
-			The Crown Construction ERM cannot connect to the Internet. Try to visit a
-			popular web page in your web browser to see if you have an internet
-			connection. If you have lost connection, you'll need to get it back
-			before trying to log in again.
-		</p>
-	</div>
+</div><!-- deck -->
 
-	<div id="login_unexpected-dialog" class="dialog"  style="display:none">
-		<p class="dialog-content">
-			A problem has been detected but the cause cannot be determined. The error
-			message has already been logged to the black box to help diagnose the
-			problem.  The best thing to do at this point is to contact a support
-			person.
-		</p>
-	</div>
-
-	<div id="login_null_db-dialog" class="dialog"  style="display:none">
-		<p class="dialog-content">
-			The database you are trying to reach does not exist. If you think this might
-			be an error, please contact a support person.
-		</p>
-	</div>
-
-</div><!-- end init-decks -->
-
-<!-- main app -->
-<div id="main" style="display:none">
-	<div id="notify-unsaved" class="ui-corner-bl" style="display:none">
-		<span></span>
-		<h3>Unsaved changes.</h3>
-		Press shift+enter or click here to save.
-	</div>
-	<div id="tabs" class="bbq ui-widget ui-widget-content ui-corner-bottom">
-		<ul id="tab-nav">
-			<li>
-				<a href="#customers" class="ui-corner-top">customers</a>
-			</li>
-			<li>
-				<a href="#jobs" class="ui-corner-top">jobs</a>
-			</li>
-		</ul>
-		<div id="tab-customers" class="tab bbq">
-			<ul class="actions">
-				<li><span class="ui-icon ui-icon-newwin"></span><a href="#new">New</a></li>
-				<li><span class="ui-icon ui-icon-zoomin"></span><a href="#find">Find</a></li>
-			</ul>
-			<div id="customer_form" class="tabpanel">
-			</div>
-		</div>
-		<div id="tab-jobs" class="tab bbq">
-			<ul class="actions">
-				<li><span class="ui-icon ui-icon-newwin"></span><a href="#new">New</a></li>
-				<li><span class="ui-icon ui-icon-zoomin"></span><a href="#find">Find</a></li>
-			</ul>
-			<div id="job_form" class="tabpanel">
-			</div>
-		</div>
-	</div>
+<!-- notification boxes -->
+<div id="login-username-warning" class="notification login-warning" style="display: none">
+  <p class="content"></p>
 </div>
-<!-- end main -->
+<div id="login-passkey-warning" class="notification login-warning" style="display: none">
+  <p class="content"></p>
+</div>
+
+<div id="panels">
+  <div id="panel-customers" class="tab-panel" style="display:none">
+    <h1>Customers</h1>
+  </div>
+</div>
+
+<!-- remove
+  <div id="init-decks" class="ui-corner-all" style="display:block">
+    <div id="login-header" class="ui-corner-all">
+      <img id="weblogo" src="img/weblogo.gif" width="291" height="120" />
+      <h1 class="ui-corner-bottom">Enterprise Resource Management System</h1>
+    </div>
+
+    <div id="deck-0" style="display:block">
+      <div id="init_progress_bar"></div>
+    </div>
+
+    <div id="deck-1" class="ui-corner-all" style="display:none">
+      <h3>Choose a logged in user...</h3>
+      <div id="user_list"></div>
+      <h3>or...</h3>
+      <button id="show_login" class="ui-corner-all">Login a different user.</button>
+    </div>
+
+    <div id="deck-2" class="ui-corner-all" style="display:none">
+      <form id="login">
+        <table>
+          <tr class="login-input-line">
+            <td>
+              <label id="label-username" for="username" class="login login-normal">Username:</label>
+            </td>
+            <td>
+              <input id="username" name="username" class="login login-normal" type="text" />
+            </td>
+            <td>
+              <span id="warn-username" class="login-warning"></span>
+            </td>
+          </tr>
+          <tr class="login-input-line">
+            <td>
+              <label id="label-passkey" for="passkey" class="login login-normal">Passkey:</label>
+            </td>
+            <td>
+              <input id="passkey" name="passkey" class="login login-normal" type="password" />
+            </td>
+            <td>
+              <span id="warn-passkey" class="login-warning"></span>
+            </td>
+          </tr>
+          <tr id="login-submit-line">
+            <td>
+              <button id="login-button" class="ui-corner-all" type="submit">
+                Login
+              </button>
+              <img id="login_busy_spinner" style="display:none"
+                src="css/images/ui-anim_basic_16x16.gif" width="16" height="16" />
+            </td>
+            <td colspan="2">
+              <label id="label-db" for="use-fake-db">Use fake database:</label>
+              <input id="use-fake-db" name="use-fake-db" type="checkbox" />
+            </td>
+          </tr>
+        </table>
+        <p id="warn-login" class="login-warning"></p>
+      </form>
+    </div>
+
+    <div id="login_offline-dialog" class="dialog" style="display:none">
+      <p class="dialog-content">
+        The Crown Construction ERM cannot connect to the Internet. Try to visit a
+        popular web page in your web browser to see if you have an internet
+        connection. If you have lost connection, you'll need to get it back
+        before trying to log in again.
+      </p>
+    </div>
+
+    <div id="login_unexpected-dialog" class="dialog"  style="display:none">
+      <p class="dialog-content">
+        A problem has been detected but the cause cannot be determined. The error
+        message has already been logged to the black box to help diagnose the
+        problem.  The best thing to do at this point is to contact a support
+        person.
+      </p>
+    </div>
+
+    <div id="login_null_db-dialog" class="dialog"  style="display:none">
+      <p class="dialog-content">
+        The database you are trying to reach does not exist. If you think this might
+        be an error, please contact a support person.
+      </p>
+    </div>
+
+  <div id="main" style="display:none">
+    <div id="notify-unsaved" class="ui-corner-bl" style="display:none">
+      <span></span>
+      <h3>Unsaved changes.</h3>
+      Press shift+enter or click here to save.
+    </div>
+    <div id="tabs" class="bbq ui-widget ui-widget-content ui-corner-bottom">
+      <ul id="tab-nav">
+        <li>
+          <a href="#customers" class="ui-corner-top">customers</a>
+        </li>
+        <li>
+          <a href="#jobs" class="ui-corner-top">jobs</a>
+        </li>
+      </ul>
+      <div id="tab-customers" class="tab bbq">
+        <ul class="actions">
+          <li><span class="ui-icon ui-icon-newwin"></span><a href="#new">New</a></li>
+          <li><span class="ui-icon ui-icon-zoomin"></span><a href="#find">Find</a></li>
+        </ul>
+        <div id="customer_form" class="tabpanel">
+        </div>
+      </div>
+      <div id="tab-jobs" class="tab bbq">
+        <ul class="actions">
+          <li><span class="ui-icon ui-icon-newwin"></span><a href="#new">New</a></li>
+          <li><span class="ui-icon ui-icon-zoomin"></span><a href="#find">Find</a></li>
+        </ul>
+        <div id="job_form" class="tabpanel">
+        </div>
+      </div>
+    </div>
+  </div>
+
+end remove -->
 
 <!-- templates -->
 <script type="text/html" id="customer_names-template">
@@ -390,16 +406,26 @@
 	</ul>
 </script>
 
-<script type="text/html" id="user_list-template">
-	<% var user, i = 0, len = users.length; %>
-	<ul>
+<script type="text/html" id="connection_list-template">
+	<% var cxn, i = 0, len = connections.length; %>
+  <div id="connection-list-container">
+  <h2 id="connection-list-heading">Choose from existing connections...</h2>
+	<ul id="connection-list">
 		<% for (; i < len; i += 1) { %>
-		<% user = users[i]; %>
-		<li>
-			<a class="button ui-corner-all" href="<%= user.dbname %>/<%= user.username %>"><%= user.username %></a>
+		<% cxn = connections[i]; %>
+		<li class="connection-list">
+      <a class="button connection-list" href="<%= cxn.id %>">
+        <%= cxn.username %> on <%= cxn.dbname %>
+      </a>
 		</li>
 		<% } %>
+		<li id="create-new-connection" class="connection-list">
+    <a class="button" href="login">
+      ... or create a new connection.
+    </a>
+		</li>
 	</ul>
+  </div>
 </script>
 
 <!-- end templates -->

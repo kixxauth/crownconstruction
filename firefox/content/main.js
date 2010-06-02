@@ -283,7 +283,7 @@ var SIGS = (function (undef) {
 
 }());
 
-(function (window) {
+function xxx(window) {
 
 	// Ghetto require function.
 	function require(id) {
@@ -1449,5 +1449,1103 @@ var SIGS = (function (undef) {
 		SIGS.broadcast('dom_ready');
 	});
 
+}
+
+function printd(msg, val) {
+  val = typeof val === 'undefined' ? '' : ' : '+ val;
+  dump(msg + val +'\n');
+}
+
+function cp(msg) {
+  printd(' -> CHECK POINT', msg);
+}
+
+var printo = (function () {
+
+  function print_object(x, ident) {
+    var r = ''
+      , i = 0
+      , len
+      , op
+      ;
+
+    ident = ident || '';
+
+    if (typeof x === 'string') {
+      return ident +'"'+ x +'"';
+    }
+    else if (typeof x === 'number' || typeof x === 'boolean') {
+      return ident + x;
+    }
+    else if (x === null) {
+      return ident +'null';
+    }
+    else if (typeof x === 'undefined') {
+      return ident +'undefined';
+    }
+    else if (typeof x === 'function') {
+      return ident +'function () { ... code ... }';
+    }
+
+    else if (Object.prototype.toString.call(x) === '[object Array]') {
+      r = ident +'[';
+      len = x.length;
+
+      for (; i < len; i += 1) {
+        r += '\n'+ arguments.callee(x[i], ident +'  ') +',';
+      }
+      if (len) {
+        r = r.slice(0, (r.length -1)) +'\n';
+      }
+      return r + ident +']\n';
+    }
+
+    r = ident +'{';
+    for (i in x) {
+      op = arguments.callee(x[i], ident +'  ');
+      r += '\n'+ ident +'  "'+ i +'": '+ op.slice((ident +'  ').length) +',';
+    }
+    r = r.slice(0, (r.length -1)) +'\n';
+    return r + ident +'}\n';
+  }
+
+  return function printo(name, x) {
+    if (arguments.length === 1) {
+      x = name;
+      name = 'undeclared';
+    }
+    printd(name, print_object(x));
+  }
+}());
+
+// Contruct the `channel` plugin for jQuery
+(function (jq, undef) {
+  var self
+    , channel
+    , observers = []
+    , uid
+    , request
+    ;
+
+  // The channel plugin function is just a listener registration function for
+  // the channel ready event, and concequently the DOM ready event.
+  self = function (fn) {
+    if (channel) {
+      fn(request);
+    }
+    else {
+      observers.push(fn);
+    }
+    return jq;
+  };
+
+  // Explicity bind the channel plugin to jQuery without clobbering the
+  // namespace.
+  self.noConflict = (function () {
+    var name, value;
+
+    return function (new_name) {
+      if (name && value) {
+        jq[name] = value;
+      }
+      name = new_name;
+      value = jq[new_name];
+      jq[name] = self;
+      return self;
+    };
+  }());
+
+  // UID generation utility.
+  uid = (function () {
+    var counter = 0;
+
+    return function () {
+      return (counter += 1);
+    };
+  }());
+
+  // Construct a request promise function.
+  request = function (resource, method, body, keepalive) {
+    var response = null
+      , handlers = []
+      , req =
+        { id: uid()
+        , resource: resource
+        , method: method
+        , body: body
+        }
+      , ev = document.createEvent('Event')
+      ;
+
+    // Handle channel events.
+    function channel_listener() {
+      var i = 0
+        , len = handlers.length
+        , r = JSON.parse(channel.attr('x-response'))
+        ;
+
+      // We need to check the request id to make sure this is a
+      // request / response pair.
+      if (r.id === req.id) {
+        printo('got response ', r);
+        response = r;
+        // Some channel connections are 'keep-alive'
+        if (!keepalive) {
+          channel.unbind('x-response', channel_listener);
+        }
+
+        printd('broadcasting channel response to '+ len +' handlers');
+        // Broadcast the response.
+        for (; i < len; i += 1) {
+          printd('broadcasting');
+          handlers[i](response);
+        }
+      }
+      return false;
+    }
+
+    channel.bind('x-response', channel_listener);
+
+    channel.attr('x-request', JSON.stringify(req));
+    ev.initEvent('x-request', true, true);
+    printo("sending request ->", req);
+    channel[0].dispatchEvent(ev);
+
+    // Promise constructor function.
+    function promise(fn) {
+      handlers.push(fn);
+      if (response) {
+        fn(response);
+      }
+      return promise;
+    }
+
+    return promise;
+  };
+
+  // Bind the channel to jQuery.channel
+  self.noConflict('channel');
+
+  // Plugin init.
+  function init(channel_id) {
+    var i = 0, len = observers.length;
+
+    // Set the channel object and notify observers.
+    channel = jq('#'+ channel_id);
+    for (; i < len; i += 1) {
+      observers[i](request);
+    }
+  }
+
+  // Setup the channel on page load.
+  jq(function () {
+
+    // Channel open event handler.
+    function handler(ev) {
+      jq(this).unbind('x-channelopen', handler);
+      init(document.documentElement.getAttribute('x-channelid'));
+      return false;
+    }
+
+    // Listen for the channel open event from browser chrome.
+    jq(document).bind('x-channelopen', handler);
+  });
+}(jQuery)); 
+
+  function setdb(type, val, callback) {
+    channel('db/'+ type, 'put', val)(function (response) {
+      callback(response.body);
+    });
+  }
+
+  login_monad = (function () {
+    var self = {};
+
+    self.dcube_debug = function (monad, val) {
+      printd('db()');
+      var me = this;
+
+      setdb('domain', conf.get('debug'), function (response) {
+        log.info('DCube debugging: '+ response);
+        me.returns();
+      });
+    };
+    self.dcube_debug.blocking = true;
+
+    self.dcube_domain = function (monad, val) {
+      printd('db()');
+      var me = this;
+
+      setdb('domain', conf.get('domain'), function (response) {
+        log.info('DCube domain '+ response);
+        me.returns();
+      });
+    };
+    self.dcube_domain.blocking = true;
+
+    self.connections = function (monad, val) {
+      printd('connections()');
+      channel('db/connections/', 'get')(function (response) {
+        printo('connections', response);
+        this.returns();
+      });
+    };
+    self.connections.blocking = true;
+
+    self.display = function (monad, val) {
+      printd('display()');
+    };
+
+    return self;
+  }());
+
+(function (window, undefined) {
+
+  // Ghetto require function.
+  function require(id) {
+    var m = Components.utils.import(
+        "resource://crownconstruction/modules/"+ id +".js", null);
+    return ((typeof m.exports === "object") ? m.exports : m);
+  }
+
+	// Handy utility.
+	function isin(x, y) {
+		return Object.prototype.hasOwnProperty.call(x, y);
+	}
+
+  var $F = function () {}
+    , conf = require('configs')
+    , debug = conf.get('debug')
+    , jmonad = jMonad.noConflict()()
+    , jq = jQuery.noConflict(true)
+    , log
+    , app = {}
+    , widget_modules = {}
+    ;
+
+  // Ghetto logger.
+  log = (function () {
+    var d = new Date(),
+      logging = require("logging"),
+      logger;
+
+    if (debug) {
+      logging.debug(debug);
+    }
+    logger = logging.getLogger("CCERM_"+
+      (d.getMonth() +1) +"-"+
+      d.getDate() +"-"+
+      d.getHours() +":"+
+      d.getMinutes() +":"+
+      d.getSeconds());
+    return logger;
+  }());
+
+  // Exception handling.
+  function exception (e) {
+    var self = new Error(msg)
+
+      , msg = ((typeof e === 'object') ?
+          (e.name || 'Error') +' -- '+ (e.message || 'Unknown.') :
+          'Error -- '+ e)
+      ;
+
+    self.name = "app_exception";
+    self.lineNumber = typeof e === 'object' ? (e.lineNumber || 0) : 0;
+    self.fileName = typeof e === 'object' ? (e.fileName || 'na') : 'na';
+    self.constructor = arguments.callee;
+
+    self.raise = function () {
+      log.error(self);
+      // TODO: Nice error dialog.
+      alert(self);
+      throw self;
+    };
+
+    return self;
+  }
+
+  function unexpected_exception(e) {
+    var self = exception(e);
+    self.name = 'unexpected_app_exception';
+    self.constructor = arguments.callee;
+    return self;
+  }
+
+	// Templating.
+	function render_template(id, context) {
+		return _.template(document.getElementById(id).innerHTML, context);
+	}
+
+  // Contructor for the 'deck' module.
+  function deck_constructor(deck_id) {
+    var deck = jq('#'+ deck_id)
+      , current
+      , frames = {}
+      ;
+
+    deck.children().each(function (i) {
+      frames[this.id] = jq('#'+ this.id);
+    });
+
+    function fade_switch(frame_name, speed, callback) {
+      if (current) {
+        current.hide(speed, function () {
+          current = jq(this);
+          current.show(speed, callback);
+        });
+      }
+      else {
+        current = frames[frame_name];
+        current.show(speed, callback);
+      }
+    }
+
+    return function (frame_name, speed, callback) {
+      if (speed) {
+        fade_switch(frame_name, speed, callback);
+        return;
+      }
+
+      if (current) {
+        current.hide();
+      }
+
+      if (frame_name) {
+        current = frames[frame_name];
+        current.show();
+      }
+    };
+  }
+
+  function widgets() {
+    var self = {}
+      , bbq = jq.bbq
+      , widget_dict = {}
+      ;
+
+    function maybe_update(new_state, current_state) {
+      if (!new_state || new_state === current_state) {
+        return;
+      }
+
+      var parts = new_state.split('?');
+      return [parts[0], jq.deparam.querystring(parts[1], true)];
+      // Return the hash and query string as an object.
+    }
+
+    jq(window).bind('hashchange', function(ev) {
+      var id, w, update, new_state;
+
+      for (id in widget_dict) {
+        if (isin(widget_dict, id)) {
+          w = widget_dict[id];
+          new_state = ev.getState(id);
+          update = maybe_update(new_state, w.current_state);
+          if (update) {
+            w.current_state = new_state;
+            // tuple (hash, params)
+            w.update(update[0], update[1]);
+          }
+        }
+      }
+    });
+
+    self.register = function (modules) {
+      var name, mod;
+      for (name in modules) {
+        if (isin(modules, name)) {
+          mod = modules[name];
+          widget_dict[mod.id] = mod;
+        }
+      }
+    };
+
+    self.start = function (hash) {
+      if (hash) {
+        window.location.hash = hash;
+      }
+      jq(window).trigger('hashchange');
+    };
+			
+    // For all links inside a .bbq widget, push the appropriate state onto the
+    // history when clicked.
+    jq('.bbq a[href^=#]').live('click', function(e){
+      var state = {}
+        , href_jq = jq(this)
+        
+          // Get the id of this .bbq widget.
+        , id = href_jq.closest('.bbq').attr('id')
+        
+          // Get the url from the link's href attribute,
+          // stripping any leading #.
+        , hash = href_jq.attr('href').replace(/^#/, '')
+        ;
+
+      // Make sure there is a widget object with this id.
+      if (!widget_dict[id]) {
+        log.warn('No widget with referenced id "'+ id +'".');
+      }
+      
+      // Set the state.
+      state[id] = hash;
+      bbq.pushState(state);
+      
+      // Prevent the default link click behavior by returning false.
+      return false;
+    });
+
+    return self;
+  }
+
+  function main_widget_constructor(swap_frame) {
+    var self = {id: 'main-navigation'}
+      , toggle_menu_state
+      , toggle_tabs
+      ;
+
+    toggle_panels = (function () {
+      var current_panel;
+
+      return function (panel) {
+        cp('toggle_tab() to: '+ panel +', from: '+ current_panel);
+        toggle_menu_state(current_panel, 'close');
+        toggle_menu_state(panel, 'open');
+        if (current_panel === panel) {
+          return;
+        }
+        jq('#panel-'+ current_panel).hide();
+        jq('#panel-'+ panel).show();
+        current_panel = panel;
+      };
+    }());
+
+    toggle_menu_state = (function () {
+      var current_states = {}
+        , get_menu_item
+        ;
+
+      
+      get_menu_item = (function () {
+        var items = {};
+
+        return function (name) {
+          if (!items[name]) {
+            items[name] = jq(
+              "#main-navigation>li>a[href='#"+ name +"']").next();
+          }
+          return items[name];
+        };
+      }());
+
+      function open(name) {
+        get_menu_item(name).show();
+        current_states[name] = 'open';
+      }
+
+      function close(name) {
+        get_menu_item(name).hide();
+        current_states[name] = 'close';
+      }
+
+      return function (name, state) {
+        if (!name) {
+          return;
+        }
+
+        if (state) {
+          if (current_states[name] === state) {
+            return;
+          }
+          if (state === 'open') {
+            open(name);
+          }
+          if (state === 'close') {
+            close(name);
+          }
+          return;
+        }
+
+        if (current_states[name] === 'open') {
+          close(name);
+          return;
+        }
+
+        open(name);
+      };
+    }());
+
+    self.update = function (hash, params /* params is an object */) {
+      cp('update(): '+ hash);
+      if (/customer/.test(hash)) {
+        toggle_panels('customers');
+      }
+    };
+
+    self.show = function () {
+      jq('#main-navigation>li.navigation>button.navigation')
+        .click(function (ev) {
+          toggle_menu_state(jq(this).next().attr('href').replace(/^#/, ''));
+        });
+
+      swap_frame('main-navigation');
+    };
+
+    return self;
+  }
+
+  // Construct the login widget frame.
+  function login_widget_constructor(swap_frame) {
+    var self = {}
+      , validate_passkey = require('dcube').validatePasskey
+      , validate_username = require('dcube').validateUsername
+      , form_jq
+      , username_jq
+      , passkey_jq
+      , username
+      , passkey
+      , show_username_warning
+      , show_passkey_warning
+      , show_spinner
+      , show_button
+      ;
+
+    function set_form_jq() {
+      if (!form_jq) {
+        form_jq = jq('#login');
+      }
+    }
+
+    function set_username_jq() {
+      if (!username_jq) {
+        username_jq = jq('#username');
+      }
+    }
+
+    function set_passkey_jq() {
+      if (!passkey_jq) {
+        passkey_jq = jq('#passkey');
+      }
+    }
+
+    username = function () {
+      set_username_jq();
+
+      username = function () {
+        var x = username_jq.val()
+          , rv = {error: null, val: null}
+          ;
+
+        try {
+          rv.val = validate_username(x);
+        } catch (e) {
+          if (e.name === 'usernameValidationError') {
+            rv.error = e;
+          }
+          else {
+            // Stops execution.
+            unexpected_exception(e).raise();
+          }
+        }
+
+        return rv;
+      };
+
+      return username();
+    };
+
+    passkey = function () {
+      set_passkey_jq();
+
+      passkey = function () {
+        var x = passkey_jq.val()
+          , rv = {error: null, val: null}
+          ;
+
+        try {
+          rv.val = validate_passkey(x);
+        } catch (e) {
+          if (e.name === 'passkeyValidationError') {
+            rv.error = e;
+          }
+          else {
+            // Stops execution.
+            unexpected_exception(e).raise();
+          }
+        }
+
+        return rv;
+      };
+
+      return passkey();
+    };
+
+    show_username_warning = function (ex) {
+      var target = jq('#username')
+        , offsets = target.offset()
+        , target_width = target.width()
+        , warn_box = jq('#login-username-warning')
+        , content_box = warn_box.find('.content')
+        , change_content
+        ;
+
+      warn_box.css({
+          'top': offsets.top - target.height(),
+          'left': offsets.left + (target_width + (target_width * 0.07))});
+
+      change_content = (function () {
+        var current;
+        return function (exception) {
+          var msg;
+
+          if (exception.message === current) {
+            return;
+          }
+
+          current = exception.message;
+          switch (current) {
+          case 'too short':
+            msg = 'A username must have at least one character.';
+            break;
+          case 'too long':
+            msg = 'A username cannot contain more than 70 characters.';
+            break;
+          case 'invalid characters':
+            msg = ('A username may only contain the '+
+                'characters "a" - "z", "A" - "Z", "0" - "9", and "_".');
+            break;
+          case 'username not found':
+            msg = 'This username does not exist.';
+            break;
+          default:
+            msg = 'Invalid username.';
+          }
+
+          content_box.text(msg);
+        };
+      }());
+
+      function show(exception) {
+        change_content(exception);
+        warn_box.show();
+
+        function hide() {
+          self.remove_listener(hide);
+          warn_box.hide();
+          show_username_warning = show;
+        }
+
+        function handle_keyup(ev) {
+          var x = username();
+          if (x.error) {
+            change_content(x.error);
+          }
+          else {
+            target.unbind('keyup', handle_keyup);
+            hide();
+          }
+        }
+
+        target.keyup(handle_keyup);
+        self.add_listener(hide);
+        show_username_warning = change_content;
+      };
+
+      show(ex);
+    };
+
+    show_passkey_warning = function (ex) {
+      var target = jq('#passkey')
+        , offsets = target.offset()
+        , target_width = target.width()
+        , warn_box = jq('#login-passkey-warning')
+        , content_box = warn_box.find('.content')
+        , change_content
+        ;
+
+      warn_box.css({
+          'top': offsets.top - target.height(),
+          'left': offsets.left + (target_width + (target_width * 0.07))});
+
+      change_content = (function () {
+        var current;
+        return function (exception) {
+          var msg;
+
+          if (exception.message === current) {
+            return;
+          }
+
+          current = exception.message
+          switch (current) {
+          case 'too short':
+            msg = 'A passkey must have at least 4 characters.'
+            break;
+          case 'too long':
+            msg = 'A passkey cannot contain more than 140 characters.'
+            break;
+          case 'invalid characters':
+            msg = 'A passkey may only contain visible characters.';
+            break;
+          default:
+            msg = 'Invalid passkey.';
+          }
+
+          content_box.text(msg);
+        };
+      }());
+
+      function show(exception) {
+        change_content(exception);
+        warn_box.show();
+
+        function hide() {
+          self.remove_listener(hide);
+          warn_box.hide();
+          show_passkey_warning = show;
+        }
+
+        function handle_keyup(ev) {
+          var x = passkey();
+          if (x.error) {
+            change_content(x.error);
+          }
+          else {
+            target.unbind('keyup', handle_keyup);
+            hide();
+          }
+        }
+
+        target.keyup(handle_keyup);
+        self.add_listener(hide);
+        show_passkey_warning = change_content;
+      };
+
+      show(ex);
+    };
+
+    self.show = function (cb) {
+      var button = jq('#login-button')
+        , button_css = {
+            'background-color': button.css('background-color')
+          }
+        ;
+
+      function handle_click(ev) {
+        var u = username()
+          , p = passkey()
+          , db = (jq('#use-fake-db').attr('checked') ?
+              conf.get('sandbox-dbname') : conf.get('dbname'))
+          ;
+
+        if (u.error) {
+          setTimeout(function () {
+            username_jq.focus();
+          }, 0);
+          show_username_warning(u.error);
+          return false;
+        }
+        if (p.error) {
+          setTimeout(function () {
+            passkey_jq.focus();
+          }, 0);
+          show_passkey_warning(p.error);
+          return false;
+        }
+
+        show_spinner();
+        set_form_jq();
+        form_jq.trigger('login', [u.val, p.val, db]);
+        return false;
+      }
+
+      show_spinner = function () {
+        button
+          .unbind('click', handle_click)
+          .css('background-color', '#eee')
+          .html('<img width="16" height="16" '+
+            'src="css/images/ui-anim_basic_16x16.gif" />')
+          ;
+      };
+
+      show_button = function () {
+        button
+          .click(handle_click)
+          .css('background-color', button_css['background-color'])
+          .html('Login')
+          ;
+      };
+
+      button.click(handle_click);
+      swap_frame('frame-login');
+    };
+
+    self.add_listener = function (fn) {
+      set_form_jq();
+
+      function bind (f) {
+        form_jq.bind('login', f);
+      }
+
+      self.add_listener = bind;
+      bind(fn);
+    };
+
+    self.remove_listener = function (fn) {
+      set_form_jq();
+
+      function unbind (f) {
+        form_jq.unbind('login', f);
+      }
+
+      self.remove_listener = unbind;
+      unbind(fn);
+    };
+
+    self.user_not_found = function () {
+      show_button();
+      username_jq.focus();
+      show_username_warning({message: 'username not found'});
+    };
+
+    self.invalid_passkey = function () {
+      show_button();
+      passkey_jq.focus();
+      show_passkey_warning({message: 'Invalid passkey.'});
+    };
+
+    return self;
+  }
+
+  // Construct the connection list widget frame.
+  function connection_list_widget_constructor(swap_frame) {
+    var self = {}
+      , bind
+      , unbind = $F
+      , handle_selection
+      , handle_login
+      , frame_jq
+      ;
+
+    frame_jq = function () {
+      frame = jq('#frame-connections');
+      frame_jq = function () {
+        return frame;
+      };
+      return frame;
+    };
+
+    bind = function () {
+      var list_jq = jq('a.connection-list')
+        , login_jq = jq('#create-new-connection>a')
+        ;
+
+      function unbind_fn() {
+        list_jq.unbind('click', handle_selection);
+        login_jq.unbind('click', handle_login);
+        unbind = $F;
+        bind = bind_fn;
+      }
+
+      function bind_fn() {
+        list_jq.click(handle_selection);
+        login_jq.click(handle_login);
+        unbind = unbind_fn;
+        bind = $F;
+      }
+
+      bind_fn();
+    };
+
+    handle_selection = function (ev) {
+      unbind();
+      frame_jq().trigger('login', [jq(this).attr('href')]);
+      return false;
+    };
+
+    handle_login = function (ev) {
+      unbind();
+      frame_jq().trigger('login', [null]);
+      return false;
+    }
+
+    function show(list) {
+      var cxns;
+
+      cxns = jq.map(list, function (item, i) {
+        return {
+          id: item.id,
+          username: item.username,
+          dbname: (item.dbname === 'crown_construction' ? 'Live' : 'Sandbox')
+        };
+      });
+
+      frame_jq().html(render_template('connection_list-template', {connections: cxns}));
+      bind();
+      swap_frame('frame-connections');
+      self.show = $F;
+    }
+
+    self.add_listener = function (fn) {
+      frame_jq().bind('login', fn);
+    };
+
+    self.remove_listener = function (fn) {
+      frame_jq().unbind('login', fn);
+    };
+
+    self.show = show;
+    return self;
+  }
+
+  // Called when the init process is done.
+  function init_monad_done(monad, retval) {
+    var controller = widgets();
+
+    printd('connected to ', retval);
+    monad.widgets.main = main_widget_constructor(monad.swap_frame);
+    controller.register(monad.widgets);
+    controller.start(/* could give a hash string */);
+    monad.widgets.main.show();
+  }
+
+  // Called when an error is thrown from the init process.
+  function init_monad_exception(ex) {
+    printd('init monad error', ex);
+    log.error(ex);
+    Components.utils.reportError(ex);
+  }
+
+  app.dom_setup = function (monad, returned) {
+    monad.swap_frame = deck_constructor('deck');
+  };
+
+  app.dcube_setup = function (monad, returned) {
+    printd('dcube_setup()');
+    var returns = this.returns; 
+    monad.channel('db/debug', 'put', debug)(function () {
+      monad.channel('db/domain', 'put', conf.get('domain'))(returns);
+    });
+  };
+  app.dcube_setup.blocking = true;
+
+  app.check_connections = function (monad, returned) {
+    printd('check_connections()');
+    var m = this;
+    monad.channel('db/connections/', 'get')(function (response) {
+      m.returns(response.body);
+    });
+  };
+  app.check_connections.blocking = true;
+
+  app.display_login = function (monad, returned) {
+    // `returned` is the connections list.
+    var m = this, is_array = jq.isArray(returned);
+    cp('display_login');
+    printo('returned', returned);
+
+    if (is_array && !returned.length) {
+      returned = null;
+      is_array = false;
+    }
+
+    function handle_login_event(ev, username, passkey, db) {
+      cp('login '+ username);
+      monad.login.remove_listener(handle_login_event);
+      m.returns({username: username, passkey: passkey, dbname: db});
+    }
+
+    function handle_connection_event(ev, connection) {
+      cp('select connection '+ connection);
+      monad.connections.remove_listener(handle_connection_event);
+      m.returns(connection /* string or null */);
+    }
+
+    // Got the connections list.
+    if (is_array) {
+      cp('got connections list');
+      monad.connections = connection_list_widget_constructor(monad.swap_frame);
+      monad.connections.add_listener(handle_connection_event);
+      monad.connections.show(returned);
+    }
+    // Got null - login request.
+    else if (returned === null) {
+      cp('got null -- login request');
+      monad.login = login_widget_constructor(monad.swap_frame);
+      monad.login.add_listener(handle_login_event);
+      monad.login.show($F);
+    }
+    // Got the connection id string or credentials object.
+    else {
+      cp('got connection id');
+      m.returns(returned);
+    }
+  };
+  app.display_login.blocking = true;
+
+  app.maybe_login = function (monad, returned) {
+    // If a connection id is passed, we already have a connection.
+    if (typeof returned === 'string') {
+      this.returns(returned);
+      return;
+    }
+
+    var m = this, handle_login_event, try_login;
+
+    handle_login_event = function (ev, u, p, d) {
+        monad.login.remove_listener(handle_login_event);
+        try_login({username: u, passkey: p, dbname: d});
+    }
+
+    try_login = function (creds) {
+      monad.channel('db/connections/', 'put', creds)(
+        function (response) {
+          printo('response', response);
+
+          if (response.body === 'DCubeUserError: user does not exist') {
+            monad.login.add_listener(handle_login_event);
+            monad.login.user_not_found();
+          }
+
+          else if (response.body === 'DCubeUserError: invalid passkey') {
+            monad.login.add_listener(handle_login_event);
+            monad.login.invalid_passkey();
+          }
+
+          else if (response.status === 'exception') {
+            unexpected_exception(new Error(response.body)).raise();
+          }
+
+          else if (response.status === 'ok') {
+            m.returns(response.body);
+          }
+        });
+    }
+    try_login(returned);
+  };
+  app.maybe_login.blocking = true;
+
+  // Build the monad.
+  jmonad.extend('app', app);
+
+  // Listen for the DOM/channel ready event to start the program.
+  jq.channel(function (ch) {
+    var monad = {
+      channel: ch,
+      widgets: widget_modules
+    };
+
+    jmonad('app', monad)
+      .dom_setup()
+      .dcube_setup()
+      .check_connections()
+      .display_login()
+      .display_login()
+      .maybe_login()
+      (init_monad_done, init_monad_exception)
+      ;
+  });
+
+  printd('-> start');
 }(window));
 

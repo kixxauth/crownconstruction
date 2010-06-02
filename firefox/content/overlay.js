@@ -136,12 +136,14 @@ HTMLDocument: false
     // Inject the HTML element into the content page and attach our
     // message passing event handler to it.
     content_doc.documentElement.appendChild(dom_node);
+    dom_node.setAttribute('id', 'x-channel');
     dom_node.addEventListener('x-request', message_event_handler, false);
 
     // Initialize and fire an event to notify the content page
     // that we're ready for messages.
     init_event.initEvent('x-channelopen', true, true);
-    content_doc.defaultView.dispatchEvent(init_event);
+    content_doc.documentElement.setAttribute('x-channelid', 'x-channel');
+    content_doc.dispatchEvent(init_event);
   };
 
   // If there is already a request handler running, return it.

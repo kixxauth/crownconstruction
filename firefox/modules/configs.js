@@ -41,7 +41,7 @@ let configs =
   {
     switch(a)
     {
-      case "data-url":
+      case "domain":
         return this.getPreferences().getValue(PREF_DATA_DOMAIN, "");
 
       case "debug":

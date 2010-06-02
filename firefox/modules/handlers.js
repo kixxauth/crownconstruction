@@ -56,9 +56,9 @@ function isin(x, y) {
 }
 
 // For Mozilla JavaScript modules system.
-var EXPORTED_SYMBOLS = ["exports"]
+var EXPORTED_SYMBOLS = ['exports']
+  , log = require('logging').getLogger("DCubeServer")
   , DCUBE = require('dcube')
-  , CONF = require('configs')
   , CONNECTIONS
   , db
   , connections
@@ -68,9 +68,6 @@ var EXPORTED_SYMBOLS = ["exports"]
   , connection_uid_gen
   , exports = {}
   ;
-
-// Initialize DCube.
-DCUBE.debug(CONF.get('debug')).domain(CONF.get('data-url'));
 
 // Initialize the data models in DCube.
 (function () {
@@ -85,7 +82,7 @@ DCUBE.debug(CONF.get('debug')).domain(CONF.get('data-url'));
   }
 }());
 
-// Factory function to create unique identifier generations functions.
+// Factory function to create unique identifier generation functions.
 function make_uid_gen(prefix) {
   var counter = 0;
   prefix = prefix || '';
@@ -436,10 +433,18 @@ CONNECTIONS = (function () {
 db = (function () {
   var self = {};
 
-  self.get = function (callback, type) {
-    var val = CONF.get(type);
-    DCUBE[type](val);
-    callback(val);
+  self.put = function (callback, type) {
+    if (type === 'debug') {
+      DCUBE.debug(this.body);
+      callback({status: 'ok', body: this.body});
+    }
+    else if (type === 'domain') {
+      DCUBE.domain(this.body);
+      callback({status: 'ok', body: this.body});
+    }
+    else {
+      callback({status: 'ok', body: false});
+    }
   };
 
   return self;
@@ -546,10 +551,15 @@ items = (function (dbname, username) {
 }());
 
 exports.mapping = [
-  [/db\/(\w+)/, db],
-  [/db\/connections\/(\w*)/, connections],
-  [/db\/connections\/(\w+)\/commits\//, commits],
-  [/db\/connections\/(\w+)\/observers\//, observers],
-  [/db\/connections\/(\w+)\/items\/(\w*)/, items]
+    [/db\/connections\/(\w+)\/commits\//, commits]
+  , [/db\/connections\/(\w+)\/observers\//, observers]
+  , [/db\/connections\/(\w+)\/items\/(\w*)/, items]
+
+  // get all connections, put a new connection, or query a connection by id
+  , [/db\/connections\/(\w*)/, connections]
+
+  // '/db/debug' to set the debug mode (truthy or falsy body value).
+  // '/db/domain' to set the domain name for DCube to use.
+  , [/db\/(\w+)/, db]
 ];
 
