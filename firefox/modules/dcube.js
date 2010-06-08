@@ -326,15 +326,26 @@ exports.query = function query_constructor() {
 		}
 		entity = JSON.stringify(confirmObject(entity));
 		indexes = confirmObject(indexes);
-		var stmts = [["key", "=", key], ["entity", "=", entity]], idx;
+		var stmts = [["key", "=", key], ["entity", "=", entity]], idx, i = 0;
 		
 		for (idx in indexes) {
 			if (indexes.hasOwnProperty(idx)) {
 				if (typeof indexes[idx] !== "string" &&
-						typeof indexes[idx] !== "number") {
+						typeof indexes[idx] !== "number" &&
+            !isArray(indexes[idx])) {
 					throw new Error("query.put(); index '"+
 							idx +"' not a string or number.");
 				}
+        if (isArray(indexes[idx])) {
+          for (; i < indexes[idx].length; i += 1) {
+            if (typeof indexes[idx] !== "string" &&
+                typeof indexes[idx] !== "number" &&
+                !isArray(indexes[idx])) {
+              throw new Error("query.put(); index item '"+
+                  idx +"."+ i +"' not a string or number.");
+            }
+          }
+        }
 				stmts.push([idx, "=", indexes[idx]]);
 			}
 		}
@@ -685,13 +696,14 @@ DB = (function () {
 				}
 				isarr = isArray(val);
 				if (typeof val !== 'string' && typeof val !== 'number' && !isarr) {
+          dump('is not string, number, or array; '+ typeof val +'\n');
 					throw new Error('map_model(); Invalid index property: '+
 							(isarr ? JSON.stringify(val) : val)); 
 				}
 
 				if (isarr) {
 					for (; i < val.length; i += 1) {
-						if (typeof val !== 'string' && typeof val !== 'number') {
+						if (typeof val[i] !== 'string' && typeof val[i] !== 'number') {
 							throw new Error(
 									'map_model(); Invalid index property: '+ val); 
 						}

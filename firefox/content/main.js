@@ -24,27 +24,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
 
-
-/*jslint
-onevar: true,
-undef: true,
-nomen: true,
-eqeqeq: true,
-plusplus: true,
-bitwise: true,
-strict: true,
-immed: true */
-
-/*global
-Components: false,
-window: false,
-document: false,
-jQuery: false,
-jMonad: false,
-_: false
-*/
-
-"use strict";
+// TODO:
+// =====
+//
+//  * When to set the cache=true URL param and when not to.
+//
 
 function printd(msg, val) {
   val = typeof val === 'undefined' ? '' : ' : '+ val;
@@ -828,6 +812,124 @@ printd('-> start');
     };
   }());
 
+  // Show an employee entity.
+  employee_view = (function () {
+    var form, name, addresses, phones, groups;
+
+    function input_handler(ev) {
+      // The path to a field is stored in the name attribute of the input element
+      // that points to it. It is formatted like so:
+      // `key_string.property.index.field`
+      var target_jq = jq(this)
+        , path = target_jq.attr('name')
+        , parts = path.split('.')
+        , key = parts[0]
+        , type
+        , val = target_jq.val()
+        ;
+
+      // TODO: Groups update is not working.
+      printd('path', path);
+
+      if (parts[1] === 'name') {
+        type = 'name:'+ parts[2];
+      }
+      else if (parts[1] === 'groups') {
+        type = 'groups';
+      }
+      else {
+        type = parts[1] +':'+ parts[3];
+      }
+      printd('type', type);
+
+      switch (type) {
+      case 'name:last':
+        dbupdate(key, path, val);
+        break;
+      case 'name:first':
+        dbupdate(key, path, val);
+        break;
+      case 'phones:phone':
+        dbupdate(key, path, val);
+        break;
+      case 'phones:label':
+        dbupdate(key, path, val);
+        break;
+      case 'addresses:street':
+        dbupdate(key, path, val);
+        break;
+      case 'addresses:city':
+        dbupdate(key, path, val);
+        break;
+      case 'addresses:state':
+        dbupdate(key, path, val);
+        break;
+      case 'addresses:zip':
+        dbupdate(key, path, val);
+        break;
+      case 'groups':
+        cp('updating groups');
+        dbupdate(key, path, val);
+        break;
+      }
+    }
+
+    function append_handler(ev) {
+      var path = jq(this).attr('href').split('.')
+        , key = path[0]
+        , path = path[1]
+        , new_field
+        ;
+
+      dbappend(key, path, null, function (employee) {
+        switch(path) {
+        case 'addresses':
+          addresses.html(render_template(
+              'employee_addresses-template',
+              {key: key, addresses: employee.addresses}));
+          break;
+        case 'phones':
+          phones.html(render_template(
+              'employee_phones-template',
+              {key: key, phones: employee.phones}));
+          break;
+        }
+      });
+
+      return false;
+    }
+
+    function view (employee) {
+      var key = employee.name.last.path.split('.')[0];
+
+      name.html(render_template(
+          'employee_name-template', {key: key, name: employee.name}));
+      groups.html(render_template(
+          'employee_groups-template', {key: key, groups: employee.groups}));
+      addresses.html(render_template(
+          'employee_addresses-template',
+          {key: key, addresses: employee.addresses}));
+      phones.html(render_template(
+          'employee_phones-template', {key: key, phones: employee.phones}));
+    }
+
+    return function (employee) {
+      // Cache the jQuery objects we'll be using to render the customer forms.
+      form = jq('#personnel-view')[0];
+      name = jq('#personnel-name');
+      groups = jq('#personnel-groups');
+      addresses = jq('#personnel-addresses');
+      phones = jq('#personnel-phones');
+
+      // Attach the live event handlers once.
+      jq('input.fform', form).live('keyup blur', input_handler);
+      jq('a.fform.append.button', form).live('click', append_handler);
+
+      employee_view = view;
+      view(employee);
+    };
+  }());
+
   // Main application panel widgets.
   // -------------------------------
 
@@ -894,13 +996,24 @@ printd('-> start');
       jq('#search-customers').click(self.customers);
       jq('#search-advanced').click(self.advanced);
 
-      jq('a.search-result').live('click', function (ev) {
-        jq('#advanced-search').hide();
-        jq('#customer-search').hide();
-        // Don't return false here, because the BBQ widget handler neeeds to
-        // get this URL hash.
-        // return false;
-      });
+      // Set the handlers for future customer search results.
+      jq('a.search-result', jq('#customer-search-results')[0])
+        .live('click', function (ev) {
+          jq.bbq.pushState({panels: 'customers'});
+          jq('#customer-search').hide();
+          // Don't return false here, because the BBQ widget handler neeeds to
+          // get this URL hash.
+          // return false;
+        });
+
+      // Set the handlers for future advanced search results.
+      jq('a.search-result', jq('#advanced-search-results')[0])
+        .live('click', function (ev) {
+          jq('#advanced-search').hide();
+          // Don't return false here, because the BBQ widget handler neeeds to
+          // get this URL hash.
+          // return false;
+        });
     });
 
     return self;
@@ -913,9 +1026,6 @@ printd('-> start');
       var created = {key: null, view: null};
 
       return function(params) {
-        // Show the customers panel if it is not already.
-        jq.bbq.pushState({panels: 'customers'});
-
         // If there is no key param, create a new customer.
         if (!params.key) {
           dbcreate('customer', function (entity_view) {
@@ -946,6 +1056,55 @@ printd('-> start');
     self.listeners = [
       {
         name: 'customers',
+        handler: function (ev, state, params) {
+          actions[state](params);
+        }
+      },
+    ];
+
+    return self;
+  }());
+
+  widget_modules.personnel = (function () {
+    var self = {}, actions = {};
+
+    actions['view'] = (function (params) {
+      var created = {key: null, view: null};
+
+      return function(params) {
+        // If there is no key param, create a new employee.
+        if (!params.key) {
+          // Go to the personnel panel if we are not already there.
+          jq.bbq.pushState({panels: 'personnel'});
+
+          dbcreate('employee', function (entity_view) {
+            var new_state = {};
+            created.key = entity_view.name.first.path.split('.')[0];
+            created.view = entity_view;
+            jq.bbq.pushState({personnel: 'view?key='+ created.key});
+          }); 
+          return;
+        }
+
+        // If the employee was just created, use it.
+        if (created.key === params.key) {
+          employee_view(created.view);
+          // We don't want to memoize this view again.
+          created.view = null;
+          created.key = null;
+          return;
+        }
+
+        // Get the employee view by the given key.
+        dbget(params.key, params.cached, function (entity_view) {
+          employee_view(entity_view);
+        });
+      };
+    }());
+
+    self.listeners = [
+      {
+        name: 'personnel',
         handler: function (ev, state, params) {
           actions[state](params);
         }

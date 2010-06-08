@@ -51,6 +51,22 @@ function index_last_name(val) {
   return ['last_name', val.toUpperCase()];
 }
 
+var index_groups = (function () {
+	var rtrim = /^\s+|\s+$/g;
+
+  return function (val) {
+    var rv = [],
+      i = 0,
+      groups = (val || '').split(',');
+
+    for (; i < groups.length; i += 1) {
+      groups[i] = groups[i].replace(rtrim, '').toUpperCase();
+    }
+
+    return ['groups', groups];
+  };
+}());
+
 exports.customer = function (db) {
   return {
     names: db.list(
@@ -79,6 +95,30 @@ exports.customer = function (db) {
         label: db.str()
       })
     )
+  };
+};
+
+exports.employee = function (db) {
+  return {
+    name: db.dict({
+      first: db.str(),
+      last: db.str({index: index_last_name})
+    }),
+    addresses: db.list(
+      db.dict({
+        street: db.str(),
+        city: db.str(),
+        state: db.str(),
+        zip: db.str()
+      })
+    ),
+    phones: db.list(
+      db.dict({
+        phone: db.str(),
+        label: db.str()
+      })
+    ),
+    groups: db.str({index: index_groups})
   };
 };
 

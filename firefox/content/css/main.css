@@ -1,3 +1,5 @@
+/* Set defaults.
+ * ============= */
 body {
 	font-family: Verdana,Arial,sans-serif;
 	background: #000000 url(images/wooden_plank_bg.jpg) repeat-x fixed;
@@ -23,10 +25,13 @@ a.button {
   padding: .3em 0 .4em;
 }
 
+/* Keep floated children of these block level elements from floating away. */
 div, form {
   overflow: hidden;
 }
 
+/* General styling for inheritence.
+ * ================================ */
 .notification {
   background: #fcf4e6;
   border: .09em solid #ecb44c;
@@ -63,7 +68,10 @@ h4.section-header {
   color: #fff;
 }
 
-/* shared login and connection list */
+/* Login deck.
+ * =========== */
+
+/* Shared login and connection list. */
 #frame-connections, #frame-login {
   font-size: 130%;
   width: 32.8em;
@@ -84,8 +92,8 @@ h4.section-header {
   color: #333;
 }
 
-/* login page frame
-------------------- */
+/* Login page frame.
+ * ----------------- */
 #frame-login {
   height: 27em;
   top: 50%;
@@ -171,7 +179,7 @@ p.login {
 }
 
 /* Connection list page frame.
------------------------------- */
+ * --------------------------- */
 #frame-connections {
   margin-top: 2.8em;
 }
@@ -205,8 +213,11 @@ a.connection-list, #create-new-connection>a {
   background-color: #65ac0d;
 }
 
-/* application frame
--------------------- */
+/* Main frame.
+ * =========== */
+
+/* Application frame.
+ * ------------------ */
 #frame-app {
   font-size: 120%;
   width: 100%;
@@ -216,7 +227,7 @@ a.connection-list, #create-new-connection>a {
 }
 
 /* Navigation tree.
-------------------- */
+ * ---------------- */
 #navigation {
   margin-top: 4em; /* make room for menu bar */
   padding-top: 1em;
@@ -263,8 +274,8 @@ li.navigation.sub-section {
   line-height: 1.3;
 }
 
-/* menu bar
------------ */
+/* Menu bar.
+ * --------- */
 #menu-bar {
   position: fixed;
   top: 0;
@@ -303,8 +314,8 @@ button.menu {
   margin-left: 80%;
 }
 
-/* tabs
-------- */
+/* Tab panels.
+ * ----------- */
 .tab-panel {
   position: absolute;
   top: 3em; /* make room for the menu bar */
@@ -321,8 +332,8 @@ h2.panel-header {
   margin: .5em 0 1em 1.2%;
 }
 
-/* forms
--------- */
+/* Forms.
+ * ====== */
 form.fform {
   line-height: 1;
   margin: 0 1.2%;
@@ -388,8 +399,8 @@ a.fform.append.button {
   font-weight: bold;
 }
 
-/* customer form
----------------- */
+/* Customer form.
+ * -------------- */
 #customer-names, #customer-addresses, #customer-phones, #customer-emails {
   min-height: 7em;
   width: 48%;
@@ -403,8 +414,26 @@ a.fform.append.button {
   float: right;
 }
 
-/* customer search
------------------- */
+/* Employee form.
+ * -------------- */
+#personnel-name, #personnel-addresses, #personnel-phones, #personnel-groups {
+  min-height: 7em;
+  width: 48%;
+}
+
+#personnel-name, #personnel-groups {
+  float: left;
+}
+
+#personnel-addresses, #personnel-phones {
+  float: right;
+}
+
+/* Other panels.
+ * ============= */
+
+/* Customer search.
+ * ---------------- */
 div.search-panel {
   position: absolute;
   width: 69.9%; /* - .1 for borders */

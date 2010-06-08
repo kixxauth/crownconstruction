@@ -47,11 +47,8 @@ Login Deck
     <!-- navigation column -->
     <ul id="navigation">
 
-      <!-- customers -->
+      <!-- search -->
       <li class="navigation section search">
-        <!-- BBQ URL hashes for panel navigation should be in the form
-        '#panels/'+ panel_name -->
-
         <button class="navigation section">+</button>
         <a id="search-options" class="navigation" href="#">Search</a>
 
@@ -64,7 +61,7 @@ Login Deck
             <a id="search-customers" class="navigation" href="#">Customers</a></li>
 
         </ul>
-      </li><!-- customers -->
+      </li><!-- search -->
 
       <!-- customers -->
       <li class="navigation section customers">
@@ -81,6 +78,22 @@ Login Deck
 
         </ul>
       </li><!-- customers -->
+
+      <!-- personnel -->
+      <li class="navigation section personnel">
+        <!-- BBQ URL hashes for panel navigation should be in the form
+        '#panels/'+ panel_name -->
+
+        <button class="navigation section">+</button>
+        <a class="bbq navigation" href="#panels/personnel">Personnel</a>
+
+        <ul class="navigation options" style="display:none">
+
+          <li class="navigation sub-section">
+            <a class="bbq navigation" href="#personnel/view?key=">Create</a></li>
+
+        </ul>
+      </li><!-- personnel -->
 
     </ul><!-- navigation -->
     <!-- menu bar -->
@@ -125,15 +138,37 @@ application panels
         <h4 class="section-header">Names</h4>
       </fieldset>
       <fieldset id="customer-phones" class="fform content-panel">
-        <h4 class="section-header">Addresses</h4>
+        <h4 class="section-header">Phone Numbers</h4>
       </fieldset>
       <fieldset id="customer-addresses" class="fform content-panel">
-        <h4 class="section-header">Phone Numbers</h4>
+        <h4 class="section-header">Addresses</h4>
       </fieldset>
       <fieldset id="customer-emails" class="fform content-panel">
         <h4 class="section-header">Email Addresses</h4>
       </fieldset>
     </form><!-- customer-view -->
+
+  </div><!-- panel-customers -->
+
+  <!-- panel-personnel -->
+  <div id="panel-personnel" class="tab-panel" style="display:none">
+    <h2 class="panel-header">Personnel</h2>
+
+    <!-- personnel view widget -->
+    <form id="personnel-view" class="fform">
+      <fieldset id="personnel-name" class="fform content-panel">
+        <h4 class="section-header">Name</h4>
+      </fieldset>
+      <fieldset id="personnel-phones" class="fform content-panel">
+        <h4 class="section-header">Phone Numbers</h4>
+      </fieldset>
+      <fieldset id="personnel-groups" class="fform content-panel">
+        <h4 class="section-header">Groups</h4>
+      </fieldset>
+      <fieldset id="personnel-addresses" class="fform content-panel">
+        <h4 class="section-header">Addresses</h4>
+      </fieldset>
+    </form><!-- personnel-view -->
 
   </div><!-- panel-customers -->
 
@@ -145,7 +180,7 @@ search panels
 <div id="advanced-search" class="content-panel search-panel" style="display:none">
   <h4 class="section-header">Advanced Search
     <span class="search-panel-close-button">x</span></h4>
-  <ul class="search-results-list">
+  <ul id="advanced-search-results" class="search-results-list">
   </ul>
 </div><!-- advanced-search -->
 
@@ -236,7 +271,7 @@ templates
 
   <a href="<%= key %>.addresses"" class="append fform button" title="Add another customer address.">
     <span class="icon">+</span>
-    Add another customer address.
+    Add another address.
   </a>
 </script>
 
@@ -273,8 +308,8 @@ templates
 
   <% for (; i < len; i += 1) { %>
   <% email = emails[i]; %>
-  <div class="input-section ui-corner-all">
-    <div class="line ui-helper-clearfix">
+  <div class="input-section">
+    <div class="line">
       <p class="input-float">
         <label class="live-label">email:</label>
         <input class="clean-text-input fform email" type="text"
@@ -301,6 +336,115 @@ templates
   <% customer = customers[i]; %>
   <li class="search-result">
     <a class="bbq search-result" href="#customers/view?key=<%= customer.key %>&cached=true">
+      <%= customer.data.names[0].first %> <%= customer.data.names[0].last %>
+    </a>
+  </li>
+  <% } %>
+</script>
+
+<script type="text/html" id="employee_name-template">
+  <h4 class="section-header">Name</h4>
+
+  <div class="input-section">
+    <div class="line">
+      <p class="input-float"><label class="live-label">last:</label>
+        <input class="clean-text-input fform lastname" type="text"
+          name="<%= name.last.path %>" value="<%= name.last.value %>" />
+      </p>
+      <p class="input-float"><label class="live-label">first:</label>
+        <input class="clean-text-input fform firstname" type="text"
+          name="<%= name.first.path %>" value="<%= name.first.value %>" />
+      </p>
+    </div>
+  </div>
+</script>
+
+<script type="text/html" id="employee_addresses-template">
+	<% var i = 0, len = addresses.length, address; %>
+  <h4 class="section-header">Addresses</h4>
+
+  <% for (; i < len; i += 1) { %>
+  <% address = addresses[i]; %>
+  <div class="input-section">
+    <div class="line">
+      <p>
+        <label class="live-label">street:</label>
+        <input class="clean-text-input fform street-address" type="text"
+          name="<%= address.street.path %>" value="<%= address.street.value %>" />
+      </p>
+    </div>
+    <div class="line">
+      <p class="input-float">
+        <label class="live-label">city:</label>
+        <input class="clean-text-input fform city" type="text"
+          name="<%= address.city.path %>" value="<%= address.city.value %>" />
+      </p>
+      <p class="input-float">
+        <label class="live-label">state:</label>
+        <input class="clean-text-input fform state-address" type="text"
+          name="<%= address.state.path %>" value="<%= address.state.value %>" />
+      </p>
+      <p class="input-float">
+        <label class="live-label">zip:</label>
+        <input class="clean-text-input fform zip" type="text"
+          name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
+      </p>
+    </div>
+  </div>
+  <% } %>
+
+  <a href="<%= key %>.addresses"" class="append fform button" title="Add another customer address.">
+    <span class="icon">+</span>
+    Add another address.
+  </a>
+</script>
+
+<script type="text/html" id="employee_phones-template">
+	<% var i = 0, len = phones.length, phone; %>
+  <h4 class="section-header">Phone Numbers</h4>
+  <% for (; i < len; i += 1) { %>
+  <% phone = phones[i]; %>
+  <div class="input-section">
+    <div class="line">
+      <p class="input-float">
+        <label class="live-label">number:</label>
+        <input class="clean-text-input fform phone" type="text"
+          name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
+      </p>
+      <p class="input-float">
+        <label class="live-label">label:</label>
+        <input class="clean-text-input fform label" type="text"
+          name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
+      </p>
+    </div>
+  </div>
+  <% } %>
+
+  <a href="<%= key %>.phones"" class="append fform button" title="Add another phone number.">
+    <span class="icon">+</span>
+    Add another phone number.
+  </a>
+</script>
+
+<script type="text/html" id="employee_groups-template">
+  <h4 class="section-header">Groups</h4>
+  <div class="input-section">
+    <div class="line">
+      <p class="input-float">
+        <label class="live-label">groups:</label>
+        <input class="clean-text-input fform groups" type="text"
+          name="<%= groups.path %>" value="<%= groups.value %>" />
+      </p>
+    </div>
+  </div>
+</script>
+
+<script type="text/html" id="customer_results-template">
+	<% var i = 0, customer; %>
+  <% for (; i < customers.length; i += 1) { %>
+  <% customer = customers[i]; %>
+  <li class="search-result">
+    <a class="bbq search-result customer-search" href="#customers/view?key=<%= customer.key %>&cached=true">
       <%= customer.data.names[0].first %> <%= customer.data.names[0].last %>
     </a>
   </li>
