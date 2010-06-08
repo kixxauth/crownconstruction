@@ -124,15 +124,13 @@ function make_cache(db, mutation_observer) {
 
     if (data !== original) {
       mutations[key] = true;
-      cache[key].refs += 1;
       if (!has_changes) {
         broadcast = true;
       }
       has_changes = true;
     }
     else {
-      mutations[key] = false;
-      self.release(key);
+      delete mutations[key];
       is_mutated = mutated();
       if (is_mutated !== has_changes) {
         broadcast = true;
@@ -144,41 +142,50 @@ function make_cache(db, mutation_observer) {
     }
   }
 
-  function map_to_dict(x, dict, result, parts) {
-    var p;
+  // `x` is the data
+  // `pointer` is the pointer dictionary
+  // `view` is the data view dictionary
+  // `parts` is the current path array
+  function map_to_dict(x, pointer, view, parts) {
+    var p, path;
     for (p in x) {
       if (isin(x, p)) {
-
-        parts[p] = parts.slice();
-        parts[p].push(p);
-
-        if (isNaN(+p)) {
-          result[p] = [];
-        }
-        else {
-          result[p] = {};
-        }
+        // Make a copy and push the path.
+        path = parts.slice();
+        path.push(p);
 
         if (typeof x[p] === 'object') {
-          arguments.callee(x[p], dict, result[p], parts[p]);
+          // Test for array
+          if (Object.prototype.toString.call(x[p]) === "[object Array]") {
+            view[p] = [];
+          }
+          else {
+            view[p] = {};
+          }
+          arguments.callee(x[p], pointer, view[p], path);
         }
         else {
-          result[p] = {};
-          result[p].path = parts[p].join('.');
-          result[p].value = x[p];
+          view[p] = {
+            path: path.join('.'),
+            value: x[p]
+          };
 
-          parts[p].pop();
-          dict[parts[p].join('.')] = x;
+          path.pop();
+          pointer[path.join('.')] = x;
         }
       }
     }
   }
 
+  // `callback` is optional
   function handle_fetch(callback) {
     return function(entity) {
       if (!entity) {
-        callback(null);
-        return;
+        if (typeof callback === 'function') {
+          callback(null);
+          return;
+        }
+        return null;
       }
       var key = entity('key');
 
@@ -186,16 +193,19 @@ function make_cache(db, mutation_observer) {
       entity.original = JSON.stringify(entity.data);
       entity.pointer = {};
       entity.view = {};
-      entity.refs = 0;
       map_to_dict(entity.data, entity.pointer, entity.view, [key]);
 
       cache[key] = entity;
-      callback(key);
+      if (typeof callback === 'function') {
+        callback(key);
+        return;
+      }
+      return key;
     };
   }
 
   function fetch(keys, callback, errback) {
-    var i = 0, len = keys.legth,
+    var i = 0, len = keys.length,
       handler = handle_fetch(callback);
 
     for (; i < len; i += 1) {
@@ -204,9 +214,9 @@ function make_cache(db, mutation_observer) {
     db.go(errback);
   }
 
-  self.get = function (keys, callback, errback) {
+  self.get = function (keys, from_cache, callback, errback) {
     var i = 0
-      , len = keys.legth
+      , len = keys.length
       , key
       , entity
       , tofetch = []
@@ -215,8 +225,12 @@ function make_cache(db, mutation_observer) {
       ;
 
     function combine(entity) {
-      entity.refs += 1;
-      rv.push(entity.view);
+      if (entity) {
+        rv.push(entity.view);
+      }
+      else {
+        rv.push(null);
+      }
       count += 1;
       if (count === len) {
         callback(rv);
@@ -225,10 +239,19 @@ function make_cache(db, mutation_observer) {
 
     for (; i < len; i += 1) {
       key = keys[i];
-      entity = cache[key];
+
+      if (from_cache) {
+        entity = cache[key];
+      }
+      else {
+        entity = null;
+      }
+
       if (entity) {
         // Rebuild the view in case the entity has been mutated since the view
         // was last built.
+        entity.pointer = {};
+        entity.view = {};
         map_to_dict(entity.data, entity.pointer, entity.view, [key]);
         combine(entity);
       }
@@ -237,9 +260,14 @@ function make_cache(db, mutation_observer) {
       }
     }
 
-    fetch(tofetch, function (key) {
-      combine(cache[key]);
-    }, errback);
+    if (tofetch.length) {
+      fetch(tofetch, function (key) {
+        combine(cache[key]);
+      }, errback);
+    }
+    else if (!rv.length) {
+      callback(rv);
+    }
   };
 
   self.query = function(query, callback, errback) {
@@ -252,29 +280,20 @@ function make_cache(db, mutation_observer) {
     }
 
     q.append(function (results) {
-      var rv = [], n = 0, len = results.length;
+      var rv = []
+        , n = 0
+        , len = results.length
+        , register = handle_fetch()
+        , key
+        ;
 
       for (; n < len; n += 1) {
-        rv.push(results[n]('entity'));
+        key = register(results[n]);
+        rv.push({key: key, data: cache[key].data});
       }
       callback(rv);
-    });
-
-    q.go(errback);
-  };
-
-  self.release = function (key) {
-    cache[key].refs -= 1;
-    if (cache[key].refs < 1) {
-      delete mutations[key];
-      delete cache[key];
-    }
-  };
-
-  self.refresh = function (key, callback, errback) {
-    fetch([key], function (k) {
-      callback(cache[k].view);
-    }, errback);
+    })
+    .go(errback);
   };
 
   self.update = function (key, fullpath, value) {
@@ -288,19 +307,22 @@ function make_cache(db, mutation_observer) {
     broadcast_mutation(key, entity.data, entity.original);
   };
 
-  self.append = function (fullpath, value) {
-    var path = fullpath.split('.')
-      , i = 0
-      , len = path.legth
-      , key = path.shift()
+  // `path` is *not* the same thing as the path strings in the view object.
+  self.append = function (key, path, value) {
+    var i = 0
       , entity = cache[key]
       , pointer = entity.data
       ;
 
-    for (; i < len; i += 1) {
+    path = path.split('.');
+    for (; i < path.length; i += 1) {
       pointer = pointer[path[i]];
     }
-    pointer.push(value);
+
+    pointer.push(null);
+    entity.data = entity('update', entity.data);
+    entity.pointer = {};
+    entity.view = {};
     map_to_dict(entity.data, entity.pointer, entity.view, [key]);
     broadcast_mutation(key, entity.data, entity.original);
     return entity.view;
@@ -311,7 +333,7 @@ function make_cache(db, mutation_observer) {
       , len = 0
       , count = 0
       , entity
-      , stash
+      , stash = {}
       ;
 
     function handler(entity) {
@@ -335,10 +357,20 @@ function make_cache(db, mutation_observer) {
       }
     }
 
+    if (!len) {
+      callback();
+      return;
+    }
+
     db.go(function (ex) {
       callback();
       errback(ex);
     });
+  };
+
+  self.create = function (kind) {
+    var key = handle_fetch()(db.create(kind));
+    return cache[key].view;
   };
 
   return self;
@@ -368,7 +400,9 @@ function make_connection(dbname, username, passkey, callback, errback) {
       self.dbname = dbname;
       self.get = cache.get;
       self.update = cache.update;
+      self.append = cache.append;
       self.commit = cache.commit;
+      self.create = cache.create;
 
       self.query = function (query, callback, errback) {
         var q
@@ -530,11 +564,11 @@ items = (function (dbname, username) {
   self.get = function (callback, cid, key) {
     var keys = key ? [key] : this.body.keys;
 
-    CONNECTIONS(cid).get(keys,
+    CONNECTIONS(cid).get(keys, this.body.cached,
       function (views) {
         callback({
           status: 'ok',
-          body: views.length === 1 ? views[0] : views
+          body: views
         });
       },
       function (ex) {
@@ -547,12 +581,27 @@ items = (function (dbname, username) {
     callback({status: 'ok', body: null});
   };
 
+  self.append = function (callback, cid, key) {
+    callback({
+      status: 'ok',
+      body: CONNECTIONS(cid).append(key, this.body.path, this.body.value)
+    });
+  };
+
+  self.put = function (callback, cid) {
+    callback({status: 'ok', body: CONNECTIONS(cid).create(this.body)});
+  };
+
   return self;
 }());
 
 exports.mapping = [
+  // put a commit -- this is more like an action than a resource.
     [/db\/connections\/(\w+)\/commits\//, commits]
+
   , [/db\/connections\/(\w+)\/observers\//, observers]
+
+  // get by key or keys, post a field update, or put to create a new entity.
   , [/db\/connections\/(\w+)\/items\/(\w*)/, items]
 
   // get all connections, put a new connection, or query a connection by id

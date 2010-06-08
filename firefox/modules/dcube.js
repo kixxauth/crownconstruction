@@ -392,6 +392,19 @@ exports.query = function query_constructor() {
 				return this;
 			},
 
+      range: function q_range(a, b) {
+				if (typeof a !== "string" && typeof a !== "number") {
+					throw new Error("query.query.range(); "+
+							"First param not a string or number.");
+				}
+				if (typeof b !== "string" && typeof b !== "number") {
+					throw new Error("query.query.range(); "+
+							"Second param not a string or number.");
+				}
+				stmts.push([a,"<=>",b]);
+				return this;
+      },
+
 			append: function q_append() {
 				q.push({action: "query", statements: stmts});
 				return self;
@@ -423,7 +436,7 @@ exports.query = function query_constructor() {
 };
 
 DB = (function () {
-	var cache = {}, models = {}, uid;
+	var models = {}, uid;
 
 	function entity(spec, mapper) {
 		var key = spec.key,
@@ -498,31 +511,29 @@ DB = (function () {
 
 		function create(kind) {
 			var ent = models[kind]();
-			return (cache[ent('key')] = ent);
+			return ent;
 		}
 
 		function get(key, cb) {
-			if (cache[key]) {
-				fulfilled_results.push(function () {
-					cb(cache[key]);
-				});
-			}
-			else {
-				request.get(key);
-				promised_results.push(cb);
-			}
+      request.get(key);
+      promised_results.push(cb);
 			return self;
 		}
 
 		function put(ent, cb) {
 			request.put(ent('key'), ent('entity'), ent('indexes'));
-			promised_results.push(cb);
+			promised_results.push(function (err) {
+        if (err) {
+          cb(err);
+        }
+        else {
+          cb(ent);
+        }
+      });
 			return self;
 		}
 
 		function del(key, cb) {
-			cache[key]('delete');
-			delete cache[key];
 			request.remove(key);
 			promised_results.push(cb);
 			return self;
@@ -542,20 +553,14 @@ DB = (function () {
 			var ent, parsed_entity = JSON.parse(item.entity);
 
 			try {
-				if (!cache[item.key]) {
-					ent = models[item.indexes.kind](
-						item.key, parsed_entity, item.indexes);
-					cache[item.key] = ent;
-				}
-				else {
-					cache[item.key]('update', parsed_entity);
-				}
+        ent = models[item.indexes.kind](
+          item.key, parsed_entity, item.indexes);
 			} catch (e) {
 				LOG.warn('Unable to handle DCube results for '+
 					JSON.stringify(item));
 				LOG.error(e);
 			}
-			cb(cache[item.key] || null);
+			cb(ent || null);
 		}
 
 		function go(errback) {
@@ -597,15 +602,14 @@ DB = (function () {
 						}
 						else if (action === 'put') {
 							if (status === 200 || status === 201) {
-								this_results[i](cache[item.key]);
+								this_results[i](null);
 							}
 							else {
-								this_results[i](null);
+								this_results[i](unexpected_Exception('Did not put item.'));
 							}
 						}
 						else if (action === 'delete') {
 							this_results[i](status === 204);
-							// cache already deleted before remote request was made.
 						}
 						else if (action === 'query') {
 							qresults = [];

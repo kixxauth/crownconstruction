@@ -48,7 +48,7 @@ var EXPORTED_SYMBOLS = ["exports"],
   exports = {};
 
 function index_last_name(val) {
-  return ['last_name', val];
+  return ['last_name', val.toUpperCase()];
 }
 
 exports.customer = function (db) {
