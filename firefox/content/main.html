@@ -92,6 +92,9 @@ Login Deck
           <li class="navigation sub-section">
             <a class="bbq navigation" href="#personnel/view?key=">Create</a></li>
 
+          <li class="navigation sub-section">
+            <a class="bbq navigation" href="#personnel/directory">Directory</a></li>
+
         </ul>
       </li><!-- personnel -->
 
@@ -133,7 +136,7 @@ application panels
     <h2 class="panel-header">Customers</h2>
 
     <!-- customer view widget -->
-    <form id="customer-view" class="fform">
+    <form id="customer-view" class="fform inner-tab-panel">
       <fieldset id="customer-names" class="fform content-panel">
         <h4 class="section-header">Names</h4>
       </fieldset>
@@ -154,8 +157,14 @@ application panels
   <div id="panel-personnel" class="tab-panel" style="display:none">
     <h2 class="panel-header">Personnel</h2>
 
+    <!-- personnel directory widget -->
+    <div id="personnel-directory" class="personnel-panel inner-tab-panel">
+      <ul id="personnel-group-list">
+      </ul>
+    </div>
+
     <!-- personnel view widget -->
-    <form id="personnel-view" class="fform">
+    <form id="personnel-view" class="fform personnel-panel inner-tab-panel" style="display:none">
       <fieldset id="personnel-name" class="fform content-panel">
         <h4 class="section-header">Name</h4>
       </fieldset>
@@ -437,6 +446,29 @@ templates
       </p>
     </div>
   </div>
+</script>
+
+<script type="text/html" id="personnel_groups-template">
+  <% var group_name, group, i, member; %>
+  <% for (group_name in groups) { %>
+    <% if (groups.hasOwnProperty(group_name)) { %>
+    <% group = groups[group_name]; %>
+    <li class="personnel-group">
+      <h4 class="personnel-group-name"><%= group_name %></h4>
+      <ul class="personnel-group-members">
+        <% for (i = 0; i < group.length; i += 1) { %>
+        <% member = group[i]; %>
+        <li class="employee">
+        <a class="bbq employee-directory"
+          href="#personnel/view?key=<%= member.key %>&cached=true">
+          <%= member.name %>
+        </a>
+        </li>
+        <% } %>
+      </ul>
+    </li>
+    <% } %>
+  <% } %>
 </script>
 
 <script type="text/html" id="customer_results-template">

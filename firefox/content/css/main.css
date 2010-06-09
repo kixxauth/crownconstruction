@@ -3,7 +3,7 @@
 body {
 	font-family: Verdana,Arial,sans-serif;
 	background: #000000 url(images/wooden_plank_bg.jpg) repeat-x fixed;
-  line-height: 0;
+  line-height: 1; /* override the reset */
 }
 
 input, button {
@@ -111,7 +111,6 @@ h4.section-header {
 
 /* login header */
 h1.login {
-  line-height: 1;
   margin: 0.5em 0 2em;
   padding: .5em 0 .7em;
   text-indent: 2.8em;
@@ -159,7 +158,6 @@ p.login {
   font-size: 70%;
   display: block;
   margin: 1.3em 0 0 8em;
-  line-height: 1;
   float: left;
 }
 
@@ -198,7 +196,6 @@ p.login {
 }
 
 li.connection-list {
-  line-height: 1;
   margin: 1em 2.8em 0 2.8em;
 }
 
@@ -258,7 +255,6 @@ li.navigation.section {
   padding-top: 0.5em;
   width: 16%;
   border-top: .09em dotted #777;
-  line-height: 1;
 }
 
 li.navigation.section>a {
@@ -328,17 +324,15 @@ button.menu {
 h2.panel-header {
   font-size: 150%;
   font-weight: bold;
-  line-height: 1;
   margin: .5em 0 1em 1.2%;
+}
+
+.inner-tab-panel {
+  margin: 0 1.2%;
 }
 
 /* Forms.
  * ====== */
-form.fform {
-  line-height: 1;
-  margin: 0 1.2%;
-}
-
 fieldset.fform {
   font-size: 105%;
   margin: 0 0 2em 0;
@@ -432,6 +426,40 @@ a.fform.append.button {
 /* Other panels.
  * ============= */
 
+/* Personnel directory.
+ * -------------------- */
+#personnel-group-list {
+  width: 60%;
+  margin: 2em 0 0 20%;
+}
+
+#personnel-group-list, ul.personnel-group-members {
+  list-style-type: none;
+}
+
+li.personnel-group {
+  margin-bottom: 1em;
+}
+
+h4.personnel-group-name {
+  font-size: 120%;
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+
+ul.personnel-group-members {
+  margin-left: 4%;
+}
+
+li.employee {
+  margin-bottom: 0.5em;
+}
+
+a.employee-directory {
+  text-decoration: none;
+  color: #fff;
+}
+
 /* Customer search.
  * ---------------- */
 div.search-panel {
@@ -439,7 +467,6 @@ div.search-panel {
   width: 69.9%; /* - .1 for borders */
   top: 3em; /* make room for menu bar */
   left: 24.5%;
-  line-height: 1;
 }
 
 span.search-panel-close-button {

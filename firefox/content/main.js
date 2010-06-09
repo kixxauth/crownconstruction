@@ -27,7 +27,11 @@ THE SOFTWARE.
 // TODO:
 // =====
 //
+//  * Build a pretty error handler.
+//  * Cache employee directory results.
+//  * Provide "back to" buttons on everyting. (A breadcrumb trail?)
 //  * When to set the cache=true URL param and when not to.
+//  * Handle 'no results' case for searches and employee directory.
 //
 
 function printd(msg, val) {
@@ -363,15 +367,22 @@ printd('-> start');
   //
   // A speed (is ms) and a callback function can also be passed in as the
   // second and third parameters. This will cause the card swap to be animated.
-  function deck_constructor(deck_id) {
-    var deck = jq('#'+ deck_id)
-      , current
+  function deck_constructor(deck) {
+    var current
       , frames = {}
       ;
 
-    deck.children().each(function (i) {
-      frames[this.id] = jq('#'+ this.id);
-    });
+    if (typeof deck === 'string') {
+      deck = jq('#'+ deck)
+      deck.children().each(function (i) {
+        frames[this.id] = jq(this);
+      });
+    }
+    else if (jq.isArray(deck)) {
+      jq.each(deck, function (i, el) {
+        frames[el.id] = jq(el);
+      });
+    }
 
     function fade_switch(frame_name, speed, callback) {
       if (current) {
@@ -914,7 +925,7 @@ printd('-> start');
     }
 
     return function (employee) {
-      // Cache the jQuery objects we'll be using to render the customer forms.
+      // Cache the jQuery objects we'll be using to render the employee forms.
       form = jq('#personnel-view')[0];
       name = jq('#personnel-name');
       groups = jq('#personnel-groups');
@@ -992,6 +1003,7 @@ printd('-> start');
       };
     }());
 
+    // Stuff to do when the DOM is ready.
     jq(function () {
       jq('#search-customers').click(self.customers);
       jq('#search-advanced').click(self.advanced);
@@ -1066,12 +1078,54 @@ printd('-> start');
   }());
 
   widget_modules.personnel = (function () {
-    var self = {}, actions = {};
+    var self = {}
+      , actions = {}
+      , swap_tab
+      ;
 
-    actions['view'] = (function (params) {
+    actions['directory'] = function (params) {
+      swap_tab('personnel-directory');
+      dbquery({'kind eq': 'employee'}, function (results) {
+        var groups = {};
+
+        // TODO: Handle the not found, no results case.
+
+        // Collect all the group names and members.
+        jq.each(results, function (i, result) {
+          var i = 0
+            , key = result.key
+            , employee = result.data
+            , name = (employee.name.first +' '+ employee.name.last)
+            , parts = employee.groups.split(',')
+            , len = parts.length
+            , group_name
+            ;
+
+          for (; i < len; i += 1) {
+            group_name = jq.trim(parts[i]);
+            if (!groups[group_name]) {
+              groups[group_name] = [];
+            }
+            groups[group_name].push({
+                  key: key
+                , name: name
+              });
+          }
+        });
+
+        printo('groups', groups);
+        jq('#personnel-group-list')
+          .html(render_template(
+              'personnel_groups-template'
+            , {groups: groups}));
+      });
+    };
+
+    actions['view'] = (function () {
       var created = {key: null, view: null};
 
       return function(params) {
+        swap_tab('personnel-view');
         // If there is no key param, create a new employee.
         if (!params.key) {
           // Go to the personnel panel if we are not already there.
@@ -1109,7 +1163,29 @@ printd('-> start');
           actions[state](params);
         }
       },
+      {
+        name: 'panels',
+        handler: function (ev, state, params) {
+          if (state !== 'personnel') {
+            return;
+          }
+
+          if (!jq.bbq.getState('personnel')) {
+            jq.bbq.pushState({personnel: 'directory'});
+          }
+          // Don't do this anymore.
+          self.listeners[1].handler = $F;
+        }
+      }
     ];
+
+    // Stuff to do when the DOM is ready.
+    jq(function () {
+      swap_tab = deck_constructor(
+        jq('#panel-personnel')
+          .children('.personnel-panel')
+          .toArray());
+    });
 
     return self;
   }());
