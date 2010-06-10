@@ -28,10 +28,17 @@ THE SOFTWARE.
 // =====
 //
 //  * Build a pretty error handler.
+//
 //  * Cache employee directory results.
+//
 //  * Provide "back to" buttons on everyting. (A breadcrumb trail?)
+//
 //  * When to set the cache=true URL param and when not to.
+//
 //  * Handle 'no results' case for searches and employee directory.
+//
+//  * Back button does not work after a new entity has been created because of
+//    automated switch from '?view=' to '?view=key'
 //
 
 function printd(msg, val) {
@@ -592,7 +599,20 @@ printd('-> start');
         .parent()
         .children('a.navigation')
         .click(function (ev) {
-          toggle_menu_state(jq(this).parent().children('ul.options'));
+          var nav_jq = jq(this)
+            , panel = nav_jq.attr('href').split('/')[1]
+            ;
+
+          // We do not want to collapse the navigation for this panel if the
+          // user is trying to navigate to it.
+          if (panel !== jq.bbq.getState('panels')) {
+            toggle_menu_state(nav_jq.parent().children('ul.options'), 'open');
+          }
+          else {
+            toggle_menu_state(nav_jq.parent().children('ul.options'));
+          }
+
+          jq(window).trigger('nav-action');
         })
         ;
 
@@ -944,17 +964,25 @@ printd('-> start');
   // Main application panel widgets.
   // -------------------------------
 
+  // Module for job search and customer search.
   search_panels = (function () {
-    var self = {};
+    var self = {}
 
-    function advanced_panel() {
-      jq('#advanced-search').show();
+      // Cached jQuery objects.
+      , job_jq
+      , customer_jq
+      ;
+
+    // Open the job search panel.
+    function job_panel() {
+      job_jq.show();
 
       // This is actually an event handler.
       return false;
     }
 
-    function customers_panel() {
+    // Open the customer search panel.
+    function customer_panel() {
       jq('#customer-search-button').click(function () {
         var firstname = jq('#customer-search-firstname').val().toUpperCase()
           , lastname = jq('#customer-search-lastname').val().toUpperCase()
@@ -973,55 +1001,51 @@ printd('-> start');
         return false;
       });
 
-      jq('#customer-search').show();
+      customer_jq.show();
 
       // This is actually an event handler.
       return false;
     }
 
-    function setup_panel() {
-      // TODO: Hook up events and cache jQuery objects the first time through.
+    // Stuff to do when the DOM is ready.
+    jq(function () {
+      // Cache the jQuery objects that represent search panels.
+      job_jq = jq('#job-search');
+      customer_jq = jq('#customer-search');
+
+      // Hook into the navigation controls on the navigation panel.
+      jq('#search-customers').click(customer_panel);
+      jq('#search-jobs').click(job_panel);
+
+      // Register the event handler on the panel close icons.
       jq('span.search-panel-close-button').click(function (ev) {
           jq(this).parent().parent().hide();
       });
 
-      self.advanced = advanced_panel;
-      self.customers = customers_panel;
-    }
+      // Stop search nav <a href=""> from clearing the hash.
+      jq('#search-options').click(function (ev) {
+        ev.preventDefault();
+      });
 
-    self.advanced = (function () {
-      return function () {
-        setup_panel();
-        return self.advanced();
-      };
-    }());
-
-    self.customers = (function () {
-      return function () {
-        setup_panel();
-        return self.customers();
-      };
-    }());
-
-    // Stuff to do when the DOM is ready.
-    jq(function () {
-      jq('#search-customers').click(self.customers);
-      jq('#search-advanced').click(self.advanced);
+      jq(window).bind('nav-action', function (ev) {
+        job_jq.hide();
+        customer_jq.hide();
+      });
 
       // Set the handlers for future customer search results.
       jq('a.search-result', jq('#customer-search-results')[0])
         .live('click', function (ev) {
           jq.bbq.pushState({panels: 'customers'});
-          jq('#customer-search').hide();
+          customer_jq.hide();
           // Don't return false here, because the BBQ widget handler neeeds to
           // get this URL hash.
           // return false;
         });
 
-      // Set the handlers for future advanced search results.
-      jq('a.search-result', jq('#advanced-search-results')[0])
+      // Set the handlers for future job search results.
+      jq('a.search-result', jq('#job-search-results')[0])
         .live('click', function (ev) {
-          jq('#advanced-search').hide();
+          job_jq.hide();
           // Don't return false here, because the BBQ widget handler neeeds to
           // get this URL hash.
           // return false;
@@ -1040,6 +1064,9 @@ printd('-> start');
       return function(params) {
         // If there is no key param, create a new customer.
         if (!params.key) {
+          // Go to the customers panel if we are not already there.
+          jq.bbq.pushState({panels: 'customers'});
+
           dbcreate('customer', function (entity_view) {
             var new_state = {};
             created.key = entity_view.names[0].first.path.split('.')[0];
@@ -1071,7 +1098,7 @@ printd('-> start');
         handler: function (ev, state, params) {
           actions[state](params);
         }
-      },
+      }
     ];
 
     return self;
@@ -1087,6 +1114,9 @@ printd('-> start');
       swap_tab('personnel-directory');
       dbquery({'kind eq': 'employee'}, function (results) {
         var groups = {};
+
+        // Go to the personnel panel if we are not already there.
+        jq.bbq.pushState({panels: 'personnel'});
 
         // TODO: Handle the not found, no results case.
 

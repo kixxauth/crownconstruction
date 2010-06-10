@@ -55,7 +55,7 @@ Login Deck
         <ul class="navigation options" style="display:none">
 
           <li class="navigation sub-section">
-            <a id="search-advanced" class="navigation" href="#">Advanced</a></li>
+            <a id="search-jobs" class="navigation" href="#">Jobs</a></li>
 
           <li class="navigation sub-section">
             <a id="search-customers" class="navigation" href="#">Customers</a></li>
@@ -78,6 +78,22 @@ Login Deck
 
         </ul>
       </li><!-- customers -->
+
+      <!-- jobs -->
+      <li class="navigation section jobs">
+        <!-- BBQ URL hashes for panel navigation should be in the form
+        '#panels/'+ panel_name -->
+
+        <button class="navigation section">+</button>
+        <a class="bbq navigation" href="#panels/jobs">Jobs</a>
+
+        <ul class="navigation options" style="display:none">
+
+          <li class="navigation sub-section">
+            <a class="bbq navigation" href="#jobs/view?key=">Create</a></li>
+
+        </ul>
+      </li><!-- jobs -->
 
       <!-- personnel -->
       <li class="navigation section personnel">
@@ -153,6 +169,10 @@ application panels
 
   </div><!-- panel-customers -->
 
+  <!-- panel-jobs -->
+  <div id="panel-jobs" class="tab-panel" style="display:none">
+  </div><!-- panel-jobs -->
+
   <!-- panel-personnel -->
   <div id="panel-personnel" class="tab-panel" style="display:none">
     <h2 class="panel-header">Personnel</h2>
@@ -186,12 +206,12 @@ application panels
 <!--
 search panels
 ~~~~~~~~~~~~~ -->
-<div id="advanced-search" class="content-panel search-panel" style="display:none">
-  <h4 class="section-header">Advanced Search
+<div id="job-search" class="content-panel search-panel" style="display:none">
+  <h4 class="section-header">Job Search
     <span class="search-panel-close-button">x</span></h4>
-  <ul id="advanced-search-results" class="search-results-list">
+  <ul id="job-search-results" class="search-results-list">
   </ul>
-</div><!-- advanced-search -->
+</div><!-- job-search -->
 
 <div id="customer-search" class="content-panel search-panel" style="display:none">
   <h4 class="section-header">Customer Search
