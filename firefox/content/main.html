@@ -171,6 +171,48 @@ application panels
 
   <!-- panel-jobs -->
   <div id="panel-jobs" class="tab-panel" style="display:none">
+    <h2 class="panel-header">Jobs</h2>
+
+    <!-- job view widget -->
+    <form id="job-view" class="fform inner-tab-panel">
+      <fieldset id="job-header" class="fform content-panel">
+        <h4 class="section-header">Job Name</h4>
+      </fieldset>
+      <fieldset id="job-addresses" class="fform content-panel">
+        <h4 class="section-header">Work Addresses</h4>
+      </fieldset>
+      <fieldset id="job-customer" class="fform content-panel">
+        <h4 class="section-header">Customer</h4>
+      </fieldset>
+      <fieldset id="job-dates" class="fform content-panel">
+        <h4 class="section-header">Dates</h4>
+      </fieldset>
+      <fieldset id="job-payments" class="fform content-panel">
+        <h4 class="section-header">Payments</h4>
+      </fieldset>
+      <fieldset id="job-special-orders" class="fform content-panel">
+        <h4 class="section-header">Special Orders</h4>
+      </fieldset>
+      <fieldset id="job-subcontractors" class="fform content-panel">
+        <h4 class="section-header">Sub Conractors</h4>
+      </fieldset>
+      <fieldset id="job-siding" class="fform content-panel">
+        <h4 class="section-header">Siding</h4>
+      </fieldset>
+      <fieldset id="job-roofing" class="fform content-panel">
+        <h4 class="section-header">Roofing</h4>
+      </fieldset>
+      <fieldset id="job-permits" class="fform content-panel">
+        <h4 class="section-header">Permits</h4>
+      </fieldset>
+      <fieldset id="job-estimate" class="fform content-panel">
+        <h4 class="section-header">Estimate</h4>
+      </fieldset>
+      <fieldset id="job-profitandtaxes" class="fform content-panel">
+        <h4 class="section-header">Finances</h4>
+      </fieldset>
+    </form><!-- job-view -->
+
   </div><!-- panel-jobs -->
 
   <!-- panel-personnel -->
@@ -449,7 +491,7 @@ templates
   </div>
   <% } %>
 
-  <a href="<%= key %>.phones"" class="append fform button" title="Add another phone number.">
+  <a href="<%= key %>.phones" class="append fform button" title="Add another phone number.">
     <span class="icon">+</span>
     Add another phone number.
   </a>
@@ -504,86 +546,108 @@ templates
 </script>
 
 <script type="text/html" id="job_header-template">
-	<div class="form-sub-section">
-		<div class="form-sub-section-head-ctn">
-			<h4 class="section-header">Job Header</h4>
-		</div>
-
-		<div class="input-section ui-corner-all">
-			<div class="line ui-helper-clearfix">
-				<p class="input-float">
-					<span>job ID:</span>
-					<span class="computed">job<%= id.value %></span>
-				</p>
-				<p class="input-float">
-					<span>cost of contract:</span>
-					<span name="cost-of-contract" class="computed">0</span>
-				</p>
-			</div>
-			<div class="line ui-helper-clearfix">
-				<p class="input-float">
-					<label>start by:</label>
-					<input class="clean-text-input fform" type="text"
-						name="<%= startdate.path %>" value="<%= startdate.value %>" />
-				</p>
-				<p class="input-float">
-					<label>complete:</label>
-					<input class="clean-text-input fform" type="text"
-						name="<%= completedate.path %>" value="<%= completedate.value %>" />
-				</p>
-			</div>
-		</div>
-	</div>
+  <h4 class="section-header"><%= job.name %></h4>
 </script>
 
-<script type="text/html" id="job_results-template">
-	<% var key, job; %>
-	<ul>
-		<% for (key in jobs) { %>
-		<% if (Object.prototype.hasOwnProperty.call(jobs, key)) { %>
-		<% job = jobs[key]; %>
-		<li>
-			<a href="#show?key=<%= key %>"><%= job.id %></a>
-		</li>
-		<% } %>
-		<% } %>
-	</ul>
+<script type="text/html" id="job_addresses-template">
+  <h4 class="section-header">Work Addresses</h4>
 </script>
 
-<script type="text/html" id="new_job_customer_results-template">
-	<% var key, customer; %>
-	<ul>
-		<% for (key in customers) { %>
-		<% if (Object.prototype.hasOwnProperty.call(customers, key)) { %>
-		<% customer = customers[key]; %>
-		<li>
-			<a href="#new?key=<%= key %>"><%= customer.lastname %></a>
-		</li>
-		<% } %>
-		<% } %>
-	</ul>
+<script type="text/html" id="job_customer-template">
+  <h4 class="section-header">Customer Contacts</h4>
 </script>
 
-<script type="text/html" id="connection_list-template">
-	<% var cxn, i = 0, len = connections.length; %>
-  <div id="connection-list-container">
-  <h2 id="connection-list-heading">Choose from existing connections...</h2>
-	<ul id="connection-list">
-		<% for (; i < len; i += 1) { %>
-		<% cxn = connections[i]; %>
-		<li class="connection-list">
-      <a class="button connection-list" href="<%= cxn.id %>">
-        <%= cxn.username %> on <%= cxn.dbname %>
-      </a>
-		</li>
-		<% } %>
-		<li id="create-new-connection" class="connection-list">
-    <a class="button" href="login">
-      ... or create a new connection.
-    </a>
-		</li>
-	</ul>
+<script type="text/html" id="job_dates-template">
+  <h4 class="section-header">Dates</h4>
+</script>
+
+<script type="text/html" id="job_schedule-template">
+  <h4 class="section-header">Job Schedule</h4>
+</script>
+
+<script type="text/html" id="job_payments-template">
+  <h4 class="section-header">Payment Schedule</h4>
+</script>
+
+<script type="text/html" id="job_special_orders-template">
+  <h4 class="section-header">Special Orders</h4>
+</script>
+
+<script type="text/html" id="job_subcontractors-template">
+  <h4 class="section-header">Sub Contractors</h4>
+</script>
+
+<script type="text/html" id="job_siding-template">
+  <h4 class="section-header">Siding</h4>
+</script>
+
+<script type="text/html" id="job_roofing-template">
+  <h4 class="section-header">Roofing</h4>
+</script>
+
+<script type="text/html" id="job_permits-template">
+  <h4 class="section-header">Permits</h4>
+
+  <div class="line">
+    <%= permit_type_inputs %>
   </div>
+
+  <div class="input-section">
+    <div class="line">
+      <%= permit_type_inputs %>
+    </div>
+    <div class="line">
+      <p class="input-float">
+        <label class="live-label">date received:</label>
+        <input class="clean-text-input fform date_received" type="text"
+          name="<%= permit.date_received.path %>" value="<%= permit.date_received.value %>" />
+      </p>
+      <p class="input-float">
+        <label class="live-label">permit number:</label>
+        <input class="clean-text-input fform permit_number" type="text"
+          name="<%= permit.permit_num.path %>" value="<%= permit.permit_num.value %>" />
+      </p>
+    </div>
+    <div class="line">
+        <label class="live-label">phone number:</label>
+        <input class="clean-text-input fform permit_number" type="text"
+          name="<%= permit.phone.path %>" value="<%= permit.phone.value %>" />
+    </div>
+  </div>
+
+  <a href="<%= key %>.permits" class="append fform button" title="Add another permit.">
+    <span class="icon">+</span>
+    Add another permit.
+  </a>
+</script>
+
+<script type="text/html" id="job_permit-types-template">
+  <div class="line">
+    <p class="input-float">
+      <input class="new-job-permit" name="UFPO" type="checkbox" />
+      <label class="live-label">UFPO</label>
+    </p>
+    <p class="input-float">
+      <input class="new-job-permit" name="building" type="checkbox" />
+      <label class="live-label">building</label>
+    </p>
+    <p class="input-float">
+      <input class="new-job-permit" name="electrical" type="checkbox" />
+      <label class="live-label">electrical</label>
+    </p>
+    <p class="input-float">
+      <input class="new-job-permit" name="plumbing" type="checkbox" />
+      <label class="live-label">plumbing</label>
+    </p>
+  </div>
+</script>
+
+<script type="text/html" id="job_estimate-template">
+  <h4 class="section-header">Estimate</h4>
+</script>
+
+<script type="text/html" id="job_profitandtaxes-template">
+  <h4 class="section-header">Finances</h4>
 </script>
 
 <!-- end templates -->

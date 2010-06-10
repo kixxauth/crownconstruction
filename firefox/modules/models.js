@@ -51,22 +51,6 @@ function index_last_name(val) {
   return ['last_name', val.toUpperCase()];
 }
 
-var index_groups = (function () {
-	var rtrim = /^\s+|\s+$/g;
-
-  return function (val) {
-    var rv = [],
-      i = 0,
-      groups = (val || '').split(',');
-
-    for (; i < groups.length; i += 1) {
-      groups[i] = groups[i].replace(rtrim, '').toUpperCase();
-    }
-
-    return ['groups', groups];
-  };
-}());
-
 exports.customer = function (db) {
   return {
     names: db.list(
@@ -98,6 +82,22 @@ exports.customer = function (db) {
   };
 };
 
+var index_groups = (function () {
+	var rtrim = /^\s+|\s+$/g;
+
+  return function (val) {
+    var rv = [],
+      i = 0,
+      groups = (val || '').split(',');
+
+    for (; i < groups.length; i += 1) {
+      groups[i] = groups[i].replace(rtrim, '').toUpperCase();
+    }
+
+    return ['groups', groups];
+  };
+}());
+
 exports.employee = function (db) {
   return {
     name: db.dict({
@@ -123,7 +123,7 @@ exports.employee = function (db) {
 };
 
 function index_customer_key(val) {
-  return ['customer', val];
+  return ['ref_customer', val];
 }
 
 exports.job = function (db) {
@@ -152,7 +152,6 @@ exports.job = function (db) {
     jobs: db.list(
       db.dict({
         type: db.str(),
-        retail: db.str(),
         amount: db.str(),
         foreman: db.str(),
         mandays: db.num()
@@ -169,8 +168,8 @@ exports.job = function (db) {
       delivery_date: db.str()
     })),
     sub_contractors: db.list(db.dict({
+      contractor: db.str(),
       description: db.str(),
-      task: db.str(),
       phone: db.str(),
       quote: db.str(),
       startdate: db.str()
@@ -191,9 +190,11 @@ exports.job = function (db) {
       color: db.str(),
       tearoff: db.bool()
     }),
-    ufpo: db.str(),
     permits: db.list(db.dict({
-      type: db.str(), date_received: db.str(), phone: db.str()
+      type: db.str(),
+      date_received: db.str(),
+      permit_num: db.str(),
+      phone: db.str()
     }))
   };
 };
