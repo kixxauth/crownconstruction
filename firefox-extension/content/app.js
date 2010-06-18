@@ -1,23 +1,37 @@
-(function (require, jq, undefined) {
+(function (jq, undefined) {
   var deck = jq.deck(jq('#main').children())
-    , platform = require('platform')
-    , console = platform.console
+    , Cu = Components.utils
+    , require = Cu.import('resource://fireworks/lib/require.js', null).require
+
     , events = require('events')
-    , log = require('logging').get('login')
-    , db = require('dcube')
-    , system_ready
+    , platform = require('platform')
+    , logging = require('logging')
+    , log = logging.get('fireworks-boot')
+    , console = platform.console
     ;
 
-  console.log('Start of application instance.');
+  console.log('Start Fireworks application instance.');
 
-  function ready() {
-    log.info('System ready.');
-    platform.addListener('quit', function () {
-      log.info('Platform shutdown.');
-    });
+  function formatErr(e) {
+    if (typeof e === 'string') {
+      return e;
+    }
+    return (e.name +': '+ e.message +'\nfile: '+
+            e.fileName +'\nline: '+ e.lineNumber +'\n');
   }
 
-  system_ready = events.Aggregate(ready);
-  events.observeOnce('logging.ready', system_ready());
-}(require, jQuery));
+  events.addListener('error', function (err) {
+    Cu.reportError(err);
+    log.error(formatErr(err));
+  });
+
+  require.ensure(['logging', 'environ'], function (require) {
+    var env = require('environ')
+      , logging = require('logging')
+      ;
+
+    log = logging.get('fireworks' || env.LOG_NAME)
+    log.info('Module system bootstrapped.');
+  });
+}(jQuery));
 
