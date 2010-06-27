@@ -103,7 +103,6 @@ function logfile(msg) {
   file.append(log_file_name);
   fos.init(file, flags, 0644, 0);
   try {
-    log.trace('Writing to log file "'+ file.leafName +'"');
     fos.write(msg, msg.length);
     fos.close();
     if (file.fileSize < 1024 * 400 /* 400kb */) {
@@ -111,8 +110,8 @@ function logfile(msg) {
     }
     file.moveTo(file.parent, file.leafName.replace(/\.log$/, '_2.log'));
   } catch(e) {
-    log.error(e);
-    log.error('Problem with log file "'+ file.leafName +'"');
+    Cu.reportError(e);
+    Cu.reportError('Problem with log file "'+ file.leafName +'"');
   }
 }
 
@@ -224,19 +223,36 @@ exports.formatError = function (e) {
 log = exports.get('Logging');
 
 set_current_level = function (level) {
-  current_level = ((typeof level === 'string') ?
-           (isNaN(+level) ? level : +level) :
-           ((typeof levels[level] === 'number') ?
-                   levels[level] : current_level));
-  log.trace('Set log level to "'+ levels.DESC[current_level] +'".');
+  if (typeof level === 'string') {
+    if (isNaN(+level)) {
+      level = levels[level.toLowerCase()];
+      current_level = (typeof level === 'number') ? level : current_level;
+    }
+    else {
+      current_level = +level;
+    }
+  }
+  else if (typeof level === 'number') {
+    current_level = level;
+  }
+
+  log.info('Set log level to "'+ levels.DESC[current_level] +'".');
 };
 
 set_replay_level = function (level) {
-  replay_level = ((typeof level === 'string') ?
-           (isNaN(+level) ? level : +level) :
-           ((typeof levels[level] === 'number') ?
-                   levels[level] : current_level));
-  log.trace('Set log replay level to "'+ levels.DESC[replay_level] +'".');
+  if (typeof level === 'string') {
+    if (isNaN(+level)) {
+      level = levels[level.toLowerCase()];
+      replay_level = typeof level === 'number' ? level : replay_level;
+    }
+    else {
+      replay_level = +level;
+    }
+  }
+  else if (typeof level === 'number') {
+    replay_level = level;
+  }
+  log.info('Set log replay level to "'+ levels.DESC[replay_level] +'".');
 };
 
 function load(cb) {
@@ -252,13 +268,13 @@ function load(cb) {
 
     function debug_change(val) {
       if (val === true) {
-        log.trace('Going into debug mode.');
-        locked = val;
+        log.info('Going into debug mode.');
+        locked = !!val;
         cached_level = current_level;
         set_current_level('all');
         return;
       }
-      log.trace('Going out of debug mode.');
+      log.info('Going out of debug mode.');
       set_current_level(cached_level);
     }
 
@@ -267,6 +283,7 @@ function load(cb) {
         set_current_level(level);
         return;
       }
+      log.info('Will go to log level "'+ level +'" when out of debug mode.');
       cached_level = level;
     }
 
@@ -274,15 +291,16 @@ function load(cb) {
       log.trace('Setup.');
       set_current_level(level_pref.value());
       set_replay_level(replay_pref.value());
-      locked = !!debug_pref.value();
+      cached_level = current_level;
+      debug_change(debug_pref.value());
 
       level_pref.addListener(function () {
         level_change(this.value());
       });
       debug_pref.addListener(function () {
-        debug_change(!!this.value());
+        debug_change(this.value());
       });
-      replay_pref.addListner(function () {
+      replay_pref.addListener(function () {
         set_replay_level(this.value());
       });
     }
@@ -292,6 +310,7 @@ function load(cb) {
       platform.pref('log.level', prefs_ready('level_pref'), 'warn');
       platform.pref('debug', prefs_ready('debug_pref'), false);
       platform.pref('log.replay', prefs_ready('replay_pref'), 'error');
+      log.info('Loaded prefs.');
     }
     catch (e) {
       log.debug(e);

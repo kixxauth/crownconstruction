@@ -45,9 +45,9 @@ exports.addListener = application.addListener;
 exports.removeListener = application.removeListener;
 
 // Preference object constructor.
-function Pref(pref, defaultValue) {
+function Pref(pref) {
   if(!(this instanceof Pref)) {
-    return new Pref(pref, defaultValue);
+    return new Pref(pref);
   }
   this.extIPreference = pref;
   this.name = pref.name;
@@ -95,14 +95,16 @@ function load(cb) {
       log.warn(PlatformError(new Error('"EXTENSION_ID" environment '+
           'variable is not defined. Unable to load '+
           'extension and preferences interfaces.')));
-      cb('platform', exports);
+      cb('platform', null);
       return;
     }
+    log.info('"EXTENSION_ID" is now defined. Loading prefs.');
 
     observer.observe = function (nsIPrefBranch, changed, pref) {
-      if (changed !== Ci.nsIPrefBranch2.NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
+      if (changed !== 'nsPref:changed') {
         return;
       }
+      pref = pref.replace(/^\./, '');
       log.info('Change in preference "'+ pref +'" observed.');
       if (typeof registry[pref] === 'function') {
         registry[pref]();
@@ -141,16 +143,13 @@ function load(cb) {
             +'" to default value `'+ defaultValue +'`.');
           pref = extension.prefs.get(name);
         }
+        else {
+          log.info('Pref "'+ name
+            +'" is set to to value `'+ pref.value +'`.');
+        }
         callback(Pref(pref));
       });
     };
-
-    exports.extension(function (this_ext) {
-      this_ext.addListner('uninstall', function () {
-        log.info('Observed "uninstall" event.');
-        prefbranch.deleteBranch('');
-      });
-    });
 
     cb('platform', exports);
   });
