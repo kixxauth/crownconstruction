@@ -17,7 +17,7 @@ Components: false
 
 "use strict";
 
-dump('loading platform.js\n');
+dump(' ... platform.js\n');
 
 var EXPORTED_SYMBOLS = ['exports', 'load']
 
@@ -32,22 +32,19 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
   , application = Cc["@mozilla.org/fuel/application;1"]
                     .getService(Ci.fuelIApplication)
 
-  , observe_pref
+  , log = require('logging').get('Platform')
+
+  , PlatformError = require('errors')
+                      .ErrorConstructor('PlatformError', 'platform.js')
+
+  , observe_pref = function () {}
   ;
 
-function PlatformError(msg) {
-  var self;
-  if (msg instanceof Error) {
-    self = msg;
-  }
-  else {
-    self = new Error(msg);
-  }
-  self.name = "PlatformError";
-  self.constructor = PlatformError;
-  return self;
-}
+exports.console = application.console;
+exports.addListener = application.addListener;
+exports.removeListener = application.removeListener;
 
+// Preference object constructor.
 function Pref(pref, defaultValue) {
   if(!(this instanceof Pref)) {
     return new Pref(pref, defaultValue);
@@ -56,6 +53,11 @@ function Pref(pref, defaultValue) {
   this.name = pref.name;
   this.type = pref.type;
 }
+
+Pref.prototype = {};
+
+Pref.prototype.name = '';
+Pref.prototype.type = '';
 
 Pref.prototype.value = function () {
   return this.extIPreference.value;
@@ -70,33 +72,29 @@ Pref.prototype.modified = function () {
 };
 
 Pref.prototype.addListener = function (fn) {
+  var self = this;
   observe_pref(this.name, function () {
-    fn.call(this);
+    fn.call(self);
   });
 };
 
-exports.console = application.console;
-exports.addListener = application.addListener;
-exports.removeListener = application.removeListener;
-
 function load(cb) {
-  require.ensure(['environ', 'events'], function (require) {
-    var observer = {}
+  require.ensure(['environ'], function (require) {
+    var prefservice = Cc["@mozilla.org/preferences-service;1"]  
+                        .getService(Ci.nsIPrefService)
+      , prefbranch
+      , observer = {}
 
       , env = require('environ')
       , events = require('events')
 
-      , prefservice = Cc["@mozilla.org/preferences-service;1"]  
-                        .getService(Ci.nsIPrefService)
-
-      , prefbranch
       , registry = {}
       ;
 
     if (!env.EXTENSION_ID) {
-      events.trigger('error',
-        PlatformError('"EXTENSION_ID" environment variable is not defined. '+
-          'Unable to load extension and preferences interfaces.'));
+      log.warn(PlatformError(new Error('"EXTENSION_ID" environment '+
+          'variable is not defined. Unable to load '+
+          'extension and preferences interfaces.')));
       cb('platform', exports);
       return;
     }
@@ -105,6 +103,7 @@ function load(cb) {
       if (changed !== Ci.nsIPrefBranch2.NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
         return;
       }
+      log.info('Change in preference "'+ pref +'" observed.');
       if (typeof registry[pref] === 'function') {
         registry[pref]();
       }
@@ -138,6 +137,8 @@ function load(cb) {
         var pref = extension.prefs.get(name);
         if (!pref) {
           extension.prefs.setValue(name, defaultValue);
+          log.info('Set preference "'+ name
+            +'" to default value `'+ defaultValue +'`.');
           pref = extension.prefs.get(name);
         }
         callback(Pref(pref));
@@ -146,6 +147,7 @@ function load(cb) {
 
     exports.extension(function (this_ext) {
       this_ext.addListner('uninstall', function () {
+        log.info('Observed "uninstall" event.');
         prefbranch.deleteBranch('');
       });
     });
@@ -154,4 +156,3 @@ function load(cb) {
   });
 }
 
-dump('loaded platform.js\n');

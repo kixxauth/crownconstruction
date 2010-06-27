@@ -12,7 +12,8 @@ laxbreak: true
 */
 
 /*global
-Components: false
+Components: false,
+dump: false
 */
 
 "use strict";
@@ -25,7 +26,15 @@ var EXPORTED_SYMBOLS = ['require']
 
   , loaded_modules = {}
 
+    // The events module will be loaded with the require function.
   , events
+
+    // Temporary trace logging until the logging module is loaded.
+  , log = {
+      trace: function (msg) {
+               dump('> Booting Module_Loader: '+ msg +'\n');
+             }
+    }
   ;
 
 function get_url(id) {
@@ -35,25 +44,35 @@ function get_url(id) {
 function require(id) {
   var url, m = loaded_modules[id];
 
-  dump('require("'+ id +'")\n');
+  log.trace('require("'+ id +'")');
 
   if (m) {
-    dump('"'+ id +'" loading from cache.\n');
+    log.trace('"'+ id +'" loading from cache.');
     return m;
   }
    
-  dump('"'+ id +'" loading partial.\n');
+  log.trace('"'+ id +'" loading partial.\n');
   url = get_url(id);
   try {
     m = Cu.import(url, null);
   }
   catch (e) {
+    if (log.debug && log.error) {
+      log.debug(e);
+      log.error('Could not require() module from "'+ url +'".');
+      return;
+    }
     Cu.reportError(e);
     Cu.reportError('Could not require() module from "'+ url +'".');
     return;
   }
   return ((typeof m.exports === 'object') ? m.exports : m);
 }
+
+log.trace('Loading events module');
+events = require('events');
+log.trace('Loading logging module');
+log = require('logging').get('Module_Loader');
 
 function load(modules) {
   var i = 0, len = modules.length;
@@ -70,9 +89,6 @@ function Loader(callback) {
   });
 }
 
-dump('Loading events module to initialize "require" module.\n');
-events = require('events');
-
 require.ensure = function (modules, callback) {
   var loader = Loader(callback)
     , i = 0
@@ -80,23 +96,25 @@ require.ensure = function (modules, callback) {
     , init
     ;
 
-  dump('require.ensure("'+ modules +'").\n');
+  log.trace('require.ensure("'+ modules +'")');
   for (; i < len; i += 1) {
     if (!loaded_modules[modules[i]]) {
-      dump('require.ensure() will load "'+ modules[i] +'".\n');
+      log.trace('require.ensure() loading "'+ modules[i] +'"');
       try {
         init = Cu.import(get_url(modules[i]), null).load;
       }
       catch (loadErr) {
-        Cu.reportError(loadErr);
+        log.debug(loadErr);
         throw 'Error loading module from "'+ get_url(modules[i]) +'".';
       }
       init(loader(['id', 'exports']));
     }
+    else {
+      log.trace('require.ensure() already loaded "'+ modules[i] +'"');
+    }
   }
 
   if (!init) {
-    dump('require.ensure() has nothing to load.\n');
     events.enqueue(function () {
       callback(require);
     }, 0);

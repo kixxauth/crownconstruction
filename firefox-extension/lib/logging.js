@@ -12,12 +12,13 @@ laxbreak: true
 */
 
 /*global
-Components: false
+Components: false,
+dump: false
 */
 
 "use strict";
 
-dump('loading logging.js\n');
+dump(' ... logging.js\n');
 
 var EXPORTED_SYMBOLS = ['exports', 'load']
 
@@ -52,17 +53,10 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
     }
 
   , replay_level = levels.error
-  , current_level = levels.warn
+  , current_level = levels.info
 
-  , set_current_level = function (level) {
-      current_level = ((typeof levels[level] === 'number') ?
-                       levels[level] : current_level);
-    }
-
-  , set_replay_level = function (level) {
-      replay_level = ((typeof levels[level] === 'number') ?
-                       levels[level] : replay_level);
-    }
+  , set_current_level
+  , set_replay_level
 
   , log_file_name = 'fireworks.log'
 
@@ -70,26 +64,28 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
 
   , console = require('platform').console
   , util = require('util')
+
+  , LoggingError = require('errors')
+                     .ErrorConstructor('LoggingError', 'logging')
+
+    // Temporary logging until the module is loaded.
+  , log = {
+      trace: function (msg) {
+               dump('> Booting Logger: '+ msg +'\n');
+             }
+    , error: function (msg) {
+               dump('> Booting Logger: '+ msg +'\n');
+             }
+    }
   ;
 
-function LoggingError(msg) {
-  var self;
-  if (msg instanceof Error) {
-    self = msg;
-  }
-  else {
-    self = new Error(msg);
-  }
-  self.name = "LoggingError";
-  self.constructor = LoggingError;
-  return self;
-}
-
+// Format a log line.
 function format(name, level, msg) {
   var d = new Date().toLocaleFormat('%Y-%m-%d %H:%M:%S');
   return d +' '+ name +' '+ levels.DESC[level] +' '+ msg +'\n';
 }
 
+// Log to a log file.
 function logfile(msg) {
   var file = Cc["@mozilla.org/file/directory_service;1"]
                .getService(Ci.nsIProperties)
@@ -104,6 +100,7 @@ function logfile(msg) {
   file.append(log_file_name);
   fos.init(file, flags, 0644, 0);
   try {
+    log.trace('Writing to log file "'+ file.leafName +'"');
     fos.write(msg, msg.length);
     fos.close();
     if (file.fileSize < 1024 * 400 /* 400kb */) {
@@ -111,10 +108,12 @@ function logfile(msg) {
     }
     file.moveTo(file.parent, file.leafName.replace(/\.log$/, '_2.log'));
   } catch(e) {
-    Components.utils.reportError(e);
+    log.error(e);
+    log.error('Problem with log file "'+ file.leafName +'"');
   }
 }
 
+// Log to the browser console.
 function logconsole(level, msg) {
   if (level >= levels.error) {
     Components.utils.reportError(msg);
@@ -124,6 +123,7 @@ function logconsole(level, msg) {
   }
 }
 
+// Write out the log.
 function logout(items) {
   var i = 0
     , len = items.length
@@ -140,9 +140,13 @@ function logout(items) {
 }
 
 global_logger = (function () {
+  // The rotator contains a cache of log message that will be replayed if a log
+  // level is triggered which is greate that replay_level.
   var rotator = [];
 
   return function (name, level, msg) {
+    msg = util.isError(msg) ? exports.formatError(msg) : msg;
+
     if (level >= replay_level) {
       rotator.unshift(['REPLAY', levels.info, 'START']);
       rotator.push(['REPLAY', levels.info, 'END']);
@@ -153,7 +157,7 @@ global_logger = (function () {
     }
 
     rotator.push([name, level, msg]);
-    if (rotator.length > 12) {
+    if (rotator.length > 24) {
       rotator.shift();
     }
 
@@ -169,6 +173,7 @@ function logging_function(level) {
   };
 }
 
+// Logger object constructor.
 function Logger(name) {
   if (!(this instanceof Logger)) {
     return new Logger(name);
@@ -184,10 +189,12 @@ Logger.prototype.config = logging_function(levels.config);
 Logger.prototype.debug = logging_function(levels.debug);
 Logger.prototype.trace = logging_function(levels.trace);
 
+// Get a new logger object.
 exports.get = function (name) {
   return Logger(name);
 };
 
+// Dump utilities.
 exports.dump = function (msg, val) {
   val = typeof val === 'undefined' ? '' : ' : '+ val;
   dump(msg + val +'\n');
@@ -202,6 +209,33 @@ exports.inspect = function (name, x) {
   exports.dump(name, util.prettify(x));
 };
 
+// Pretty print an error.
+exports.formatError = function (e) {
+  if (typeof e === 'string') {
+    return e;
+  }
+  return (e.name +': '+ e.message +'; file: '+
+          e.fileName +'; line: '+ e.lineNumber +'; trace: '+ e.stack);
+};
+
+log = exports.get('Logging');
+
+set_current_level = function (level) {
+  current_level = ((typeof level === 'string') ?
+           (isNaN(+level) ? level : +level) :
+           ((typeof levels[level] === 'number') ?
+                   levels[level] : current_level));
+  log.trace('Set log level to "'+ levels.DESC[current_level] +'".');
+};
+
+set_replay_level = function (level) {
+  replay_level = ((typeof level === 'string') ?
+           (isNaN(+level) ? level : +level) :
+           ((typeof levels[level] === 'number') ?
+                   levels[level] : current_level));
+  log.trace('Set log replay level to "'+ levels.DESC[replay_level] +'".');
+};
+
 function load(cb) {
   require.ensure(['events', 'platform'], function (require) {
     var platform = require('platform')
@@ -213,23 +247,26 @@ function load(cb) {
 
     function debug_change(val) {
       if (val === true) {
+        log.trace('Going into debug mode.');
         locked = val;
         cached_level = current_level;
-        current_level = levels.all;
+        set_current_level('all');
         return;
       }
-      current_level = cached_level;
+      log.trace('Going out of debug mode.');
+      set_current_level(cached_level);
     }
 
     function level_change(level) {
       if (!locked) {
-        current_level = level;
+        set_current_level(level);
         return;
       }
       cached_level = level;
     }
 
     function setup(level_pref, debug_pref, replay_pref) {
+      log.trace('Setup.');
       set_current_level(level_pref.value());
       set_replay_level(replay_pref.value());
       locked = !!debug_pref.value();
@@ -252,13 +289,11 @@ function load(cb) {
       platform.pref('log.replay', prefs_ready(['pref']), 'error');
     }
     catch (e) {
-      events.trigger('error', e);
-      events.trigger('error',
-          LoggingError('Unable to read logging preferences.'));
+      log.debug(e);
+      log.warn(LoggingError(new Error('Unable to read logging preferences.')));
     }
 
     cb('logging', exports);
   });
 }
 
-dump('loaded logging.js\n');
