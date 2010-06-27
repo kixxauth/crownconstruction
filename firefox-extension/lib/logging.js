@@ -62,7 +62,10 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
 
   , global_logger
 
-  , console = require('platform').console
+  , console = {
+      log: function () {}
+    }
+
   , util = require('util')
 
   , LoggingError = require('errors')
@@ -245,6 +248,8 @@ function load(cb) {
       , cached_level = current_level
       ;
 
+    console = platform.console;
+
     function debug_change(val) {
       if (val === true) {
         log.trace('Going into debug mode.');
@@ -284,9 +289,9 @@ function load(cb) {
 
     prefs_ready = events.Aggregate(setup);
     try {
-      platform.pref('log.level', prefs_ready(['pref']), 'warn');
-      platform.pref('debug', prefs_ready(['pref']), false);
-      platform.pref('log.replay', prefs_ready(['pref']), 'error');
+      platform.pref('log.level', prefs_ready('level_pref'), 'warn');
+      platform.pref('debug', prefs_ready('debug_pref'), false);
+      platform.pref('log.replay', prefs_ready('replay_pref'), 'error');
     }
     catch (e) {
       log.debug(e);
