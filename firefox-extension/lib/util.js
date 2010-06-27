@@ -17,7 +17,7 @@ Components: false
 
 "use strict";
 
-dump('loading util.js\n');
+dump(' ... util.js\n');
 
 var EXPORTED_SYMBOLS = ['exports', 'load']
 
@@ -30,6 +30,8 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
   , require = Cu.import('resource://fireworks/lib/require.js', null).require
 
   , events = require('events')
+
+  , $F = function () {}
   ;
 
 /*
@@ -225,12 +227,37 @@ exports.prettify = function (x) {
   return x +'';
 };
 
-exports.isArray = function (x) {
-  return Object.prototype.toString.call(x) === '[object Array]';
+exports.isObject = function (x) {
+	return !!(x && Object.prototype.toString.call(x) === "[object Object]");
 };
+
+exports.isArray = function (x) {
+  return !!(x && Object.prototype.toString.call(x) === '[object Array]');
+};
+
+exports.isError = function (x) {
+  return !!(x && Object.prototype.toString.call(x) === '[object Error]');
+}
 
 exports.has = function (owner, propname) {
   Object.prototype.hasOwnProperty.call(owner, propname);
+};
+
+exports.confirmObject = function confirmObject(x) {
+	return exports.isObject(x) ? x : {};
+};
+
+exports.confirmArray = function confirmArray(x) {
+	return exports.isArray(x) ? x : [];
+};
+
+exports.confirmFunc = function confirmFunc(x) {
+	return typeof x === "function" ? x : $F;
+};
+
+exports.confirmInt = function (x, def) {
+  x = +x;
+  return isNaN(x) ? ((typeof def === 'undefined') ? 0 : def) : x;
 };
 
 function load(cb) {
@@ -238,6 +265,4 @@ function load(cb) {
     cb('util', exports);
   }, 0);
 }
-
-dump('loaded util.js\n');
 

@@ -17,7 +17,7 @@ Components: false
 
 "use strict";
 
-dump('loading http.js\n');
+dump(' ... http.js\n');
 
 var EXPORTED_SYMBOLS = ['exports', 'load']
 
@@ -30,20 +30,11 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
   , require = Cu.import('resource://fireworks/lib/require.js', null).require
 
   , events = require('events')
+
+  , RequestError = require('errors')
+                     .ErrorConstructor('RequestError', 'http')
   ;
 
-function RequestError(msg) {
-  var self;
-  if (msg instanceof Error) {
-    self = msg;
-  }
-  else {
-    self = new Error(msg);
-  }
-  self.name = "HTTPReqError";
-  self.constructor = RequestError;
-  return self;
-}
 
 // Make an asynchronous HTTP request.
 // ----------------------------------
@@ -97,7 +88,7 @@ exports.request = function make_http_request(options, callback) {
     xhr.open(method, options.url, true);
   } catch (e) {
     throw RequestError('Problem calling XMLHttpRequest.open('+
-      method +', '+ options.url +', true); '+ e);
+      method +', '+ options.url +', true); '+ e.message);
   }
 
   options.headers = options.headers || {};
@@ -110,7 +101,8 @@ exports.request = function make_http_request(options, callback) {
   try {
     xhr.send(options.body || null);
   } catch(sendErr) {
-    throw RequestError('Problem calling XMLHttpRequest.send(); '+ sendErr);
+    throw RequestError(
+        'Problem calling XMLHttpRequest.send(); '+ sendErr.message);
   }
 };
 
@@ -119,6 +111,4 @@ function load(cb) {
     cb('http', exports);
   }, 0);
 }
-
-dump('loaded http.js\n');
 
