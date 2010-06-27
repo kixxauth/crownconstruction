@@ -202,7 +202,7 @@ exports.Broadcaster = function() {
     exports.enqueue(function () {
       var i;
       for (i in registry) {
-        if (util.has(registry, i)) {
+        if (typeof registry[i] === 'function') {
           registry[i].apply(binding || null, vals);
         }
       }

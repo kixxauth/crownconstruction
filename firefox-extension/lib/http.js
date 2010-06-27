@@ -66,7 +66,7 @@ exports.request = function make_http_request(options, callback) {
     if (ev.target.readyState !== 4) {
       return;
     }
-    if (ev.target.status === 0) {
+    if (!xhr.responseText && ev.target.status === 0) {
       callback(
           null,
           RequestError('XMLHttpRequest HTTP status is 0.'));
