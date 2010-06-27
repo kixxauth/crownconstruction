@@ -1,37 +1,62 @@
-(function (jq, undefined) {
+/*jslint
+onevar: true,
+undef: true,
+nomen: true,
+eqeqeq: true,
+plusplus: true,
+bitwise: true,
+regexp: true,
+immed: true,
+strict: true,
+laxbreak: true
+*/
+
+/*global
+Components: false,
+jQuery: false
+*/
+
+"use strict";
+
+var INIT
+  , LOGIN
+  , APP
+  ;
+
+INIT = function (jq) {
   var deck = jq.deck(jq('#main').children())
-    , Cu = Components.utils
-    , require = Cu.import('resource://fireworks/lib/require.js', null).require
+    , start
+    , require = Components
+                  .utils
+                  .import('resource://fireworks/lib/require.js', null)
+                  .require
 
     , events = require('events')
-    , platform = require('platform')
-    , logging = require('logging')
-    , log = logging.get('fireworks-boot')
-    , console = platform.console
     ;
 
-  console.log('Start Fireworks application instance.');
+  require('platform')
+    .console.log('Start Fireworks application instance.');
 
-  function formatErr(e) {
-    if (typeof e === 'string') {
-      return e;
-    }
-    return (e.name +': '+ e.message +'\nfile: '+
-            e.fileName +'\nline: '+ e.lineNumber +'\n');
-  }
-
-  events.addListener('error', function (err) {
-    Cu.reportError(err);
-    log.error(formatErr(err));
-  });
-
-  require.ensure(['logging', 'environ'], function (require) {
+  start = events.Aggregate(function (require, jq) {
     var env = require('environ')
-      , logging = require('logging')
+
+      , log = require('logging')
+                .get('Fireworks_App' || env.LOG_NAME)
       ;
 
-    log = logging.get('fireworks' || env.LOG_NAME)
     log.info('Module system bootstrapped.');
+    LOGIN(require, log, deck);
   });
-}(jQuery));
+
+  require.ensure(['logging', 'environ'], start());
+  jq(start());
+};
+
+LOGIN = function (require, log, deck) {
+};
+
+APP = function () {
+};
+
+INIT(jQuery);
 

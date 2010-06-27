@@ -31,6 +31,7 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
   , require = Cu.import('resource://fireworks/lib/require.js', null).require
 
   , util = require('util')
+  , isArray = util.isArray
 
   , observer_service = Cc["@mozilla.org/observer-service;1"]
                          .getService(Ci.nsIObserverService)
@@ -343,26 +344,48 @@ exports.Aggregate = function (callback) {
   var registry = [];
 
   function try_return() {
-    var i = 0, len = registry.length;
+    var i = 0
+      , len = registry.length
+      , args = []
+      , params = []
+      ;
 
     for (; i < len; i += 1) {
+      if (registry[i][0]) {
+        params.push(registry[i][1]);
+      }
+      else {
+        args.push(registry[i][1]);
+      }
       if (registry[i] === false) {
         return;
       }
     }
-    callback(registry);
+    if (args.length) {
+      callback(args);
+    }
+    else {
+      callback.apply(null, params);
+    }
   }
 
   return function (keys) {
     var index = registry.push(false) -1;
 
     return function () {
-      var args = {}, i;
-      if (keys) {
+      var args = [false, false], i, arg;
+
+      if (isArray(keys)) {
+        arg = {};
         for (i = 0; i < keys.length; i += 1) {
-          args[keys[i]] = arguments[i];
+          arg[keys[i]] = arguments[i];
         }
+        args = [false, arg];
       }
+      else {
+        args = [true, arguments[0]];
+      }
+
       registry[index] = args;
       try_return();
     };

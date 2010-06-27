@@ -26,6 +26,8 @@ var EXPORTED_SYMBOLS = ['require']
 
   , loaded_modules = {}
 
+  , ensure
+
     // The events module will be loaded with the require function.
   , events
 
@@ -51,7 +53,7 @@ function require(id) {
     return m;
   }
    
-  log.trace('"'+ id +'" loading partial.\n');
+  log.trace('"'+ id +'" loading partial.');
   url = get_url(id);
   try {
     m = Cu.import(url, null);
@@ -69,11 +71,6 @@ function require(id) {
   return ((typeof m.exports === 'object') ? m.exports : m);
 }
 
-log.trace('Loading events module');
-events = require('events');
-log.trace('Loading logging module');
-log = require('logging').get('Module_Loader');
-
 function load(modules) {
   var i = 0, len = modules.length;
 
@@ -89,7 +86,7 @@ function Loader(callback) {
   });
 }
 
-require.ensure = function (modules, callback) {
+function initialized(modules, callback) {
   var loader = Loader(callback)
     , i = 0
     , len = modules.length
@@ -105,6 +102,7 @@ require.ensure = function (modules, callback) {
       }
       catch (loadErr) {
         log.debug(loadErr);
+        // This error brings the whole module loader to a halt.
         throw 'Error loading module from "'+ get_url(modules[i]) +'".';
       }
       init(loader(['id', 'exports']));
@@ -119,5 +117,20 @@ require.ensure = function (modules, callback) {
       callback(require);
     }, 0);
   }
+}
+
+ensure = function (modules, callback) {
+  log.trace('Initializing require.ensure()');
+  log.trace('Loading events module');
+  events = require('events');
+  log.trace('Loading logging module');
+  log = require('logging').get('Module_Loader');
+
+  ensure = initialized;
+  ensure(modules, callback);
+};
+
+require.ensure = function (modules, callback) {
+  ensure(modules, callback);
 };
 

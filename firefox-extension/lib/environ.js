@@ -38,46 +38,51 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
 exports.CONFIGS_URL = 'resource://fireworks/config.json';
 
 function load(cb) {
-  require.ensure(['events', 'http', 'util'], function (require) {
+  require.ensure(['http', 'util'], function (require) {
     var http = require('http')
       , util = require('util')
-      , events = require('events')
       ;
 
     // Read config file and set global constants.
     try {
       http.request({url: exports.CONFIGS_URL}, function (response, err) {
-        if (err) {
-          log.debug(err);
-          log.error(EnvironError(new Error('Unable to read config file at "'+
-                exports.CONFIGS_URL +'".')));
-          cb('environs', exports);
-          return;
-        }
-
-        var configs = {}, attr;
         try {
-          configs = JSON.parse(response.body);
-        }
-        catch (parseErr) {
-          log.debug(parseErr);
-          log.error(EnvironError(new Error('Unable to parse config file at "'+
-                exports.CONFIGS_URL +'".')));
-        }
+          if (err) {
+            log.debug(err);
+            throw new Error('Unable to read config file at "'+
+                        exports.CONFIGS_URL +'".');
+          }
 
-        for (attr in configs) {
-          if (util.has(configs, attr)) {
-            exports[attr] = configs[attr];
+          var configs = {}, attr;
+          try {
+            configs = JSON.parse(response.body);
+          }
+          catch (parseErr) {
+            log.debug(parseErr);
+            throw new Error('Unable to parse config file at "'+
+                        exports.CONFIGS_URL +'".');
+          }
+
+          for (attr in configs) {
+            if (util.has(configs, attr)) {
+              exports[attr] = configs[attr];
+            }
           }
         }
-
-        cb('environs', exports);
+        catch (e) {
+          log.error(EnvironError(e));
+        }
+        finally {
+          cb('environs', exports);
+        }
       });
     }
     catch (httpErr) {
       log.debug(httpErr);
       log.error(EnvironError(new Error('Invalid config file "'+
             exports.CONFIGS_URL +'".')));
+    }
+    finally {
       cb('environs', exports);
     }
   });
