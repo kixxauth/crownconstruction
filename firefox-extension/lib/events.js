@@ -86,6 +86,8 @@ exports.Promise = function (init) {
         }
       };
 
+  var logging = require('logging');
+
   function broadcast(type, args) {
     if (spec.fulfilled_val || spec.exception_val) {
       return;
@@ -111,10 +113,14 @@ exports.Promise = function (init) {
       val = spec.exception_val = Array.prototype.slice.call(args);
     }
 
-    for (i = 0; i < len; i += 1) {
+    function queue_observer(fn, val) {
       exports.enqueue(function () {
-        observers[i].apply(null, val);
+        fn.apply(null, val);
       }, 0);
+    }
+
+    for (i = 0; i < len; i += 1) {
+      queue_observer(observers[i], val);
     }
   }
 
@@ -130,10 +136,12 @@ exports.Promise = function (init) {
     broadcast('progress', arguments);
   }
 
-  exports.enqueue(function init_promise() {
+  exports.enqueue(function () {
     init(broadcast_fulfill,
         broadcast_exception, broadcast_progress);
   }, 0);
+
+  return construct_pub_promise(spec);
 };
 
 function Observer(topic, callback) {
