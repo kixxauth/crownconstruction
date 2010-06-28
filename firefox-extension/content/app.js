@@ -74,7 +74,9 @@ INIT = function (jq) {
             })
           ;
       }
-      LOGIN(require, log, jq, deck);
+      require.ensure(['db'], function (require) {
+        LOGIN(require, log, require('db'), jq, deck);
+      });
     }, false);
     
   });
@@ -83,9 +85,8 @@ INIT = function (jq) {
   jq(start());
 };
 
-LOGIN = function (require, log, jq, deck) {
+LOGIN = function (require, log, db, jq, deck) {
   var logging = require('logging')
-    , db = require('db')
     ;
 
   function show_login() {
@@ -121,6 +122,10 @@ LOGIN = function (require, log, jq, deck) {
         function (connection) {
           logging.checkpoint('connection', connection);
         }
+
+        // DCubeError: 'Request error.'
+        // 'User does not exist.'
+        // 'Authentication denied.'
       , function (err) {
           logging.checkpoint('connection err', err);
         }

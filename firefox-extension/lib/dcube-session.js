@@ -110,25 +110,51 @@ exports.request = function (spec, callback, errback) {
         callback(normalize_response(response));
         return;
       }
-      log.debug(ex);
-      errback(DCubeSessionError(new Error(ex.message)));
+      log.debug(logging.formatError(ex));
+      log.debug('URL: '+ spec.url +', username: '+ spec.username);
+      errback(DCubeSessionError(new Error('request failed')));
     }, timeout);
   } catch (e) {
-    log.debug(e);
-    errback(DCubeSessionError(new Error(e.message)));
+    log.debug(logging.formatError(e));
+    log.debug('URL: '+ spec.url +', username: '+ spec.username);
+    errback(DCubeSessionError(new Error('invalid request')));
   }
 };
 
-Session = function(username, passkey) {
+var SHA1 = function (target) {
+	var uc = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
+			createInstance(Components.interfaces.nsIScriptableUnicodeConverter),
+		hasher = Components.classes["@mozilla.org/security/hash;1"].
+			 createInstance(Components.interfaces.nsICryptoHash),
+		data, hash;
+
+	uc.charset = "UTF-8";
+	data = uc.convertToByteArray(target, {});
+	hasher.init(hasher.SHA1);
+	hasher.update(data, data.length);
+	hash = hasher.finish(false);
+
+	function toHexString(charCode) {
+		return ("0" + charCode.toString(16)).slice(-2);
+	}
+
+	// Should not be using JavaScript array comprehensions.
+	//return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+
+	return Array.prototype
+		.map.call(hash, function (x){ return x.charCodeAt(0); })
+		.map(toHexString)
+		.join("");
+};
+
+Session = function(username) {
   if (!(this instanceof Session)) {
-    return new Session(username, passkey);
+    return new Session(username);
   }
   this.username = username;
-  this.passkey = passkey;
 };
 
 Session.prototype = {};
-Session.prototype.passkey = '';
 Session.prototype.username = '';
 Session.prototype.nonce = '';
 Session.prototype.nextnonce = '';
@@ -136,31 +162,38 @@ Session.prototype.nextnonce = '';
 Session.prototype.stack = [];
 Session.prototype.blocked = false;
 
-Session.cnonce = function () {
-  return crypto.sha1(crypto.sha1(this.passkey +''+ this.nextnonce));
+Session.prototype.cnonce = function (passkey) {
+  return crypto.sha1(crypto.sha1(passkey +''+ this.nextnonce));
 };
 
-Session.response = function () {
-  return crypto.sha1(this.passkey +''+ this.nonce);
+Session.prototype.response = function (passkey) {
+  return crypto.sha1(passkey +''+ this.nonce);
 };
 
 Session.prototype.request = function (spec, callback, errback, done) {
+  var self = this;
+
   spec.username = this.username;
   if (this.nonce && this.nextnonce) {
-    spec.cnonce = this.cnonce();
-    spec.response = this.response();
+    spec.cnonce = this.cnonce(spec.passkey);
+    spec.response = this.response(spec.passkey);
   }
+
+  dump('--->>> ! Request using passkey: '+ spec.passkey +'\n');
+  dump('--->>> ! Request nonce: '+ this.nonce +'\n');
+  dump('--->>> ! Request nextnonce: '+ this.nextnonce +'\n');
+
   exports.request(spec, function (response) {
     var nonce = response.head.authorization[1]
       , nextnonce = response.head.authorization[2]
       ;
 
-    log.debug('Got response for "'+ this.username +'" user session.');
+    log.debug('Got response for "'+ self.username +'" user session.');
     log.debug(logging.inspect('response', response));
 
     if (nonce && nextnonce) {
-      this.nonce = nonce;
-      this.nextnonce = nextnonce;
+      self.nonce = nonce;
+      self.nextnonce = nextnonce;
     }
 
     done();
@@ -263,22 +296,19 @@ Session.prototype.done = function () {
 //     response body {object}.
 //   * `errback` {function} If the request fails the errback function will be
 //     invoked with one parameter: The request error.
-exports.Transaction = function Transaction(username, passkey, callback) {
+exports.Transaction = function Transaction(username, callback) {
   if (!open_sessions[username]) {
     log.trace('Creating new user session for "'+ username +'".');
     if (!username || typeof username !== 'string') {
       throw 'Username string required for a user session.';
     }
-    if (!passkey || typeof passkey !== 'string') {
-      throw 'Passkey string required for a user session.';
-    }
-    open_sessions[username] = Session(username, passkey);
+    open_sessions[username] = Session(username);
   }
   open_sessions[username].next(callback);
 };
 
 function load(cb) {
-  require.ensure(['logging'], function (require) {
+  require.ensure(['logging', 'jsonrequest'], function (require) {
     cb('dcube-session', exports);
   });
 }
