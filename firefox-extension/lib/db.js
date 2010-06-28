@@ -639,6 +639,7 @@ exports.connect = function (dbname, models, username, passkey, query) {
       }
 
       function has_session(session) {
+        logging.dump('--->>> session', typeof session);
         spec.session = session;
         session('query', dbname, query)(
           function (results) {
@@ -658,7 +659,7 @@ exports.connect = function (dbname, models, username, passkey, query) {
         log.trace('Creating new connection function.');
         if (!has(user_sessions, username)) {
           log.trace('Creating a new user session.');
-          has_session(dcube.User(username, passkey, has_session));
+          dcube.User(username, passkey, has_session);
         }
         else {
           log.trace('Using existing user session.');
