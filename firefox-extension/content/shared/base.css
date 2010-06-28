@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'DejaVu Mono';
+  font-style: normal;
+  font-weight: normal;
+  src: local('DejaVu Mono'), url('./shared/DejaVuSansMono.ttf') format('truetype');
+}
+
+body {
+  font-family: "DejaVu Mono";
+  font-size: 150%;
+}

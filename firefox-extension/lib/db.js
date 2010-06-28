@@ -554,10 +554,9 @@ blocking = {
   , locked: false
 
   , done: function () {
-      var self = this;
       events.enqueue(function () {
-        self.locked = false;
-        self.next();
+        blocking.locked = false;
+        blocking.next();
       }, 0);
     }
 
@@ -566,13 +565,13 @@ blocking = {
 
       if (typeof cc === 'function') {
         args = args || [];
-        args.unshift(this.done);
-        this.stack.push({cc: cc, args: args, binding: binding});
+        args.unshift(blocking.done);
+        blocking.stack.push({cc: cc, args: args, binding: binding});
       }
 
-      if (this.stack.length && !this.locked) {
-        this.locked = true;
-        cont = this.stack.shift();
+      if (blocking.stack.length && !blocking.locked) {
+        blocking.locked = true;
+        cont = blocking.stack.shift();
         cont.cc.apply(cont.binding, cont.args);
       }
     }
