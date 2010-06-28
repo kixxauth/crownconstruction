@@ -5,7 +5,45 @@
   src: local('DejaVu Mono'), url('./shared/DejaVuSansMono.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'DejaVu Mono';
+  font-style: normal;
+  font-weight: bold;
+  src: local('DejaVu Mono'), url('./shared/DejaVuSansMono-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DejaVu Mono';
+  font-style: italic;
+  font-weight: normal;
+  src: local('DejaVu Mono'), url('./shared/DejaVuSansMono-Oblique.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DejaVu Mono';
+  font-style: italic;
+  font-weight: bold;
+  src: local('DejaVu Mono'), url('./shared/DejaVuSansMono-BoldOblique.ttf') format('truetype');
+}
+
+@typeface: "DejaVu Mono";
+
 body {
-  font-family: "DejaVu Mono";
-  font-size: 150%;
+  font-family: @typeface;
+  font-weight: normal;
+  font-size: 120%;
+  color: #000;
+}
+
+input, textarea {
+  font-family: @typeface;
+  border: 1px solid #000;
+  background: #fff;
+}
+
+button {
+  font-family: @typeface;
+  border: 1px solid #000;
+  background: #fff;
+  cursor: pointer;
 }
