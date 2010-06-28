@@ -50,7 +50,7 @@ exports.hash = function (target, algo /*TODO: charset */) {
 	data = uc.convertToByteArray(target, {});
 
   algo = algo +'';
-  if (algo.toUpperCase === 'SHA1') {
+  if (algo.toUpperCase() === 'SHA1') {
 	  hasher.init(hasher.SHA1);
   }
   else {

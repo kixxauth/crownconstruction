@@ -279,7 +279,7 @@ function InitConnection(opt) {
   if (!(this instanceof InitConnection)) {
     return new InitConnection(opt);
   }
-  log.trace(logging.inspect('InitConnection()', opt));
+  log.trace('InitConnection() -> '+ util.prettify(opt));
   this.id = opt.id;
   this.dbname = opt.dbname;
   this.session = opt.session;
@@ -387,7 +387,7 @@ InitConnection.prototype.request = function (queries, callbacks) {
   , function (err) {
       log.trace('Got connection response for '+ this.id);
       log.debug('Request error.');
-      log.debug(err);
+      log.debug(logging.formatError(err));
       callbacks.forEach(function (cb) { cb(false, DBError('request error')); });
     }
   );
@@ -408,7 +408,7 @@ InitConnection.prototype.get = function (keys) {
     function combiner(ent, err) {
       if (!ent) {
         len -= 1;
-        log.debug(err);
+        log.debug(logging.formatError(err));
         if (err && err.message === 'request error') {
           if (!exception) {
             exception = err;
@@ -460,7 +460,7 @@ InitConnection.prototype.commit = function () {
       results += 1;
 
       if (!committed) {
-        log.debug(err);
+        log.debug(logging.formatError(err));
         self.changeset.revert(keys[results -1]);
         if (err && err.message === 'request error') {
           if (!exception) {
@@ -497,7 +497,7 @@ InitConnection.prototype.commit = function () {
 };
 
 function Connection(spec) {
-  log.trace(logging.inspect('Connection()', spec));
+  log.trace('Connection() -> '+ util.prettify(spec));
   var dbname = spec.dbname
     , username = spec.username
     , id = spec.id
@@ -620,7 +620,7 @@ exports.Query = dcube.Query;
 //     * 'Database is restricted.' The user does not have access to the db.
 exports.connect = function (dbname, models, username, passkey, query) {
   log.trace('DB.connect('+
-        [dbname, models, username, passkey, query] +')');
+        [dbname, 'models', username, passkey, 'query'] +')');
 
   return Promise(function (fulfill, except, progress) {
     blocking.next(function (done) {
@@ -639,16 +639,17 @@ exports.connect = function (dbname, models, username, passkey, query) {
       }
 
       function has_session(session) {
-        logging.dump('--->>> session', typeof session);
         spec.session = session;
-        session('query', dbname, query)(
+        session('query', passkey, dbname, query)(
           function (results) {
+            log.debug('Connection query results -> '+ util.prettify(results));
             user_sessions[username] = session;
             open_connections[id] = Connection(spec);
             done();
             fulfill(open_connections[id]);
           }
         , function (ex) {
+            log.debug('Connection error -- '+ ex);
             done();
             except(ex);
           }
@@ -659,7 +660,7 @@ exports.connect = function (dbname, models, username, passkey, query) {
         log.trace('Creating new connection function.');
         if (!has(user_sessions, username)) {
           log.trace('Creating a new user session.');
-          dcube.User(username, passkey, has_session);
+          dcube.User(username, has_session);
         }
         else {
           log.trace('Using existing user session.');
@@ -675,7 +676,7 @@ exports.connect = function (dbname, models, username, passkey, query) {
 };
 
 function load(cb) {
-  require.ensure(['logging'], function (require) {
+  require.ensure(['logging', 'dcube'], function (require) {
     cb('dcube', exports);
   });
 }

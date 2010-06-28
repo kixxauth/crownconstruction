@@ -45,7 +45,7 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
       if (val && typeof val === 'string') {
         domain = val.replace(/\/+$/, '');
       }
-      log.trace('Set domain to "'+ domain +'".');
+      log.info('Set domain to "'+ domain +'".');
     }
 
   , blocking
@@ -218,17 +218,17 @@ exports.userExists = function (username) {
 					else {
             err = ".userExists(); Received response status: "+
 							response.head.status;
-						log.debug(err);
+						log.debug(logging.formatError(err));
 						except(DCubeError(new Error(err)));
 					}
 				},
 				function (exception) {
           err = ".userExists(); "+ exception;
-					log.debug(err);
+					log.debug(logging.formatError(err));
 					except(DCubeError(new Error(err)));
 				});
 		} catch (e) {
-			log.debug(e);
+			log.debug(logging.formatError(e));
 			except(DCubeError(new Error('.userExists(); '+ e)));
 		}
 	});
@@ -238,13 +238,13 @@ function session_request(transaction, spec, cb) {
   spec.timeout = 7000;
   try {
     transaction(spec, cb, function (ex) {
-      log.debug(ex);
+      log.debug(logging.formatError(ex));
       transaction.except(DCubeError(new Error('Request error.')));
       transaction();
       log.trace('session_request() closed transaction.');
     });
   } catch (e) {
-    log.debug(e);
+    log.debug(logging.formatError(e));
     transaction.except(DCubeError(new Error('Request error.')));
     transaction();
     log.trace('session_request() closed transaction in catch block.');
@@ -254,7 +254,7 @@ function session_request(transaction, spec, cb) {
 function ChallengedUser(user) {
   user.get = ChallengedUser.get;
   user.update = ChallengedUser.update;
-  user.connect = ChallengedUser.connect;
+  user.query = ChallengedUser.query;
   user.remove = ChallengedUser.remove;
   user.createDatabase = ChallengedUser.createDatabase;
   user.removeDatabase = ChallengedUser.removeDatabase;
@@ -264,7 +264,8 @@ function ChallengedUser(user) {
 }
 
 ChallengedUser.request = function(transaction, spec, cb) {
-  log.trace('ChallengedUser.request('+ [transaction, spec, cb] +') called.');
+  log.trace('ChallengedUser.request() called.');
+  dump('--->>> ! ChallengedUser.request using passkey: '+ spec.passkey +'\n');
   session_request(transaction, spec, function (status, response) {
     transaction();
     log.trace('ChallengedUser.request() closed transaction.');
@@ -277,11 +278,11 @@ ChallengedUser.request = function(transaction, spec, cb) {
   });
 };
 
-ChallengedUser.get = function (transaction, target) {
-  log.trace('ChallengedUser.get('+ [transaction, target] +') called.');
+ChallengedUser.get = function (transaction, passkey, target) {
+  log.trace('ChallengedUser.get() called.');
   ChallengedUser.request(
       transaction
-    , {url: domain +'/users/'+ target}
+    , {url: domain +'/users/'+ target, passkey: passkey}
     , function (status, response) {
         log.trace('ChallengedUser.get() response status: '+ status +'.');
         transaction.fulfill(response);
@@ -289,11 +290,17 @@ ChallengedUser.get = function (transaction, target) {
     );
 };
 
-ChallengedUser.update = function (transaction, target, user) {
-  log.trace('ChallengedUser.update('+ [transaction, target, user] +') called.');
+ChallengedUser.update = function (transaction, passkey, target, user) {
+  log.trace('ChallengedUser.update() called.');
   ChallengedUser.request(
       transaction
-    , {url: domain +'/users/'+ target, method: 'put', body: user}
+    , {
+        url: domain +'/users/'+ target
+      , passkey: passkey
+      , method: 'put'
+      , body: user
+      }
+
     , function (status, response) {
         log.trace('ChallengedUser.update() response status: '+ status +'.');
         transaction.fulfill(response);
@@ -301,10 +308,11 @@ ChallengedUser.update = function (transaction, target, user) {
     );
 };
 
-ChallengedUser.query = function (transaction, dbname, query) {
-  log.trace('ChallengedUser.query('+ [transaction, dbname, query] +') called.');
+ChallengedUser.query = function (transaction, passkey, dbname, query) {
+  log.trace('ChallengedUser.query() called.');
   var spec = {
       url: domain +'/databases/'+ dbname
+    , passkey: passkey
     , method: 'query'
     };
 
@@ -332,11 +340,16 @@ ChallengedUser.query = function (transaction, dbname, query) {
   });
 };
 
-ChallengedUser.remove = function (transaction) {
-  log.trace('ChallengedUser.remove('+ [transaction] +') called.');
+ChallengedUser.remove = function (transaction, passkey) {
+  log.trace('ChallengedUser.remove() called.');
   ChallengedUser.request(
       transaction
-    , {url: domain +'/users/'+ this.username, method: 'delete'}
+    , {
+        url: domain +'/users/'+ this.username
+      , passkey: passkey
+      , method: 'delete'
+      }
+
     , function (status, response) {
         log.trace('ChallengedUser.remove() response status: '+ status +'.');
         transaction.fulfill();
@@ -344,11 +357,11 @@ ChallengedUser.remove = function (transaction) {
     );
 };
 
-ChallengedUser.createDatabase = function (transaction, dbname) {
-  log.trace('ChallengedUser.createDatabase('+
-        [transaction, dbname] +') called.');
+ChallengedUser.createDatabase = function (transaction, passkey, dbname) {
+  log.trace('ChallengedUser.createDatabase() called.');
   var spec = {
       url: domain +'/databases/'+ dbname
+    , passkey: passkey
     , method: 'put'
     };
 
@@ -367,12 +380,16 @@ ChallengedUser.createDatabase = function (transaction, dbname) {
   });
 };
 
-ChallengedUser.removeDatabase = function (transaction, dbname) {
-  log.trace('ChallengedUser.removeDatabase('+
-        [transaction, dbname] +') called.');
+ChallengedUser.removeDatabase = function (transaction, passkey, dbname) {
+  log.trace('ChallengedUser.removeDatabase() called.');
   ChallengedUser.request(
       transaction
-    , {url: domain +'/databases/'+ dbname, method: 'delete'}
+    , {
+        url: domain +'/databases/'+ dbname
+      , passkey: passkey
+      , method: 'delete'
+      }
+
     , function (status, response) {
         log.trace('ChallengedUser.removeDatabase() response status: '+
           status +'.');
@@ -389,12 +406,17 @@ ChallengedUser.removeDatabase = function (transaction, dbname) {
     );
 };
 
-ChallengedUser.updateDatabase = function (transaction, dbname, db) {
-  log.trace('ChallengedUser.updateDatabase('+
-        [transaction, dbname, db] +') called.');
+ChallengedUser.updateDatabase = function (transaction, passkey, dbname, db) {
+  log.trace('ChallengedUser.updateDatabase() called.');
   ChallengedUser.request(
       transaction
-    , {url: domain +'/databases/'+ dbname, method: 'put', body: db}
+    , {
+        url: domain +'/databases/'+ dbname
+      , passkey: passkey
+      , method: 'put'
+      , body: db
+      }
+
     , function (status, response) {
         log.trace('ChallengedUser.updateDatabase() response status: '+
           status +'.');
@@ -411,12 +433,11 @@ ChallengedUser.updateDatabase = function (transaction, dbname, db) {
     );
 };
 
-ChallengedUser.getDatabase = function (transaction, dbname) {
-  log.trace('ChallengedUser.getDatabase('+
-        [transaction, dbname] +') called.');
+ChallengedUser.getDatabase = function (transaction, passkey, dbname) {
+  log.trace('ChallengedUser.getDatabase() called.');
   ChallengedUser.request(
       transaction
-    , {url: domain +'/databases/'+ dbname}
+    , {url: domain +'/databases/'+ dbname, passkey: passkey}
     , function (status, response) {
         log.trace('ChallengedUser.getDatabase() response status: '+
           status +'.');
@@ -427,8 +448,7 @@ ChallengedUser.getDatabase = function (transaction, dbname) {
 
 function ping_user_method(name) {
   return function () {
-    log.trace('InitUser.'+ name +'('+
-        Array.prototype.slice.call(arguments) +') called.');
+    log.trace('InitUser.'+ name +'() called.');
     var self = this
       , args = Array.prototype.slice.call(arguments)
       , transaction = args[0]
@@ -452,17 +472,15 @@ function ping_user_method(name) {
   };
 }
 
-function InitUser(username, passkey) {
+function InitUser(username) {
   if (!(this instanceof InitUser)) {
-    return new InitUser(username, passkey);
+    return new InitUser(username);
   }
   this.username = username;
-  this.passkey = passkey;
 }
 
 InitUser.prototype = {};
 InitUser.prototype.username = '';
-InitUser.prototype.passkey = '';
 
 // `transaction` {function} Transaction function object.
 // `target` {string} Username to get.
@@ -498,10 +516,11 @@ InitUser.prototype.updateDatabase = ping_user_method('updateDatabase');
 // `dbname` {string} The name of the database to get.
 InitUser.prototype.getDatabase = ping_user_method('getDatabase');
 
-function User(username, passkey) {
-  var user = InitUser(username, passkey);
+function User(username) {
+  var user = InitUser(username);
   return function (op) {
-    log.trace('Requesting operation for username "'+ username +'".');
+    log.trace('Requesting operation "'+ op +
+        '" for username "'+ username +'".');
     if (typeof user[op] !== 'function') {
       throw '"'+ op +'" is an invalid operation.';
     }
@@ -509,7 +528,7 @@ function User(username, passkey) {
     var args = Array.prototype.slice.call(arguments, 1);
 
     return Promise(function (f, e, p) {
-      session.Transaction(username, passkey, function (txn) {
+      session.Transaction(username, function (txn) {
         log.trace('Got session.Transaction for username "'+ username +'".');
         txn.fulfill = f;
         txn.except = e;
@@ -549,25 +568,27 @@ blocking = {
     }
 };
 
-exports.User = function (username, passkey, callback) {
+exports.User = function (username, callback) {
   blocking.next(function (done) {
-    if (!open_users[username]) {
-      log.trace('Creating new user for "'+ username +'".');
-      if (!username || typeof username !== 'string') {
-        throw new Error('Username string required for a user object.');
-      }
-      if (!passkey || typeof passkey !== 'string') {
-        throw new Error('Passkey string required for a user object.');
-      }
-      open_users[username] = User(username, passkey);
+    if (open_users[username]) {
+      done();
+      callback(open_users[username]);
+      return;
     }
+
+    log.trace('Creating new user for "'+ username +'".');
+    if (!username || typeof username !== 'string') {
+      throw new Error('Username string required for a user object.');
+    }
+
+    open_users[username] = User(username);
     done();
     callback(open_users[username]);
   });
 };
 
 function load(cb) {
-  require.ensure(['platform', 'logging'], function (require) {
+  require.ensure(['platform', 'logging', 'dcube-session'], function (require) {
     var platform = require('platform');
 
     try {
