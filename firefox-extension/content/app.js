@@ -51,28 +51,7 @@ INIT = function (jq) {
     log.info('Module system bootstrapped.');
     platform.pref('dev', function (dev_pref) {
       if (dev_pref.value()) {
-        jq('#underlay')
-          .load(DEV_OVERLAY, function () {
-              jq(this)
-                .children('.gridcol')
-                .css({
-                    'background': '#d0e2f3'
-                  , 'float': 'left'
-                  , 'width': '7.25%'
-                  , 'height': '780px'
-                  , 'margin-left': '1%'
-                  })
-                ;
-            })
-          .css({
-              'position': 'absolute'
-            , 'top': '0'
-            , 'left': '0'
-            , 'width': '100%'
-            , 'height': '780px'
-            , 'z-index': '-1'
-            })
-          ;
+        jq('#underlay').load(DEV_OVERLAY);
       }
       require.ensure(['db'], function (require) {
         LOGIN(require, log, require('db'), jq, deck);
