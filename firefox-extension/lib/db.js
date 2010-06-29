@@ -55,6 +55,16 @@ function connection_id(username, dbname) {
   return username +'-'+ dbname;
 }
 
+function repr_connections() {
+  var rv = '', id;
+  for (id in open_connections) {
+    if(has(open_connections, id)) {
+      rv += (id +', ');
+    }
+  }
+  return rv.slice(0, rv.length -2);
+}
+
 function ChangeSet(connection_id) {
   if (!(this instanceof ChangeSet)) {
     return new ChangeSet(connection_id);
@@ -279,7 +289,7 @@ function InitConnection(opt) {
   if (!(this instanceof InitConnection)) {
     return new InitConnection(opt);
   }
-  log.trace('InitConnection() -> '+ util.prettify(opt));
+  log.trace('InitConnection() -> '+ opt.id);
   this.id = opt.id;
   this.dbname = opt.dbname;
   this.session = opt.session;
@@ -497,7 +507,7 @@ InitConnection.prototype.commit = function () {
 };
 
 function Connection(spec) {
-  log.trace('Connection() -> '+ util.prettify(spec));
+  log.trace('Connection() -> '+ spec.id);
   var dbname = spec.dbname
     , username = spec.username
     , id = spec.id
@@ -583,7 +593,12 @@ exports.connections = function (callback) {
     for (id in open_connections) {
       if (has(open_connections, id)) {
         cxn = open_connections[id];
-        rv.push([cxn('username'), cxn('dbname')]);
+        rv.push({
+            id: cxn('id')
+          , username: cxn('username')
+          , dbname: cxn('dbname')
+          }
+        );
       }
     }
     done();
@@ -620,7 +635,7 @@ exports.Query = dcube.Query;
 //     * 'Database is restricted.' The user does not have access to the db.
 exports.connect = function (dbname, models, username, passkey, query) {
   log.trace('DB.connect('+
-        [dbname, 'models', username, passkey, 'query'] +')');
+        [dbname, 'models', username, 'passkey', 'query'] +')');
 
   return Promise(function (fulfill, except, progress) {
     blocking.next(function (done) {
@@ -645,6 +660,7 @@ exports.connect = function (dbname, models, username, passkey, query) {
             log.debug('Connection query results -> '+ util.prettify(results));
             user_sessions[username] = session;
             open_connections[id] = Connection(spec);
+            log.debug('Update open_connections -> '+ repr_connections());
             done();
             fulfill(open_connections[id]);
           }
@@ -655,6 +671,8 @@ exports.connect = function (dbname, models, username, passkey, query) {
           }
         );
       }
+
+      log.debug('open_connections -> '+ repr_connections());
 
       if (!has(open_connections, id)) {
         log.trace('Creating new connection function.');
@@ -677,7 +695,7 @@ exports.connect = function (dbname, models, username, passkey, query) {
 
 function load(cb) {
   require.ensure(['logging', 'dcube'], function (require) {
-    cb('dcube', exports);
+    cb('db', exports);
   });
 }
 
