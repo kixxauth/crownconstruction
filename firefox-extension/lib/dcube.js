@@ -265,7 +265,6 @@ function ChallengedUser(user) {
 
 ChallengedUser.request = function(transaction, spec, cb) {
   log.trace('ChallengedUser.request() called.');
-  dump('--->>> ! ChallengedUser.request using passkey: '+ spec.passkey +'\n');
   session_request(transaction, spec, function (status, response) {
     transaction();
     log.trace('ChallengedUser.request() closed transaction.');

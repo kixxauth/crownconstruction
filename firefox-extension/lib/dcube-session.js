@@ -179,10 +179,6 @@ Session.prototype.request = function (spec, callback, errback, done) {
     spec.response = this.response(spec.passkey);
   }
 
-  dump('--->>> ! Request using passkey: '+ spec.passkey +'\n');
-  dump('--->>> ! Request nonce: '+ this.nonce +'\n');
-  dump('--->>> ! Request nextnonce: '+ this.nextnonce +'\n');
-
   exports.request(spec, function (response) {
     var nonce = response.head.authorization[1]
       , nextnonce = response.head.authorization[2]

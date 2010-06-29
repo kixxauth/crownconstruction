@@ -240,7 +240,7 @@ exports.isError = function (x) {
 }
 
 exports.has = function (owner, propname) {
-  Object.prototype.hasOwnProperty.call(owner, propname);
+  return Object.prototype.hasOwnProperty.call(owner, propname);
 };
 
 exports.confirmObject = function confirmObject(x) {
@@ -258,6 +258,19 @@ exports.confirmFunc = function confirmFunc(x) {
 exports.confirmInt = function (x, def) {
   x = +x;
   return isNaN(x) ? ((typeof def === 'undefined') ? 0 : def) : x;
+};
+
+exports.curry = function (fn, args, binding) {
+  args = exports.isArray(args) ? args : [args];
+  binding = binding || null;
+  return function () {
+    if (arguments.length) {
+      fn.apply(binding, args.concat(Array.prototype.slice(arguments)));
+    }
+    else {
+      fn.apply(binding, args);
+    }
+  };
 };
 
 function load(cb) {
