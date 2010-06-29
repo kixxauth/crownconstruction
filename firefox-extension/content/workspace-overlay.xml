@@ -1,0 +1,311 @@
+<overlay>
+<div id="workspace">
+<!--
+Application overlay HTML snippet.
+=================================
+-->
+
+<!--
+## Top menu bar
+-->
+<ul id="menu-bar">
+</ul><!-- menu-bar -->
+
+<!--
+## Navigation side bar
+-->
+<ul id="navigation">
+  <!-- ### Search navigation -->
+  <li class="navigation section search">
+    <span class="navigation section">Search</span>
+    <ul class="navigation options">
+      <li class="navigation sub-section">
+        <a href="#search/jobs" id="search-jobs" class="bbq navigation sub-section">Jobs</a>
+      </li>
+      <li class="navigation sub-section">
+        <a href="#search/customers" id="search-customers" class="bbq navigation sub-section">Customers</a>
+      </li>
+    </ul>
+  </li><!-- search -->
+
+  <!-- ### Customers navigation -->
+  <li class="navigation section customers">
+    <a href="#panels/customers" class="bbq navigation">Customers</a>
+    <ul class="navigation options">
+      <li class="navigation sub-section">
+        <a href="#search/customers" id="customers-search" class="bbq navigation sub-section">Search</a>
+      </li>
+      <li class="navigation sub-section">
+        <a href="#customers/create" class="bbq navigation">Create</a>
+      </li>
+    </ul>
+  </li><!-- customers -->
+
+  <!-- ### Jobs navigation -->
+  <li class="navigation section jobs">
+    <a href="#panels/jobs" class="bbq navigation">Jobs</a>
+    <ul class="navigation options">
+      <li class="navigation sub-section">
+        <a href="#search/jobs" id="jobs-search" class="bbq navigation sub-section">Search</a>
+      </li>
+      <li class="navigation sub-section">
+        <a href="#jobs/create" class="bbq navigation">Create</a>
+      </li>
+    </ul>
+  </li><!-- jobs -->
+
+  <!-- ### Personnel navigation -->
+  <li class="navigation section personnel">
+    <a href="#panels/personnel" class="bbq navigation">Personnel</a>
+    <ul class="navigation options">
+      <li class="navigation sub-section">
+        <a href="#personnel/directory" class="bbq navigation">Directory</a>
+      </li>
+      <li class="navigation sub-section">
+        <a href="#personnel/create" class="bbq navigation">Create</a>
+      </li>
+    </ul>
+  </li><!-- personnel -->
+</ul><!-- navigation -->
+
+<!--
+## Main application tabset
+
+  BBQ URL hashes for panel navigation should be in
+  the form '#panels/'+ panel_name
+-->
+
+<div id="tabset">
+  <!-- ### Customers panel -->
+  <div id="customers" class="tab-panel">
+    <!-- #### Customer view widget -->
+    <form id="customer-view" class="fform inner-tab-panel">
+      <fieldset id="customer-names" class="fform content-panel">
+        <h4 class="section-header">Names</h4>
+      </fieldset>
+      <fieldset id="customer-phones" class="fform content-panel">
+        <h4 class="section-header">Phone Numbers</h4>
+      </fieldset>
+      <fieldset id="customer-addresses" class="fform content-panel">
+        <h4 class="section-header">Addresses</h4>
+      </fieldset>
+      <fieldset id="customer-emails" class="fform content-panel">
+        <h4 class="section-header">Email Addresses</h4>
+      </fieldset>
+    </form><!-- customer-view -->
+  </div><!-- panel-customers -->
+
+  <!-- ### Jobs panel -->
+  <div id="jobs" class="tab-panel">
+    <!-- #### Job view widget -->
+    <form id="job-view" class="fform inner-tab-panel">
+      <fieldset id="job-header" class="fform content-panel">
+        <h4 class="section-header">Job Name</h4>
+      </fieldset>
+      <fieldset id="job-addresses" class="fform content-panel">
+        <h4 class="section-header">Work Addresses</h4>
+      </fieldset>
+      <fieldset id="job-customer" class="fform content-panel">
+        <h4 class="section-header">Customer</h4>
+      </fieldset>
+      <fieldset id="job-dates" class="fform content-panel">
+        <h4 class="section-header">Dates</h4>
+      </fieldset>
+      <fieldset id="job-payments" class="fform content-panel">
+        <h4 class="section-header">Payments</h4>
+      </fieldset>
+      <fieldset id="job-special-orders" class="fform content-panel">
+        <h4 class="section-header">Special Orders</h4>
+      </fieldset>
+      <fieldset id="job-subcontractors" class="fform content-panel">
+        <h4 class="section-header">Sub Conractors</h4>
+      </fieldset>
+      <fieldset id="job-siding" class="fform content-panel">
+        <h4 class="section-header">Siding</h4>
+      </fieldset>
+      <fieldset id="job-roofing" class="fform content-panel">
+        <h4 class="section-header">Roofing</h4>
+      </fieldset>
+      <fieldset id="job-permits" class="fform content-panel">
+        <h4 class="section-header">Permits</h4>
+      </fieldset>
+      <fieldset id="job-estimate" class="fform content-panel">
+        <h4 class="section-header">Estimate</h4>
+      </fieldset>
+      <fieldset id="job-profitandtaxes" class="fform content-panel">
+        <h4 class="section-header">Finances</h4>
+      </fieldset>
+    </form><!-- job-view -->
+  </div><!-- panel-jobs -->
+
+  <!-- ### Personnel panel -->
+  <div id="personnel" class="tab-panel">
+    <!-- #### Personnel directory widget -->
+    <div id="personnel-directory" class="personnel-panel inner-tab-panel">
+      <ul id="personnel-group-list">
+      </ul>
+    </div>
+    <!-- #### Personnel view widget -->
+    <form id="personnel-view" class="fform personnel-panel inner-tab-panel">
+      <fieldset id="personnel-name" class="fform content-panel">
+        <h4 class="section-header">Name</h4>
+      </fieldset>
+      <fieldset id="personnel-phones" class="fform content-panel">
+        <h4 class="section-header">Phone Numbers</h4>
+      </fieldset>
+      <fieldset id="personnel-groups" class="fform content-panel">
+        <h4 class="section-header">Groups</h4>
+      </fieldset>
+      <fieldset id="personnel-addresses" class="fform content-panel">
+        <h4 class="section-header">Addresses</h4>
+      </fieldset>
+    </form><!-- personnel-view -->
+
+    <!-- #### Personnel view templates -->
+    <template id="employee_name-template">
+    <![CDATA[
+      <h4 class="section-header">Name</h4>
+
+      <div class="input-section">
+        <div class="line">
+          <p class="input-float"><label class="live-label">last:</label>
+            <input class="clean-text-input fform lastname" type="text"
+              name="{{ name.last.path }}" value="{{ name.last.value }}" />
+          </p>
+          <p class="input-float"><label class="live-label">first:</label>
+            <input class="clean-text-input fform firstname" type="text"
+              name="{{ name.first.path }}" value="{{ name.first.value }}" />
+          </p>
+        </div>
+      </div>
+    ]]>
+    </template>
+    <template id="employee_addresses-template">
+    <![CDATA[
+      {{ var i = 0, len = addresses.length, address; }}
+      <h4 class="section-header">Addresses</h4>
+
+      {{ for (; i < len; i += 1) { }}
+      {{ address = addresses[i]; }}
+      <div class="input-section">
+        <div class="line">
+          <p>
+            <label class="live-label">street:</label>
+            <input class="clean-text-input fform street-address" type="text"
+              name="{{ address.street.path }}" value="{{ address.street.value }}" />
+          </p>
+        </div>
+        <div class="line">
+          <p class="input-float">
+            <label class="live-label">city:</label>
+            <input class="clean-text-input fform city" type="text"
+              name="{{ address.city.path }}" value="{{ address.city.value }}" />
+          </p>
+          <p class="input-float">
+            <label class="live-label">state:</label>
+            <input class="clean-text-input fform state-address" type="text"
+              name="{{ address.state.path }}" value="{{ address.state.value }}" />
+          </p>
+          <p class="input-float">
+            <label class="live-label">zip:</label>
+            <input class="clean-text-input fform zip" type="text"
+              name="{{ address.zip.path }}" value="{{ address.zip.value }}" />
+          </p>
+        </div>
+      </div>
+      {{ } }}
+
+      <a href="{{ key }}.addresses"" class="append fform button" title="Add another customer address.">
+        <span class="icon">+</span>
+        Add another address.
+      </a>
+    ]]>
+    </template>
+
+    <template id="employee_phones-template">
+    <![CDATA[
+      {{ var i = 0, len = phones.length, phone; }}
+      <h4 class="section-header">Phone Numbers</h4>
+      {{ for (; i < len; i += 1) { }}
+      {{ phone = phones[i]; }}
+      <div class="input-section">
+        <div class="line">
+          <p class="input-float">
+            <label class="live-label">number:</label>
+            <input class="clean-text-input fform phone" type="text"
+              name="{{ phone.phone.path }}" value="{{ phone.phone.value }}" />
+          </p>
+          <p class="input-float">
+            <label class="live-label">label:</label>
+            <input class="clean-text-input fform label" type="text"
+              name="{{ phone.label.path }}" value="{{ phone.label.value }}" />
+          </p>
+        </div>
+      </div>
+      {{ } }}
+
+      <a href="{{ key }}.phones" class="append fform button" title="Add another phone number.">
+        <span class="icon">+</span>
+        Add another phone number.
+      </a>
+    ]]>
+    </template>
+
+    <template id="employee_groups-template">
+    <![CDATA[
+      <h4 class="section-header">Groups</h4>
+      <div class="input-section">
+        <div class="line">
+          <p class="input-float">
+            <label class="live-label">groups:</label>
+            <input class="clean-text-input fform groups" type="text"
+              name="{{ groups.path }}" value="{{ groups.value }}" />
+          </p>
+        </div>
+      </div>
+    ]]>
+    </template>
+  </div><!-- panel-customers -->
+</div><!-- tabset -->
+
+<!--
+## Search panels
+-->
+
+<!-- ### Job search panel -->
+<div id="job-search" class="content-panel search-panel">
+  <h4 class="section-header">
+    Job Search
+    <span class="search-panel-close-button">x</span>
+  </h4>
+  <ul id="job-search-results" class="search-results-list">
+  </ul>
+</div><!-- job-search -->
+
+<!-- ### Customer search panel -->
+<div id="customer-search" class="content-panel search-panel">
+  <h4 class="section-header">
+    Customer Search
+    <span class="search-panel-close-button">x</span>
+  </h4>
+  <form id="customer-search-form">
+    <p class="customer-search-form">
+      <label class="customer-search-form">
+        Last name starts with...
+      </label>
+      <input id="customer-search-lastname" class="customer-search-form" type="text" />
+    </p>
+    <p class="customer-search-form">
+      <label class="customer-search-form">
+        First name starts with...
+      </label>
+      <input id="customer-search-firstname" class="customer-search-form" type="text" />
+    </p>
+    <button id="customer-search-button">Find</button>
+  </form>
+  <ul id="customer-search-results" class="search-results-list">
+  </ul>
+</div><!-- customer-search -->
+
+</div>
+</overlay>

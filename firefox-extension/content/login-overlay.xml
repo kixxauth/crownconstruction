@@ -1,3 +1,6 @@
+<overlay>
+<div id="login">
+
 <!-- login panel -->
 <div id="login-panel" class="panel login">
   <form id="login-form" method="post">
@@ -19,3 +22,6 @@
     <p id="login-warning-box" class="login warning"></p>
   </form>
 </div><!-- login-panel -->
+
+</div>
+</overlay>
