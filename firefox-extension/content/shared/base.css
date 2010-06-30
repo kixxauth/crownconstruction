@@ -35,6 +35,11 @@ body {
   color: #000;
 }
 
+/* Hide templates. */
+template {
+  display: none;
+}
+
 input, textarea {
   font-family: @typeface;
   border: 1px solid #000;

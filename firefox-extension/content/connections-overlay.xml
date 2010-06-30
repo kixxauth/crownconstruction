@@ -6,20 +6,22 @@
   </ul>
 </div>
 
-<template id="connections-list-template"><![CDATA[
-  {{ var i = 0, username, dbname; }}
-  {{ for (; i < connections.length; i += 0) { }}
-  {{ username = connections[i].usernname; }}
-  {{ dbname = connections[i].dbname; }}
-  {{ id = connections[i].id; }}
+<template id="connections-list-template">
+  <![CDATA[
+  <% var i = 0, username, dbname; %>
+  <% for (; i < connections.length; i += 1) { %>
+  <% username = connections[i].username; %>
+  <% dbname = connections[i].dbname; %>
+  <% id = connections[i].id; %>
   <li class="connections">
-    <a href="{{ id }}" class="connections">{{ username }} on {{ dbname }}</button>
+    <a href="<%= id %>" class="connections"><%= username %> on <%= dbname %></a>
   </li>
-  {{ } }}
+  <% } %>
   <li class="connections">
-    <a href="create" class="create connections">Create a new connection.</button>
+    <a href="create" class="create connections">Create a new connection.</a>
   </li>
-]]></template>
+  ]]>
+</template>
 
 </div>
 </overlay>
