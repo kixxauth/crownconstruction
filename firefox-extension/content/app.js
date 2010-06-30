@@ -201,6 +201,7 @@ APP = function (require, log, connection, jq, deck) {
     , confirmFunc = util.confirmFunc
     , isArray = util.isArray
     , logging = require('logging')
+    , events = require('events')
     , db = require('db')
     , Query = db.Query
     , view = require('view')
@@ -213,6 +214,12 @@ APP = function (require, log, connection, jq, deck) {
     , jobs
     , personnel
     ;
+
+  function update_field(path, val, pointer, data) {
+    var parts = path.split('.'), field = parts.pop();
+    pointer[parts.join('.')][field] = val;
+    return data;
+  }
 
   function mod_commands() {
     var self = {}
@@ -365,8 +372,34 @@ APP = function (require, log, connection, jq, deck) {
     commands.register('personnel', 'create', function () {
       var employee = connection('create', 'employee')
         , view = mapview(employee('key'), employee('entity'))
+        , ent = view.entity
+        , pointer = view.pointer
+        , view = view.view
         ;
+
+      logging.checkpoint('Employee entity data', util.prettify(ent));
       logging.checkpoint('Employee entity view', util.prettify(view));
+
+      logging.checkpoint('Should mutate.');
+      update_field(employee('key') +'.name.first', 'Otto', pointer, ent);
+      update_field(employee('key') +'.name.last', 'Van-go', pointer, ent);
+      employee('update', ent);
+
+      logging.checkpoint('Should be clean.');
+      update_field(employee('key') +'.name.first', '', pointer, ent);
+      update_field(employee('key') +'.name.last', '', pointer, ent);
+      employee('update', ent);
+
+      logging.checkpoint('Should mutate.');
+      update_field(employee('key') +'.name.first', 'Bjorn', pointer, ent);
+      update_field(employee('key') +'.name.last', 'Straussberg', pointer, ent);
+      employee('update', ent);
+
+      logging.checkpoint('Should commit.');
+      connection('commit')(function (q) {
+        // `q` is the number of committed entities.
+        logging.checkpoint('commit', util.prettify(q));
+      });
     });
 
     commands.register('personnel', 'directory', function () {
@@ -397,6 +430,19 @@ APP = function (require, log, connection, jq, deck) {
     bbq = mod_bbq(jq_workspace[0]);
     deck('workspace');
   });
+
+  // TODO
+  /*
+  events.addListener('db.state', function (db) {
+    logging.checkpoint(db.id +' is in state '+ db.state +'.');
+  });
+  events.addListener('db.committing', function (db) {
+    logging.checkpoint(db.id +' is committing.');
+  });
+  events.addListener('db.committed', function (db) {
+    logging.checkpoint(db.id +' committed in state '+ db.state +'.');
+  });
+  */
 };
 
 INIT(jQuery);

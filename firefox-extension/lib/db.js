@@ -98,13 +98,15 @@ ChangeSet.prototype.update = function (k, v, idx) {
     first = !this.set[k];
     this.set[k] = [v, idx];
     if (first && (this.length += 1) === 1) {
-      events.trigger('db.mutated', {id: this.connection});
+      events.trigger('db.state',
+          {id: this.connection, state: 'clean'}, true);
     }
   }
   else if (this.set[k]) {
     delete this.set[k];
     if ((this.length -= 1) === 0) {
-      events.trigger('db.clean', {id: this.connection});
+      events.trigger('db.state',
+          {id: this.connection, state: 'clean'}, true);
     }
   }
 };
@@ -149,10 +151,12 @@ ChangeSet.prototype.revert = function (k) {
 ChangeSet.prototype.commit = function (k) {
   this.staging = {};
   if (this.length === 0) {
-    events.trigger('db.committed', {id: this.connection, state: 'clean'});
+    events.trigger('db.committed'
+        , {id: this.connection, state: 'clean'}, true);
     return;
   }
-  events.trigger('db.committed', {id: this.connection, state: 'mutated'});
+  events.trigger('db.committed'
+      , {id: this.connection, state: 'mutated'}, true);
 };
 
 function Query(connection) {
@@ -265,7 +269,7 @@ function Entity(spec, connection) {
       mapper(entity_util.update(data, arguments[1]), indexes);
       rv = JSON.stringify(data);
       connection.changeset.update(key, rv, JSON.stringify(indexes));
-      return rv;
+      break;
 
     case 'delete':
       data = indexes = null;
@@ -456,10 +460,10 @@ InitConnection.prototype.query = function () {
   return Query(this);
 };
 
-InitConnection.prototype.commit = function () {
+InitConnection.prototype.commit = function (report) {
+  var self = this;
   return Promise(function (fulfill, except, progress) {
-    var self = this
-      , set = this.changeset.set, k
+    var set = self.changeset.set, k
       , keys = []
       , query = dcube.Query()
       , callbacks = []
@@ -467,7 +471,7 @@ InitConnection.prototype.commit = function () {
       , results = 0
       ;
 
-    log.trace('Committing '+ this.id);
+    log.trace('Committing '+ self.id);
 
     function combiner(committed, err) {
       results += 1;
@@ -496,16 +500,23 @@ InitConnection.prototype.commit = function () {
       }
     }
 
+    log.debug('change set -> '+ util.prettify(set));
+
     for (k in set) {
       if (has(set, k)) {
         keys.push(k);
-        query.put(k, set[k][0], set[k][1]);
+        query.put(k, set[k][0], JSON.parse(set[k][1]));
         callbacks.push(combiner);
       }
     }
 
-    this.changeset.stage();
-    this.request(query.resolve(), callbacks);
+    if (!report) {
+      self.changeset.stage();
+      self.request(query.resolve(), callbacks);
+    }
+    else {
+      fulfill(query.resolve());
+    }
   });
 };
 
@@ -555,7 +566,8 @@ function Connection(spec) {
       return cxn.query();
 
     case 'commit':
-      return cxn.commit();
+      // arguments[1]: report flag
+      return cxn.commit(arguments[1]);
 
     default:
       throw '"'+ op +'" is an invalid connection operation.';

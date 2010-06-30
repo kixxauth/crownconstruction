@@ -124,10 +124,10 @@ function Query() {
   if (!(this instanceof Query)) {
     return new Query();
   }
+  this.q = [];
 }
 
 Query.prototype = {};
-Query.prototype.q = [];
 
 Query.prototype.get = function (key) {
   log.trace('Query object .get() method called on '+ key);
@@ -141,7 +141,6 @@ Query.prototype.put = function (key, entity, indexes) {
     throw '`key` parameter must be a string.';
   }
 
-  entity = JSON.stringify(entity);
   indexes = util.confirmObject(indexes);
 
 	var stmts = [['key', '=', key], ['entity', '=', entity]]

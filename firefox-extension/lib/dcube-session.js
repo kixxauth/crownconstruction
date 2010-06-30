@@ -185,7 +185,7 @@ Session.prototype.request = function (spec, callback, errback, done) {
       ;
 
     log.debug('Got response for "'+ self.username +'" user session.');
-    log.debug(logging.inspect('response', response));
+    log.debug('response -> '+ util.prettify('response', response));
 
     if (nonce && nextnonce) {
       self.nonce = nonce;
