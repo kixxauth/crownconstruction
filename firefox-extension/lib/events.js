@@ -33,6 +33,8 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
   , util = require('util')
   , isArray = util.isArray
 
+  , logging = require('logging')
+
   , observer_service = Cc["@mozilla.org/observer-service;1"]
                          .getService(Ci.nsIObserverService)
 
@@ -85,8 +87,6 @@ exports.Promise = function (init) {
           progress: []
         }
       };
-
-  var logging = require('logging');
 
   function broadcast(type, args) {
     if (spec.fulfilled_val || spec.exception_val) {
@@ -302,7 +302,7 @@ exports.observeOnce = function (name, fn) {
 //   * `name` {string} The name of the event to trigger.
 //   * `data` {any type} A data type to pass to the event handlers.
 //   * `persist` {boolean} If this flag is set to `true` the event becomes a
-//     persisted event, meaning the event data will be cashed until the event
+//     persisted event, meaning the event data will be cached until the event
 //     is triggered again.
 exports.trigger = function(name, data, persist) {
   var subject = (typeof data === 'undefined' || data === null) ?

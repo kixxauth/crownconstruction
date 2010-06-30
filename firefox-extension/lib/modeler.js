@@ -30,6 +30,7 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
   , require = Cu.import('resource://fireworks/lib/require.js', null).require
 
   , util = require('util')
+  , logging = require('logging')
   , events = require('events')
   , md5 = require('hashlib').md5
 
@@ -167,7 +168,7 @@ map_model = (function () {
 
     if (typeof m.index === 'function') {
       index_to = m.index(x);
-      idx[index_to[0]] = idx[index_to[1]];
+      idx[index_to[0]] = index_to[1];
     }
     return x;
   };
