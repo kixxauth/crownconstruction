@@ -167,14 +167,16 @@ function Query(connection) {
     if (sent) {
       throw 'This query has already been committed.';
     }
-    var q = query.query()
+    var q = query.query(query)
       , override_append = q.append
       ;
 
     q.append = function (fn) {
       callbacks.push((typeof fn === 'function') ? fn : $F);
-      return override_append.call(q);
+      override_append.call(q);
+      return self;
     };
+    return q;
   };
 
   self.send = function () {
@@ -292,6 +294,7 @@ function InitConnection(opt) {
   log.trace('InitConnection() -> '+ opt.id);
   this.id = opt.id;
   this.dbname = opt.dbname;
+  this.passkey = opt.passkey;
   this.session = opt.session;
   this.models = opt.models;
   this.changeset = ChangeSet(opt.id);
@@ -318,10 +321,10 @@ InitConnection.prototype.model = function (kind, key, ent, index) {
 };
 
 InitConnection.prototype.remote_result = function (callbacks) {
+  var self = this;
   return function (result, i) {
     var n, p, item, multi_rv, indexes
       , cb = callbacks[i]
-      , self = this
       ;
 
     if (result.status === 400) {
@@ -367,7 +370,7 @@ InitConnection.prototype.remote_result = function (callbacks) {
             indexes[p] = item[p];
           }
         }
-        multi_rv.push(this.model(
+        multi_rv.push(self.model(
             indexes.kind
           , item.key
           , item.entity
@@ -384,18 +387,18 @@ InitConnection.prototype.remote_result = function (callbacks) {
 // All requests come through here.
 // ! Do not call this method from the UI thread.
 InitConnection.prototype.request = function (queries, callbacks) {
-  var promise = this.session('query', this.dbname, queries)
+  var promise = this.session('query', this.passkey, this.dbname, queries)
     , self = this
     ;
 
   log.trace('Making connection request for '+ this.id);
   promise(
     function (results) {
-      log.trace('Got connection response for '+ this.id);
+      log.trace('Got connection response for '+ self.id);
       results.forEach(self.remote_result(callbacks));
     }
   , function (err) {
-      log.trace('Got connection response for '+ this.id);
+      log.trace('Got connection response for '+ self.id);
       log.debug('Request error.');
       log.debug(logging.formatError(err));
       callbacks.forEach(function (cb) { cb(false, DBError('request error')); });
@@ -515,6 +518,7 @@ function Connection(spec) {
     , opt = {
         dbname: dbname
       , models: models
+      , passkey: spec.passkey
       , session: spec.session
       , id: id
     }
@@ -609,7 +613,13 @@ exports.connections = function (callback) {
 exports.getConnection = function (dbname, username, callback) {
   blocking.next(function (done) {
     done();
-    return open_connections[connection_id(username, dbname)] || null;
+    if (typeof username === 'function') {
+      callback = username;
+      callback(open_connections[dbname] || null);
+    }
+    else {
+      callback(open_connections[connection_id(username, dbname)] || null);
+    }
   });
 };
 
@@ -640,7 +650,13 @@ exports.connect = function (dbname, models, username, passkey, query) {
   return Promise(function (fulfill, except, progress) {
     blocking.next(function (done) {
       var id = connection_id(username, dbname)
-        , spec = {dbname: dbname, models: models, username: username, id: id}
+        , spec = {
+              dbname: dbname
+            , models: models
+            , username: username
+            , passkey: passkey
+            , id: id
+          }
         ;
 
       if (query.constructor === exports.Query) {
