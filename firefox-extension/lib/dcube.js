@@ -482,36 +482,44 @@ InitUser.prototype = {};
 InitUser.prototype.username = '';
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 // `target` {string} Username to get.
 InitUser.prototype.get = ping_user_method('get');
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 // `target` {string} Username to update.
 // `user` {object} User object containing updates.
 InitUser.prototype.update = ping_user_method('update');
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 // `dbname` {string} Database name to query.
 // `query` {Query} Optional query object.
 InitUser.prototype.query = ping_user_method('query');
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 InitUser.prototype.remove = ping_user_method('remove');
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 // `dbname` {string} The name of the database to create.
 InitUser.prototype.createDatabase = ping_user_method('createDatabase');
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 // `dbname` {string} The name of the database to remove.
 InitUser.prototype.removeDatabase = ping_user_method('removeDatabase');
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 // `dbname` {string} The name of the database to remove.
 // `db` {object} The database object containing the updates.
 InitUser.prototype.updateDatabase = ping_user_method('updateDatabase');
 
 // `transaction` {function} Transaction function object.
+// `passkey` {string} The user passkey.
 // `dbname` {string} The name of the database to get.
 InitUser.prototype.getDatabase = ping_user_method('getDatabase');
 

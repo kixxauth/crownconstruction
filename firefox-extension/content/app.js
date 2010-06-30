@@ -75,104 +75,126 @@ LOGIN = function (require, log, db, jq, deck) {
     ;
 
   function show_login() {
-    var jq_login_warn = jq('#login-warning-box').hide()
-      ;
-
-    function show_username_warning(msg) {
-      jq_login_warn.html(msg).show();
-    }
-
-    function show_passkey_warning(msg) {
-      jq_login_warn.html(msg).show();
-    }
-
-    function try_login(username, passkey) {
-      // TODO: Cache key of user session data.
-      var query = db.Query()
-        , promise
+    jq('#login').load(LOGIN_OVERLAY, function () {
+      var jq_login_warn = jq('#login-warning-box').hide()
         ;
 
-      query.query()
-        .eq('kind', 'user_session')
-        .eq('user', username)
-        ;
-
-      // TODO: Get dbname from login form.
-      promise = db.connect('crown_construction_sandbox'
-                         , MODELS
-                         , username
-                         , passkey
-                         , query);
-      promise(
-        function (connection) {
-          log.trace('got DB connection: '+
-            ((typeof connection === 'function') ?
-             connection('id') : 'invalid'));
-          APP(require, log, connection, jq, deck);
-        }
-
-        // DCubeError: 'Request error.'
-        // 'User does not exist.'
-        // 'Authentication denied.'
-        // DB does not exist???
-        // Unauthenticated on DB???
-      , function (err) {
-          logging.checkpoint('app.js Connection Error', err);
-        }
-      );
-    }
-
-    function handle_cmd(ev) {
-      var username = jq('#username').val()
-        , passkey = jq('#passkey').val()
-        ;
-
-      try {
-        username = SHARED.validateString(username, 1, 70, /\W/);
+      function show_username_warning(msg) {
+        jq_login_warn.html(msg).show();
       }
-      catch (u_err) {
-        // 'too short', 'too long', 'invalid characters'
-        show_username_warning(u_err);
+
+      function show_passkey_warning(msg) {
+        jq_login_warn.html(msg).show();
+      }
+
+      function try_login(username, passkey) {
+        // TODO: Cache key of user session data.
+        var query = db.Query()
+          , promise
+          ;
+
+        query.query()
+          .eq('kind', 'user_session')
+          .eq('user', username)
+          ;
+
+        // TODO: Get dbname from login form.
+        promise = db.connect('crown_construction_sandbox'
+                           , MODELS
+                           , username
+                           , passkey
+                           , query);
+        promise(
+          function (connection) {
+            log.trace('got DB connection: '+
+              ((typeof connection === 'function') ?
+               connection('id') : 'invalid'));
+            APP(require, log, connection, jq, deck);
+          }
+
+          // DCubeError: 'Request error.'
+          // 'User does not exist.'
+          // 'Authentication denied.'
+          // DB does not exist???
+          // Unauthenticated on DB???
+        , function (err) {
+            logging.checkpoint('app.js Connection Error', err);
+            jq_login_warn.html(err).show();
+          }
+        );
+      }
+
+      function handle_cmd(ev) {
+        var username = jq('#username').val()
+          , passkey = jq('#passkey').val()
+          ;
+
+        try {
+          username = SHARED.validateString(username, 1, 70, /\W/);
+        }
+        catch (u_err) {
+          // 'too short', 'too long', 'invalid characters'
+          show_username_warning(u_err);
+          return false;
+        }
+
+        try {
+          passkey = SHARED.validateString(passkey, 4, 140, /[\b\t\v\f\r\n]/);
+        }
+        catch (p_err) {
+          // 'too short', 'too long', 'invalid characters'
+          show_passkey_warning(p_err);
+          return false;
+        }
+
+        try_login(username, passkey);
+
         return false;
       }
 
-      try {
-        passkey = SHARED.validateString(passkey, 4, 140, /[\b\t\v\f\r\n]/);
-      }
-      catch (p_err) {
-        // 'too short', 'too long', 'invalid characters'
-        show_passkey_warning(p_err);
-        return false;
-      }
-
-      try_login(username, passkey);
-
-      return false;
-    }
-
-    jq('#login-button').click(handle_cmd);
-    deck('login');
+      jq('#login-button').click(handle_cmd);
+      deck('login');
+    });
   }
 
   function show_connections(connections) {
-    logging.dump(jq('#connections-list-template')[0].firstChild.nodeValue);
+    jq('#connections').load(CONNECTIONS_OVERLAY, function () {
+      var jq_connections = jq('#connctions-list')
+        .html(jq('#connections-list-template')
+                .template({connections: connections}));
+
+      jq('a.connections', jq_connections[0])
+        .live('click', function () {
+          var href = jq(this).attr('href');
+          if (href === 'create') {
+            show_login();
+          }
+          else {
+            db.getConnection(href, function (connection) {
+              APP(require, log, connection, jq, deck);
+            });
+          }
+          return false;
+        });
+
+      deck('connections');
+    });
   }
 
   db.connections(function (connections) {
     log.info(connections.length +' connections.');
     if (connections.length) {
-      jq('#connections').load(CONNECTIONS_OVERLAY, function () {
-        show_connections(connections);
-      });
+      show_connections(connections);
     }
     else {
-      jq('#login').load(LOGIN_OVERLAY, show_login);
+      show_login();
     }
   });
 };
 
 APP = function (require, log, connection, jq, deck) {
   var un = _.noConflict()
+    , template = SHARED.template
     , util = require('util')
     , curry = util.curry
     , confirmObject = util.confirmObject
@@ -181,6 +203,8 @@ APP = function (require, log, connection, jq, deck) {
     , logging = require('logging')
     , db = require('db')
     , Query = db.Query
+    , view = require('view')
+    , mapview = view.mapview
     , commands
     , bbq
     , tabset
@@ -339,9 +363,26 @@ APP = function (require, log, connection, jq, deck) {
       ;
 
     commands.register('personnel', 'create', function () {
-      var employee = connection('create', 'employee');
-      logging.checkpoint('Employee entity', employee);
+      var employee = connection('create', 'employee')
+        , view = mapview(employee('key'), employee('entity'))
+        ;
+      logging.checkpoint('Employee entity view', util.prettify(view));
     });
+
+    commands.register('personnel', 'directory', function () {
+
+      function maybe_results(results) {
+        logging.dump('query results', results);
+      }
+
+      connection('query')
+        .start()
+        .eq('kind', 'employee')
+        .append(maybe_results)
+        .send()
+        ;
+    });
+
     return self;
   }
 
