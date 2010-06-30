@@ -7,22 +7,33 @@
 
 <title>Crown Construction</title>
 
+<!-- Default base styles -->
 <link rel="stylesheet" href="./shared/reset.css" type="text/css" media="screen, projection" />
 <link rel="stylesheet/less" href="./shared/base.css" type="text/css" media="screen, projection" />
 
-<!-- Development helpler styles -->
+<!-- Development helper styles -->
 <link rel="stylesheet/less" href="./shared/dev.css" type="text/css" media="screen, projection" />
 
+<!-- Application styles -->
 <link rel="stylesheet/less" href="./app.css" type="text/css" media="screen, projection" />
 
-<script src="./shared/less.js" type="application/x-javascript"></script>
+<!-- no dependencies -->
 <script src="./shared/jquery-1.4.2.js" type="application/x-javascript"></script>
+<script src="./shared/underscore.js" type="application/x-javascript"></script>
+<script src="./shared/less.js" type="application/x-javascript"></script>
+<script src="./shared/shared.js" type="application/x-javascript"></script>
+
+<!-- depends on jQuery -->
 <script src="./shared/jquery.fireworks-deck.js" type="application/x-javascript"></script>
 <script src="./shared/jquery.fireworks-load.js" type="application/x-javascript"></script>
 <script src="./shared/jquery.ba-bbq.js" type="application/x-javascript"></script>
-<script src="./shared/underscore.js" type="application/x-javascript"></script>
-<script src="./shared/shared.js" type="application/x-javascript"></script>
+
+<!-- depends on jQuery and underscore.js -->
+<script src="./shared/jquery.fireworks-template.js" type="application/x-javascript"></script>
+
+<!-- application data models -->
 <script src="./models.js" type="application/x-javascript"></script>
+
 </head>
 <body id="main">
 
