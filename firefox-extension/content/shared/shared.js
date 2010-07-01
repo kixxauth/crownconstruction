@@ -35,7 +35,15 @@ SHARED.validateString = function (str, short, long, reg) {
   return str;
 };
 
-SHARED.CommandControl = function (jQuery) {
+SHARED.throw_error = function (log) {
+  return function (e) {
+    log.error(e);
+    alert(e);
+    throw e;
+  };
+};
+
+SHARED.CommandControl = function (jQuery, throw_error) {
   var self = {}
     , command_state = {}
     , registry = {}
@@ -60,7 +68,12 @@ SHARED.CommandControl = function (jQuery) {
     var i = 0, len = registry[namespace][command].length;
 
     for (; i < len; i += 1) {
+      try {
       registry[namespace][command][i].call(null, args);
+      }
+      catch (e) {
+        throw_error(e);
+      }
     }
   }
 
@@ -79,7 +92,12 @@ SHARED.CommandControl = function (jQuery) {
     }
     // The state MUST be broadcast AFTER the commands are dispatched.
     for (i = 0; i < observers.length; i += 1) {
-      observers[i](command_state);
+      try {
+        observers[i](command_state);
+      }
+      catch (e) {
+        throw_error(e);
+      }
     }
   };
 
@@ -129,12 +147,15 @@ SHARED.CommandControl = function (jQuery) {
 };
 
 SHARED.ViewControl = (function (window) {
-function ViewControl(connection, cache, mapview, cache_expiration) {
+function ViewControl(connection, cache, mapview, cache_expiration, logging) {
   if(!(this instanceof ViewControl)) {
-    return new ViewControl(connection, cache, mapview, cache_expiration);
+    return new ViewControl(
+      connection, cache, mapview, cache_expiration, logging);
   }
 
   this.connection = connection;
+  this.connection_id = connection('id');
+  this.log = logging.get('View_Control');
   this.cache = cache;
   this.cache_expiration = cache_expiration;
   this.mapview = mapview;
@@ -151,27 +172,35 @@ ViewControl.prototype.busy = function () {
 };
 
 ViewControl.prototype.start_timer = function () {
-  if (typeof this.timer_id === 'number' || !this.key) {
+  this.log.trace('called start_timer()');
+  if (typeof this.timer_id === 'number') {
+    this.log.trace('NOT starting timer');
     return;
   }
 
+  this.log.trace('starting timer');
   var self = this;
   this.timer_id = window.setTimeout(function () {
-    self.fetch(self.key);
+    self.log.trace('expired');
+    self.timer_id = false;
+    self.refresh();
   }, 22000);
 };
 
 ViewControl.prototype.reset_timer = function () {
+  this.log.trace('called reset_timer()');
   this.stop_timer();
   this.start_timer();
 };
 
 ViewControl.prototype.stop_timer = function () {
+  this.log.trace('called stop_timer()');
   window.clearTimeout(this.timer_id);
   this.timer_id = false;
 };
 
 ViewControl.prototype.receive_entity = function (entity) {
+  this.log.trace('called receive_entity()');
   var view = this.mapview(entity('key'), entity('entity'));
   this.entity = {
       fn: entity
@@ -183,57 +212,116 @@ ViewControl.prototype.receive_entity = function (entity) {
   this.key = entity('key');
 };
 
-ViewControl.prototype.fetch = function (key) {
+ViewControl.prototype.refresh = function() {
+  this.log.trace('called refresh()');
+  if (!this.key) {
+    this.log.trace('no key');
+  }
+
   var self = this;
-  this.cache(this.connection('id'), function(transaction) {
-    var entity = transaction.get(key);
+  this.cache(this.connection_id, function(transaction) {
+    var entity = transaction.get(self.key);
     if (entity) {
-      if (entity('original') !== self.entity.orginal &&
-          entity('key') === self.requested_key) {
-        self.receive_entity(entity);
-        self.show(self.entity.view);
-      }
+      self.log.trace('got entity from cache');
       self.start_timer();
       transaction.close();
       return;
     }
-    self.busy();
-    self.connection('get', key, function (entity) {
-      if (entity && entity[0]) {
-        if (entity[0]('original') !== self.entity.orginal &&
-            entity[0]('key') === self.requested_key) {
-          self.receive_entity(entity[0]);
-          self.show(self.entity.view);
-          transaction.put(key, self.entity.fn, self.cache_expiration);
+
+    self.connection('get', self.key, function (entity) {
+      try {
+        self.log.trace('got remote response: '+
+          Object.prototype.toString.call(entity));
+        if (entity && entity[0]) {
+          transaction.put(self.key, entity[0], self.cache_expiration);
+          if (entity[0]('original') !== self.entity.original) {
+            self.log.trace('resetting entity');
+            self.receive_entity(entity[0]);
+            self.show(self.key, self.entity.view);
+          }
+          else {
+            self.log.trace('entity has not changed');
+          }
         }
+        else {
+          self.log.trace('entity does not exist');
+          self.show(self.key, null);
+        }
+        self.start_timer();
       }
-      else {
-        self.show(null);
+      catch (e) {
+        self.log.error(e);
       }
-      self.start_timer();
-      transaction.close();
+      finally {
+        transaction.close();
+      }
     });
   });
 };
 
 ViewControl.prototype.open = function (key) {
+  this.log.trace('called open()');
   this.stop_timer();
   this.key = null;
-  this.requested_key = key;
   this.entity = {};
-  this.fetch(key);
   this.in_focus = true;
+
+  var self = this;
+
+  this.cache(this.connection_id, function(transaction) {
+    var entity = transaction.get(key);
+    if (entity) {
+      self.log.trace('got entity from cache');
+      self.receive_entity(entity);
+      self.show(self.key, self.entity.view);
+      self.start_timer();
+      transaction.close();
+      return
+    }
+    self.log.trace('getting entity remotely');
+    self.connection('get', key, function (entity) {
+      try {
+        self.log.trace('got remote response: '+
+          Object.prototype.toString.call(entity));
+        if (entity && entity[0]) {
+          self.log.trace('resetting entity');
+          self.receive_entity(entity[0]);
+          self.show(self.key, self.entity.view);
+          transaction.put(
+              key
+            , self.entity.fn
+            , self.cache_expiration
+          );
+        }
+        else {
+          self.log.trace('entity does not exist');
+          self.show(self.key, null);
+        }
+        self.start_timer();
+      }
+      catch (e) {
+        self.log.error(e);
+      }
+      finally {
+        transaction.close();
+      }
+    });
+    self.busy();
+  });
 };
 
 ViewControl.prototype.focus = function () {
+  this.log.trace('called focus()');
   if (this.in_focus || !this.key) {
     return;
   }
   this.stop_timer();
-  this.fetch(this.key);
+  this.refresh(this.key);
+  this.in_focus = true;
 };
 
 ViewControl.prototype.blur = function () {
+  this.log.trace('called blur()');
   if (!this.in_focus) {
     return;
   }
@@ -242,10 +330,23 @@ ViewControl.prototype.blur = function () {
 };
 
 ViewControl.prototype.update = function (path, val) {
+  this.log.trace('called update()');
   var parts = path.split('.'), field = parts.pop();
   this.entity.pointer[parts.join('.')][field] = val;
   this.entity.fn('update', this.entity.data);
-  this.reset_timer();
+};
+
+ViewControl.prototype.commit = function () {
+  var self = this;
+  return function (info) {
+    self.log.trace('called commit() info.keys '+ info.keys);
+    if (info.keys.indexOf(self.key) !== -1) {
+      self.reset_timer();
+    }
+    else {
+      self.log.trace('Current entity is not in changeset.');
+    }
+  };
 };
 
 return ViewControl;
