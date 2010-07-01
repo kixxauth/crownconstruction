@@ -147,40 +147,44 @@ Application overlay HTML snippet.
     </div>
     <!-- #### Personnel directory template -->
     <template id="personnel_directory-template"><![CDATA[
-      <% var group_name, group, i, member; %>
-      <% for (group_name in groups) { %>
-        <% if (Object.prototype.hasOwnProperty.call(groups, group_name)) { %>
-        <% group = groups[group_name]; %>
-        <li class="personnel-group">
-          <h4 class="personnel-group-name"><%= group_name %></h4>
-          <ul class="personnel-group-members">
-            <% for (i = 0; i < group.length; i += 1) { %>
-            <% member = group[i]; %>
-            <li class="employee">
-            <a class="bbq employee-directory"
-              href="personnel/view?key=<%= member.key %>">
-              <%= member.name %>
-            </a>
-            </li>
-            <% } %>
-          </ul>
-        </li>
-        <% } %>
-      <% } %>
+      <%
+      var group_name, group, i, member;
+      for (group_name in groups) {
+        if (Object.prototype.hasOwnProperty.call(groups, group_name)) {
+        group = groups[group_name]; %>
+      <li class="personnel-group">
+        <h4 class="personnel-group-name"><%= group_name %></h4>
+        <ul class="personnel-group-members">
+          <%
+          for (i = 0; i < group.length; i += 1) {
+            member = group[i]; %>
+          <li class="employee">
+          <a class="bbq employee-directory"
+            href="personnel/view?key=<%= member.key %>">
+            <%= member.name %>
+          </a>
+          </li>
+          <%
+          } %>
+        </ul>
+      </li>
+      <%
+        }
+      } %>
     ]]></template>
 
     <!-- #### Personnel view widget -->
     <form id="personnel-view" class="fform personnel-panel inner-tab-panel">
-      <fieldset id="personnel-name" class="fform content-panel">
+      <fieldset id="employee-name" class="fform content-panel">
         <h4 class="section-header">Name</h4>
       </fieldset>
-      <fieldset id="personnel-phones" class="fform content-panel">
+      <fieldset id="employee-phones" class="fform content-panel">
         <h4 class="section-header">Phone Numbers</h4>
       </fieldset>
-      <fieldset id="personnel-groups" class="fform content-panel">
+      <fieldset id="employee-groups" class="fform content-panel">
         <h4 class="section-header">Groups</h4>
       </fieldset>
-      <fieldset id="personnel-addresses" class="fform content-panel">
+      <fieldset id="employee-addresses" class="fform content-panel">
         <h4 class="section-header">Addresses</h4>
       </fieldset>
     </form><!-- personnel-view -->
@@ -188,81 +192,83 @@ Application overlay HTML snippet.
     <!-- #### Personnel view templates -->
     <template id="employee_name-template"><![CDATA[
       <h4 class="section-header">Name</h4>
-
       <div class="input-section">
         <div class="line">
           <p class="input-float"><label class="live-label">last:</label>
             <input class="clean-text-input fform lastname" type="text"
-              name="{{ name.last.path }}" value="{{ name.last.value }}" />
+              name="<%= name.last.path %>" value="<%= name.last.value %>" />
           </p>
           <p class="input-float"><label class="live-label">first:</label>
             <input class="clean-text-input fform firstname" type="text"
-              name="{{ name.first.path }}" value="{{ name.first.value }}" />
+              name="<%= name.first.path %>" value="<%= name.first.value %>" />
           </p>
         </div>
       </div>
     ]]></template>
     <template id="employee_addresses-template"><![CDATA[
-      {{ var i = 0, len = addresses.length, address; }}
       <h4 class="section-header">Addresses</h4>
-
-      {{ for (; i < len; i += 1) { }}
-      {{ address = addresses[i]; }}
+      <%
+      var i = 0, len = addresses.length, address;
+      for (; i < len; i += 1) {
+        address = addresses[i]; %>
       <div class="input-section">
         <div class="line">
           <p>
             <label class="live-label">street:</label>
             <input class="clean-text-input fform street-address" type="text"
-              name="{{ address.street.path }}" value="{{ address.street.value }}" />
+              name="<%= address.street.path %>" value="<%= address.street.value %>" />
           </p>
         </div>
         <div class="line">
           <p class="input-float">
             <label class="live-label">city:</label>
             <input class="clean-text-input fform city" type="text"
-              name="{{ address.city.path }}" value="{{ address.city.value }}" />
+              name="<%= address.city.path %>" value="<%= address.city.value %>" />
           </p>
           <p class="input-float">
             <label class="live-label">state:</label>
             <input class="clean-text-input fform state-address" type="text"
-              name="{{ address.state.path }}" value="{{ address.state.value }}" />
+              name="<%= address.state.path %>" value="<%= address.state.value %>" />
           </p>
           <p class="input-float">
             <label class="live-label">zip:</label>
             <input class="clean-text-input fform zip" type="text"
-              name="{{ address.zip.path }}" value="{{ address.zip.value }}" />
+              name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
           </p>
         </div>
       </div>
-      {{ } }}
+      <%
+      } %>
 
-      <a href="{{ key }}.addresses"" class="append fform button" title="Add another customer address.">
+      <a href="<%= key %>.addresses" class="append fform button" title="Add another customer address.">
         <span class="icon">+</span>
         Add another address.
       </a>
     ]]></template>
     <template id="employee_phones-template"><![CDATA[
-      {{ var i = 0, len = phones.length, phone; }}
       <h4 class="section-header">Phone Numbers</h4>
-      {{ for (; i < len; i += 1) { }}
-      {{ phone = phones[i]; }}
+      <%
+      var i = 0, len = phones.length, phone;
+      for (; i < len; i += 1) {
+      phone = phones[i]; %>
       <div class="input-section">
         <div class="line">
           <p class="input-float">
             <label class="live-label">number:</label>
             <input class="clean-text-input fform phone" type="text"
-              name="{{ phone.phone.path }}" value="{{ phone.phone.value }}" />
+              name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
           </p>
           <p class="input-float">
             <label class="live-label">label:</label>
             <input class="clean-text-input fform label" type="text"
-              name="{{ phone.label.path }}" value="{{ phone.label.value }}" />
+              name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
           </p>
         </div>
       </div>
-      {{ } }}
+      <%
+      } %>
 
-      <a href="{{ key }}.phones" class="append fform button" title="Add another phone number.">
+      <a href="<%= key %>.phones" class="append fform button" title="Add another phone number.">
         <span class="icon">+</span>
         Add another phone number.
       </a>
@@ -274,7 +280,7 @@ Application overlay HTML snippet.
           <p class="input-float">
             <label class="live-label">groups:</label>
             <input class="clean-text-input fform groups" type="text"
-              name="{{ groups.path }}" value="{{ groups.value }}" />
+              name="<%= groups.path %>" value="<%= groups.value %>" />
           </p>
         </div>
       </div>

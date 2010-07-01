@@ -204,14 +204,18 @@ var un = _.noConflict()
   , main_deck = spec.deck
   , cache_exp = spec.cache_expiration
   , util = spec.util
+  , isArray = util.isArray
   , logging = spec.logging
   , curry = util.curry
+  , events = require('events')
   , view = require('view')
   , mapview = view.mapview
   , cache = require('memcache').cache
   , ViewControl = SHARED.ViewControl
+  , throw_error = SHARED.throw_error(log)
   , commands
   , tabset
+  , $N = {}
   ;
 
 // ## Registered commands:
@@ -264,6 +268,7 @@ function mod_tabset() {
   var self = {}
     , deck = jq.deck(jq('#tabset').children())
     , panels = ['customers', 'jobs', 'personnel']
+    , current
     ;
 
   un.each(panels, function (panel) {
@@ -272,9 +277,10 @@ function mod_tabset() {
 
   self.show = function (panel_id) {
     logging.checkpoint('show panel', panel_id);
-    if (un.indexOf(panels, panel_id) !== -1) {
+    if (panel_id !== current && un.indexOf(panels, panel_id) !== -1) {
       logging.checkpoint('push state for', panel_id);
       jq.bbq.pushState({'panels': panel_id});
+      current = panel_id;
     }
   };
 
@@ -330,30 +336,87 @@ function mod_jobs() {
 }
 
 function mod_personnel() {
-  var deck = jq.deck(jq('#personnel').children())
-    , control = ViewControl(connection, cache, mapview, cache_exp)
+  var jq_personnel = jq('#personnel')
+    , deck = jq.deck(jq_personnel.children())
+    , control = ViewControl(connection, cache, mapview, cache_exp, logging)
+
+    // Cache templates
     , directory_template = jq('#personnel_directory-template').template()
+    , name_template = jq('#employee_name-template').template()
+    , addresses_template = jq('#employee_addresses-template').template()
+    , phones_template = jq('#employee_phones-template').template()
+    , groups_template = jq('#employee_groups-template').template()
+
+    // Cache jQuery collection
     , jq_directory = jq('#personnel-group-list')
+    , jq_name = jq('#employee-name')
+    , jq_addresses = jq('#employee-addresses')
+    , jq_phones = jq('#employee-phones')
+    , jq_groups = jq('#employee-groups')
     ;
+
+  function handle_input(ev) {
+    logging.checkpoint('update', this.name);
+    control.update(this.name, this.value);
+  }
+
+  jq('input.fform', jq_personnel[0]).live('keyup', handle_input);
 
   control.busy = function () {
     // TODO
     // Show busy indicator.
+    alert('Busy...');
   };
 
-  control.show = function (employee) {
-    // TODO
-    // Show entity.
+  control.show = function (key, employee) {
+    logging.inspect('employee view', employee);
+    var name, addresses, phones, groups;
+    try {
+      if (!key) {
+        throw new Error('Missing employee entity key.');
+      }
+      if (!employee) {
+        throw new Error('Missing employee entity.');
+      }
+
+      jq_name.html(name_template(
+            {name: employee.name}));
+
+      jq_addresses.html(addresses_template(
+            {addresses: employee.addresses, key: key}));
+
+      jq_phones.html(phones_template(
+            {phones: employee.phones, key: key}));
+
+      jq_groups.html(groups_template(
+            {groups: employee.groups}));
+    }
+    catch (e) {
+      throw_error(e);
+    }
   };
+
+  events.addListener('db.committing', control.commit());
 
   commands.observe(function (state) {
     // TODO DEBUG REMOVE
     logging.inspect('personnel state observer', state);
+    var panel = (state.panels || $N).state
+      , personnel = (state.personnel || $N).state
+      ;
+
+    if (panel === 'personnel' && personnel === 'view') {
+      control.focus();
+    }
+    else {
+      control.blur();
+    }
   });
 
   commands.register('personnel', 'view', function (params) {
-    // TODO DEBUG REMOVE
-    logging.checkpoint('personnel::view', params.key);
+    control.open(params.key);
+    tabset.show('personnel');
+    deck('personnel-view');
   });
 
   commands.register('personnel', 'create', function () {
@@ -395,40 +458,48 @@ function mod_personnel() {
 
   commands.register('personnel', 'directory', function () {
     function maybe_results(results) {
-      log.debug('Employee directory results: '+ results.length);
+      log.debug('Employee directory results: '+
+        (isArray(results) ? results.length : 'invalid'));
+
       cache(connection('id'), function (transaction) {
-        var groups = {};
+        try {
+          var groups = {};
 
-        // Collect all the group names and members.
-        jq.each(results, function (idx, result) {
-          var i = 0
-            , key = result('key')
-            , employee = result('entity')
-            , name = (employee.name.first +' '+ employee.name.last)
-            , parts = employee.groups.split(',')
-            , len = parts.length
-            , group_name
-            ;
+          // Collect all the group names and members.
+          jq.each(results, function (idx, result) {
+            var i = 0
+              , key = result('key')
+              , employee = result('entity')
+              , name = (employee.name.first +' '+ employee.name.last)
+              , parts = employee.groups.split(',')
+              , len = parts.length
+              , group_name
+              ;
 
-          transaction.put(key, result, cache_exp);
+            transaction.put(key, result, cache_exp);
 
-          for (; i < len; i += 1) {
-            group_name = jq.trim(parts[i]);
-            if (!groups[group_name]) {
-              groups[group_name] = [];
+            for (; i < len; i += 1) {
+              group_name = jq.trim(parts[i]);
+              if (!groups[group_name]) {
+                groups[group_name] = [];
+              }
+              groups[group_name].push({
+                  key: key
+                , name: name
+              });
             }
-            groups[group_name].push({
-                key: key
-              , name: name
-            });
-          }
-        });
+          });
 
-        transaction.close();
-        logging.inspect('employees', groups);
-        jq_directory.html(directory_template({groups: groups}));
+          jq_directory.html(directory_template({groups: groups}));
+          deck('personnel-directory');
+        }
+        catch (e) {
+          throw_error(e);
+        }
+        finally {
+          transaction.close();
+        }
       });
-      deck('personnel-directory');
     }
 
     connection('query')
@@ -442,13 +513,22 @@ function mod_personnel() {
 }
 
 jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
-  commands = SHARED.CommandControl(jq);
+  commands = SHARED.CommandControl(jq, throw_error);
   tabset = mod_tabset();
   mod_search();
   mod_customers();
   mod_jobs();
   mod_personnel();
   set_commands(jq_workspace[0]);
+
+  window.setInterval(function () {
+    try {
+      connection('commit');
+    } catch (e) {
+      log.warn(e);
+    }
+  }, 3000);
+
   main_deck('workspace');
 });
 

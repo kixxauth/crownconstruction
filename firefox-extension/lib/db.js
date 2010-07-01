@@ -112,16 +112,17 @@ ChangeSet.prototype.update = function (k, v, idx) {
 };
 
 ChangeSet.prototype.stage = function () {
-  var k;
+  var k, keys = [];
   for (k in this.set) {
     if (has(this.set, k)) {
       this.staging[k] = this.originals[k];
       this.originals[k] = this.set[k];
+      keys.push(k);
     }
   }
   this.set = {};
   this.length = 0;
-  events.trigger('db.committing', {id: this.connection});
+  events.trigger('db.committing', {id: this.connection, keys: keys});
 };
 
 ChangeSet.prototype.revert = function (k) {
@@ -242,16 +243,14 @@ entity_util = {
 //   * `connections` {InitConnection object}
 function Entity(spec, original, connection) {
   var key = spec.key
-    , stringified = JSON.stringify(spec.data)
-    , data = JSON.parse(stringified)
+    , data = JSON.parse(original)
     , indexes = JSON.parse(JSON.stringify(spec.indexes))
     , mapper = spec.mapper
     , rv
     ;
 
   log.trace('Creating Entity for '+ key);
-  logging.inspect('data', data);
-  connection.changeset.register(key, stringified);
+  connection.changeset.register(key, original, JSON.stringify(indexes));
 
   return function (method) {
     switch (method) {
@@ -260,7 +259,7 @@ function Entity(spec, original, connection) {
       return key;
 
     case 'original':
-      return original;
+      return connection.changeset.originals[key][0];
 
     case 'entity':
       // Return a cheap copy.
@@ -427,6 +426,7 @@ InitConnection.prototype.request = function (queries, callbacks) {
 };
 
 InitConnection.prototype.get = function (keys) {
+  var self = this;
   return Promise(function (fulfill, except, progress) {
     keys = isArray(keys) ? keys : [keys];
     var i = 0, len = keys.length
@@ -436,9 +436,11 @@ InitConnection.prototype.get = function (keys) {
       , exception
       ;
 
-    log.trace('Making "get" request for '+ this.id);
+    log.trace('Making "get" request for '+ self.id);
 
     function combiner(ent, err) {
+      log.trace('Connection.get()::combiner('+
+          typeof ent +', '+ typeof err +') called.');
       if (!ent) {
         len -= 1;
         log.debug(logging.formatError(err));
@@ -468,7 +470,7 @@ InitConnection.prototype.get = function (keys) {
       callbacks.push(combiner);
     }
 
-    this.request(queries, callbacks);
+    self.request(queries, callbacks);
   });
 };
 
@@ -487,7 +489,7 @@ InitConnection.prototype.commit = function (report) {
       , results = 0
       ;
 
-    log.trace('Committing '+ self.id);
+    log.trace('.commit() called called on '+ self.id);
 
     function combiner(committed, err) {
       results += 1;
@@ -516,8 +518,6 @@ InitConnection.prototype.commit = function (report) {
       }
     }
 
-    log.debug('change set -> '+ util.prettify(set));
-
     for (k in set) {
       if (has(set, k)) {
         keys.push(k);
@@ -526,11 +526,16 @@ InitConnection.prototype.commit = function (report) {
       }
     }
 
-    if (!report) {
+    if (!keys.length) {
+      fulfill(0);
+    }
+    else if (!report) {
+      log.debug('change set -> '+ util.prettify(set));
       self.changeset.stage();
       self.request(query.resolve(), callbacks);
     }
     else {
+      log.debug('change set -> '+ util.prettify(set));
       fulfill(query.resolve());
     }
   });
@@ -550,12 +555,10 @@ function Connection(spec) {
       , id: id
     }
     , cxn = InitConnection(opt)
+    , callback
     ;
 
   return function (op) {
-    log.trace('Requesting connection operation "'+
-        op +'"for db "'+ dbname +'".');
-
     switch (op) {
 
     case 'username':
@@ -574,9 +577,13 @@ function Connection(spec) {
       return cxn.model(arguments[1]);
 
     case 'get':
-      // arguments[1]: key
+      // arguments[1]: key(s)
       // arguments[2]: callback
-      return cxn.get(arguments[1], arguments[2]);
+      callback = arguments[2];
+      cxn.get(arguments[1])(callback, function (ex) {
+        callback(false, ex);
+      });
+      break;
 
     case 'query':
       return cxn.query();

@@ -263,15 +263,11 @@ exports.confirmInt = function (x, def) {
 
 exports.curry = function (fn) {
   args = Array.prototype.slice.call(arguments, 1);
-  dump('curry : '+ fn.toString() +'\n');
-  dump('with arguments: '+ args.concat(Array.prototype.slice(arguments)) +'\n');
   return function () {
     if (arguments.length) {
-      dump('curry args: '+ args.concat(Array.prototype.slice(arguments)) +'\n');
       fn.apply($N, args.concat(Array.prototype.slice(arguments)));
     }
     else {
-      dump('curry args: '+ args +'\n');
       fn.apply($N, args);
     }
   };
