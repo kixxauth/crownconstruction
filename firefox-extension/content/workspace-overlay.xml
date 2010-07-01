@@ -20,49 +20,49 @@ Application overlay HTML snippet.
     <span class="navigation section">Search</span>
     <ul class="navigation options">
       <li class="navigation sub-section">
-        <a href="#search/jobs" id="search-jobs" class="bbq navigation sub-section">Jobs</a>
+        <a href="search/jobs" id="search-jobs" class="bbq navigation sub-section">Jobs</a>
       </li>
       <li class="navigation sub-section">
-        <a href="#search/customers" id="search-customers" class="bbq navigation sub-section">Customers</a>
+        <a href="search/customers" id="search-customers" class="bbq navigation sub-section">Customers</a>
       </li>
     </ul>
   </li><!-- search -->
 
   <!-- ### Customers navigation -->
   <li class="navigation section customers">
-    <a href="#panels/customers" class="bbq navigation">Customers</a>
+    <a href="panels/customers" class="bbq navigation">Customers</a>
     <ul class="navigation options">
       <li class="navigation sub-section">
-        <a href="#search/customers" id="customers-search" class="bbq navigation sub-section">Search</a>
+        <a href="search/customers" id="customers-search" class="bbq navigation sub-section">Search</a>
       </li>
       <li class="navigation sub-section">
-        <a href="#customers/create" class="bbq navigation">Create</a>
+        <a href="customers/create" class="cmd navigation">Create</a>
       </li>
     </ul>
   </li><!-- customers -->
 
   <!-- ### Jobs navigation -->
   <li class="navigation section jobs">
-    <a href="#panels/jobs" class="bbq navigation">Jobs</a>
+    <a href="panels/jobs" class="bbq navigation">Jobs</a>
     <ul class="navigation options">
       <li class="navigation sub-section">
-        <a href="#search/jobs" id="jobs-search" class="bbq navigation sub-section">Search</a>
+        <a href="search/jobs" id="jobs-search" class="bbq navigation sub-section">Search</a>
       </li>
       <li class="navigation sub-section">
-        <a href="#jobs/create" class="bbq navigation">Create</a>
+        <a href="jobs/create" class="cmd navigation">Create</a>
       </li>
     </ul>
   </li><!-- jobs -->
 
   <!-- ### Personnel navigation -->
   <li class="navigation section personnel">
-    <a href="#panels/personnel" class="bbq navigation">Personnel</a>
+    <a href="panels/personnel" class="bbq navigation">Personnel</a>
     <ul class="navigation options">
       <li class="navigation sub-section">
-        <a href="#personnel/directory" class="bbq navigation">Directory</a>
+        <a href="personnel/directory" class="bbq navigation">Directory</a>
       </li>
       <li class="navigation sub-section">
-        <a href="#personnel/create" class="bbq navigation">Create</a>
+        <a href="personnel/create" class="cmd navigation">Create</a>
       </li>
     </ul>
   </li><!-- personnel -->
@@ -145,6 +145,30 @@ Application overlay HTML snippet.
       <ul id="personnel-group-list">
       </ul>
     </div>
+    <!-- #### Personnel directory template -->
+    <template id="personnel_directory-template"><![CDATA[
+      <% var group_name, group, i, member; %>
+      <% for (group_name in groups) { %>
+        <% if (Object.prototype.hasOwnProperty.call(groups, group_name)) { %>
+        <% group = groups[group_name]; %>
+        <li class="personnel-group">
+          <h4 class="personnel-group-name"><%= group_name %></h4>
+          <ul class="personnel-group-members">
+            <% for (i = 0; i < group.length; i += 1) { %>
+            <% member = group[i]; %>
+            <li class="employee">
+            <a class="bbq employee-directory"
+              href="personnel/view?key=<%= member.key %>">
+              <%= member.name %>
+            </a>
+            </li>
+            <% } %>
+          </ul>
+        </li>
+        <% } %>
+      <% } %>
+    ]]></template>
+
     <!-- #### Personnel view widget -->
     <form id="personnel-view" class="fform personnel-panel inner-tab-panel">
       <fieldset id="personnel-name" class="fform content-panel">
@@ -162,8 +186,7 @@ Application overlay HTML snippet.
     </form><!-- personnel-view -->
 
     <!-- #### Personnel view templates -->
-    <template id="employee_name-template">
-    <![CDATA[
+    <template id="employee_name-template"><![CDATA[
       <h4 class="section-header">Name</h4>
 
       <div class="input-section">
@@ -178,10 +201,8 @@ Application overlay HTML snippet.
           </p>
         </div>
       </div>
-    ]]>
-    </template>
-    <template id="employee_addresses-template">
-    <![CDATA[
+    ]]></template>
+    <template id="employee_addresses-template"><![CDATA[
       {{ var i = 0, len = addresses.length, address; }}
       <h4 class="section-header">Addresses</h4>
 
@@ -219,11 +240,8 @@ Application overlay HTML snippet.
         <span class="icon">+</span>
         Add another address.
       </a>
-    ]]>
-    </template>
-
-    <template id="employee_phones-template">
-    <![CDATA[
+    ]]></template>
+    <template id="employee_phones-template"><![CDATA[
       {{ var i = 0, len = phones.length, phone; }}
       <h4 class="section-header">Phone Numbers</h4>
       {{ for (; i < len; i += 1) { }}
@@ -248,11 +266,8 @@ Application overlay HTML snippet.
         <span class="icon">+</span>
         Add another phone number.
       </a>
-    ]]>
-    </template>
-
-    <template id="employee_groups-template">
-    <![CDATA[
+    ]]></template>
+    <template id="employee_groups-template"><![CDATA[
       <h4 class="section-header">Groups</h4>
       <div class="input-section">
         <div class="line">
@@ -263,8 +278,7 @@ Application overlay HTML snippet.
           </p>
         </div>
       </div>
-    ]]>
-    </template>
+    ]]></template>
   </div><!-- panel-customers -->
 </div><!-- tabset -->
 
