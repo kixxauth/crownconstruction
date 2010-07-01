@@ -32,6 +32,7 @@ var EXPORTED_SYMBOLS = ['exports', 'load']
   , events = require('events')
 
   , $F = function () {}
+  , $N = {}
   ;
 
 /*
@@ -260,15 +261,18 @@ exports.confirmInt = function (x, def) {
   return isNaN(x) ? ((typeof def === 'undefined') ? 0 : def) : x;
 };
 
-exports.curry = function (fn, args, binding) {
-  args = exports.isArray(args) ? args : [args];
-  binding = binding || null;
+exports.curry = function (fn) {
+  args = Array.prototype.slice.call(arguments, 1);
+  dump('curry : '+ fn.toString() +'\n');
+  dump('with arguments: '+ args.concat(Array.prototype.slice(arguments)) +'\n');
   return function () {
     if (arguments.length) {
-      fn.apply(binding, args.concat(Array.prototype.slice(arguments)));
+      dump('curry args: '+ args.concat(Array.prototype.slice(arguments)) +'\n');
+      fn.apply($N, args.concat(Array.prototype.slice(arguments)));
     }
     else {
-      fn.apply(binding, args);
+      dump('curry args: '+ args +'\n');
+      fn.apply($N, args);
     }
   };
 };

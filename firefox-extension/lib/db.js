@@ -238,8 +238,9 @@ entity_util = {
 //         entries this entity is indexed under.
 //     * `spec.mapper` {function} A function that mutates data structures to
 //         meet the schema of this entity.
+//   * `original` {string} JSON string representation of the original data.
 //   * `connections` {InitConnection object}
-function Entity(spec, connection) {
+function Entity(spec, original, connection) {
   var key = spec.key
     , stringified = JSON.stringify(spec.data)
     , data = JSON.parse(stringified)
@@ -249,6 +250,7 @@ function Entity(spec, connection) {
     ;
 
   log.trace('Creating Entity for '+ key);
+  logging.inspect('data', data);
   connection.changeset.register(key, stringified);
 
   return function (method) {
@@ -256,6 +258,9 @@ function Entity(spec, connection) {
 
     case 'key':
       return key;
+
+    case 'original':
+      return original;
 
     case 'entity':
       // Return a cheap copy.
@@ -321,7 +326,18 @@ InitConnection.prototype.model = function (kind, key, ent, index) {
     throw DBError(new Error('InitConnection.model("'+
             kind +'") is not a valid kind name.'));
   }
-  return Entity(this.models[kind](key, ent, index), this);
+
+  var data;
+  try {
+    data = JSON.parse(ent);
+  }
+  catch (e) {
+    log.debug(e);
+    log.error('Unable to parse JSON for entity: '+ key);
+    return null;
+  }
+
+  return Entity(this.models[kind](key, data, index), ent, this);
 };
 
 InitConnection.prototype.remote_result = function (callbacks) {
