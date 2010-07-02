@@ -40,6 +40,10 @@ template {
   display: none;
 }
 
+a {
+  text-decoration: none;
+}
+
 input, textarea {
   font-family: @typeface;
   border: 1px solid #000;

@@ -372,6 +372,12 @@ ViewControl.prototype.update = function (path, val) {
   this.entity.fn('update', this.entity.data);
 };
 
+ViewControl.prototype.append = function (field) {
+  this.entity.fn('update', field);
+  this.receive_entity(this.entity.fn);
+  return this.entity.view;
+};
+
 ViewControl.prototype.commit = function () {
   var self = this;
   return function (info) {

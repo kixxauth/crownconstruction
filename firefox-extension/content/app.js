@@ -355,15 +355,25 @@ function mod_personnel() {
     , jq_phones = jq('#employee-phones')
     , jq_groups = jq('#employee-groups')
 
+    , template = {}
     , currently_showing
     ;
 
-  function handle_input(ev) {
-    logging.checkpoint('update', this.name);
-    control.update(this.name, this.value);
-  }
+  template.name = function (name) {
+    jq_name.html(name_template({name: name}));
+  };
 
-  jq('input.fform', jq_personnel[0]).live('keyup', handle_input);
+  template.addresses = function (addresses) {
+    jq_addresses.html(addresses_template({addresses: addresses}));
+  };
+
+  template.phones = function (phones) {
+    jq_phones.html(phones_template({phones: phones}));
+  };
+
+  template.groups = function (groups) {
+    jq_groups.html(groups_template({groups: groups}));
+  };
 
   function show(key, employee) {
     logging.inspect('employee view', employee);
@@ -375,17 +385,9 @@ function mod_personnel() {
         throw new Error('Missing employee entity.');
       }
 
-      jq_name.html(name_template(
-            {name: employee.name}));
-
-      jq_addresses.html(addresses_template(
-            {addresses: employee.addresses, key: key}));
-
-      jq_phones.html(phones_template(
-            {phones: employee.phones, key: key}));
-
-      jq_groups.html(groups_template(
-            {groups: employee.groups}));
+      un.each(employee, function (value, name) {
+        template[name](value);
+      });
 
       currently_showing = key;
     }
@@ -393,6 +395,26 @@ function mod_personnel() {
       throw_error(e);
     }
   }
+
+  jq('input.fform', jq_personnel[0])
+    .live('keyup', function (ev) {
+      // TODO: Validation
+      control.update(this.name, this.value);
+    });
+
+  jq('a.fform.append', jq_personnel[0])
+    .live('click', function (ev) {
+      var field = {}
+        , name = jq(this).attr('href')
+        , view
+        ;
+
+      field[name] = control.entity.data[name];
+      field[name].push({});
+      view = control.append(field);
+      template[name](view[name]);
+      return false;
+    });
 
   function show_new(key, employee) {
     show(key, employee);
@@ -518,7 +540,7 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
   main_deck('workspace');
 });
 
-// TODO
+// TODO Watch and notify db status.
 /*
 events.addListener('db.state', function (db) {
   logging.checkpoint(db.id +' is in state '+ db.state +'.');

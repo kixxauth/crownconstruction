@@ -239,8 +239,7 @@ Application overlay HTML snippet.
       </div>
       <%
       } %>
-
-      <a href="<%= key %>.addresses" class="append fform button" title="Add another customer address.">
+      <a href="addresses" class="append fform button" title="Add another customer address.">
         <span class="icon">+</span>
         Add another address.
       </a>
@@ -267,8 +266,7 @@ Application overlay HTML snippet.
       </div>
       <%
       } %>
-
-      <a href="<%= key %>.phones" class="append fform button" title="Add another phone number.">
+      <a href="phones" class="append fform button" title="Add another phone number.">
         <span class="icon">+</span>
         Add another phone number.
       </a>
