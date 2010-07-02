@@ -149,15 +149,15 @@ ChangeSet.prototype.revert = function (k) {
   }
 };
 
-ChangeSet.prototype.commit = function (k) {
+ChangeSet.prototype.commit = function (keys) {
   this.staging = {};
   if (this.length === 0) {
     events.trigger('db.committed'
-        , {id: this.connection, state: 'clean'}, true);
+        , {id: this.connection, keys: keys, state: 'clean'}, true);
     return;
   }
   events.trigger('db.committed'
-      , {id: this.connection, state: 'mutated'}, true);
+      , {id: this.connection, keys: keys, state: 'mutated'}, true);
 };
 
 function Query(connection) {
@@ -508,7 +508,7 @@ InitConnection.prototype.commit = function (report) {
       }
 
       if (results === keys.length) {
-        self.changeset.commit();
+        self.changeset.commit(keys);
         if (!exception) {
           fulfill(results);
         }
@@ -555,7 +555,8 @@ function Connection(spec) {
       , id: id
     }
     , cxn = InitConnection(opt)
-    , callback
+
+    , callback, model, ent
     ;
 
   return function (op) {
@@ -574,7 +575,12 @@ function Connection(spec) {
     // to the default values, it will not be saved on commit.
     case 'create':
       // arguments[1]: kind
-      return cxn.model(arguments[1]);
+      model = models[arguments[1]];
+      if (typeof model !== 'function') {
+        throw 'Kind "'+ arguments[1] +'" is not valid.';
+      }
+      ent = model();
+      return Entity(ent, JSON.stringify(ent.data), cxn);
 
     case 'get':
       // arguments[1]: key(s)

@@ -110,21 +110,15 @@ SHARED.CommandControl = function (jQuery, throw_error) {
     return key;
   }
 
-  jQuery(window).bind('hashchange', function(ev) {
-    // TODO DEBUG REMOVE
-    dump('--->>> hashchange event\n');
-    dump('window.location.hash = '+ window.location.hash +'\n');
-    var key, val
-      , new_state = ev.getState()
-      , changes = []
-      ;
+  self.push = function (state) {
+    var key, val, changes = [];
 
-    for (key in new_state) {
-      if (Object.prototype.hasOwnProperty.call(new_state, key)) {
-        val = new_state[key];
+    for (key in state) {
+      if (Object.prototype.hasOwnProperty.call(state, key)) {
+        val = state[key];
 
         // TODO DEBUG REMOVE
-        dump(key +' : '+ val +'\n');
+        dump('commands.push() '+ key +' : '+ val +'\n');
 
         if (!command_state[key]) {
           // TODO DEBUG REMOVE
@@ -141,6 +135,13 @@ SHARED.CommandControl = function (jQuery, throw_error) {
     }
 
     self.broadcast(changes);
+  };
+
+  jQuery(window).bind('hashchange', function(ev) {
+    // TODO DEBUG REMOVE
+    dump('--->>> hashchange event\n');
+    dump('window.location.hash = '+ window.location.hash +'\n');
+    self.push(ev.getState());
   });
 
   return self;
@@ -207,7 +208,6 @@ ViewControl.prototype.receive_entity = function (entity) {
     , data: view.entity
     , view: view.view
     , pointer: view.pointer
-    , original: entity('original')
   };
   this.key = entity('key');
 };
@@ -228,13 +228,13 @@ ViewControl.prototype.refresh = function() {
       return;
     }
 
-    self.connection('get', self.key, function (entity) {
+    self.connection('get', self.key, function (entity, err) {
       try {
         self.log.trace('got remote response: '+
           Object.prototype.toString.call(entity));
         if (entity && entity[0]) {
           transaction.put(self.key, entity[0], self.cache_expiration);
-          if (entity[0]('original') !== self.entity.original) {
+          if (entity[0]('original') !== self.entity.fn('original')) {
             self.log.trace('resetting entity');
             self.receive_entity(entity[0]);
             self.show(self.key, self.entity.view);
@@ -243,9 +243,13 @@ ViewControl.prototype.refresh = function() {
             self.log.trace('entity has not changed');
           }
         }
-        else {
+        else if (entity && entity[0] === null) {
           self.log.trace('entity does not exist');
-          self.show(self.key, null);
+          self.log.error('This is an unexpected situation.');
+        }
+        else {
+          self.log.trace('connection error');
+          self.log.debug(err);
         }
         self.start_timer();
       }
@@ -276,10 +280,10 @@ ViewControl.prototype.open = function (key) {
       self.show(self.key, self.entity.view);
       self.start_timer();
       transaction.close();
-      return
+      return;
     }
     self.log.trace('getting entity remotely');
-    self.connection('get', key, function (entity) {
+    self.connection('get', key, function (entity, err) {
       try {
         self.log.trace('got remote response: '+
           Object.prototype.toString.call(entity));
@@ -293,9 +297,13 @@ ViewControl.prototype.open = function (key) {
             , self.cache_expiration
           );
         }
-        else {
+        else if (entity && entity[0] === null) {
           self.log.trace('entity does not exist');
           self.show(self.key, null);
+        }
+        else {
+          self.log.trace('connection error');
+          self.log.debug(err);
         }
         self.start_timer();
       }
@@ -310,13 +318,41 @@ ViewControl.prototype.open = function (key) {
   });
 };
 
+ViewControl.prototype.create = function (kind) {
+  this.log.trace('called create()');
+  this.stop_timer();
+  this.key = null;
+  this.entity = {};
+  this.in_focus = true;
+
+  var self = this
+    , entity = this.connection('create', kind);
+
+  this.receive_entity(entity);
+
+  this.cache(this.connection_id, function(transaction) {
+    try {
+      transaction.put(self.key, self.entity.fn, self.cache_expiration);
+      self.newly_created = true;
+      self.show(self.key, self.entity.view);
+    }
+    catch (e) {
+      self.log.error(e);
+    }
+    finally {
+      transaction.close();
+    }
+  });
+};
+
 ViewControl.prototype.focus = function () {
   this.log.trace('called focus()');
   if (this.in_focus || !this.key) {
     return;
   }
-  this.stop_timer();
-  this.refresh(this.key);
+  if (!this.newly_created) {
+    this.start_timer();
+  }
   this.in_focus = true;
 };
 
@@ -339,17 +375,14 @@ ViewControl.prototype.update = function (path, val) {
 ViewControl.prototype.commit = function () {
   var self = this;
   return function (info) {
-    self.log.trace('called commit() info.keys '+ info.keys);
-    if (info.keys.indexOf(self.key) !== -1) {
+    self.log.trace('called commit(); info.keys '+ info.keys);
+    if (info.keys.indexOf(self.key) !== -1 && self.in_focus) {
       self.reset_timer();
-    }
-    else {
-      self.log.trace('Current entity is not in changeset.');
+      self.newly_created = false;
     }
   };
 };
 
 return ViewControl;
 }(window));
-
 
