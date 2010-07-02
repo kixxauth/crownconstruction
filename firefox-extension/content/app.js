@@ -253,13 +253,14 @@ function set_commands(workspace) {
       , parts = jq(this).attr('href').split('/')
       , id = parts[0]
       , url = parts[1]
-      , sub_parts = url.split('?')
-      , state_str = sub_parts[0]
-      , params = jq.deparam.querystring(sub_parts[1], true)
       ;
 
-    state[id] = {state: state_str, params: params};
-    commands.broadcast(state);
+    try {
+      state[id] = url;
+      commands.push(state);
+    } catch (e) {
+      log.error(e);
+    }
     return false;
   });
 }
@@ -353,6 +354,8 @@ function mod_personnel() {
     , jq_addresses = jq('#employee-addresses')
     , jq_phones = jq('#employee-phones')
     , jq_groups = jq('#employee-groups')
+
+    , currently_showing
     ;
 
   function handle_input(ev) {
@@ -362,15 +365,8 @@ function mod_personnel() {
 
   jq('input.fform', jq_personnel[0]).live('keyup', handle_input);
 
-  control.busy = function () {
-    // TODO
-    // Show busy indicator.
-    alert('Busy...');
-  };
-
-  control.show = function (key, employee) {
+  function show(key, employee) {
     logging.inspect('employee view', employee);
-    var name, addresses, phones, groups;
     try {
       if (!key) {
         throw new Error('Missing employee entity key.');
@@ -390,13 +386,26 @@ function mod_personnel() {
 
       jq_groups.html(groups_template(
             {groups: employee.groups}));
+
+      currently_showing = key;
     }
     catch (e) {
       throw_error(e);
     }
+  }
+
+  function show_new(key, employee) {
+    show(key, employee);
+    jq.bbq.pushState({personnel: 'view?key='+ key});
+  }
+
+  control.busy = function () {
+    // TODO
+    // Show busy indicator.
+    alert('Busy...');
   };
 
-  events.addListener('db.committing', control.commit());
+  events.addListener('db.committed', control.commit());
 
   commands.observe(function (state) {
     // TODO DEBUG REMOVE
@@ -414,46 +423,17 @@ function mod_personnel() {
   });
 
   commands.register('personnel', 'view', function (params) {
-    control.open(params.key);
+    if (params.key != currently_showing) {
+      control.show = show;
+      control.open(params.key);
+    }
     tabset.show('personnel');
     deck('personnel-view');
   });
 
   commands.register('personnel', 'create', function () {
-    // TODO
-    // Create employee.
-    /* Testing
-    var employee = connection('create', 'employee')
-      , view = mapview(employee('key'), employee('entity'))
-      , ent = view.entity
-      , pointer = view.pointer
-      , view = view.view
-      ;
-
-    logging.checkpoint('Employee entity data', util.prettify(ent));
-    logging.checkpoint('Employee entity view', util.prettify(view));
-
-    logging.checkpoint('Should mutate.');
-    update_field(employee('key') +'.name.first', 'Otto', pointer, ent);
-    update_field(employee('key') +'.name.last', 'Van-go', pointer, ent);
-    employee('update', ent);
-
-    logging.checkpoint('Should be clean.');
-    update_field(employee('key') +'.name.first', '', pointer, ent);
-    update_field(employee('key') +'.name.last', '', pointer, ent);
-    employee('update', ent);
-
-    logging.checkpoint('Should mutate.');
-    update_field(employee('key') +'.name.first', 'Bjorn', pointer, ent);
-    update_field(employee('key') +'.name.last', 'Straussberg', pointer, ent);
-    employee('update', ent);
-
-    logging.checkpoint('Should commit.');
-    connection('commit')(function (q) {
-      // `q` is the number of committed entities.
-      logging.checkpoint('commit', util.prettify(q));
-    });
-    */
+    control.show = show_new;
+    control.create('employee');
   });
 
   commands.register('personnel', 'directory', function () {
@@ -521,9 +501,15 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
   mod_personnel();
   set_commands(jq_workspace[0]);
 
-  window.setInterval(function () {
+  var interval = window.setInterval(function () {
     try {
-      connection('commit');
+      connection('commit')(null, function (err) {
+        log.warn(err);
+        log.warn('Shutting down commit loop.');
+        window.clearInterval(interval);
+        throw_error(new Error('Encountered network error -- '+
+            'Shutting down commit loop.'));
+      });
     } catch (e) {
       log.warn(e);
     }
