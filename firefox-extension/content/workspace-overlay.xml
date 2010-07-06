@@ -425,7 +425,7 @@ Application overlay HTML snippet.
   <form id="customer-search-form">
     <p class="customer-search-form">
       <label class="customer-search-form">
-        Last name starts with...
+        Last name starts with:
       </label>
       <input id="customer-search-lastname" class="customer-search-form" type="text" />
     </p>
@@ -434,6 +434,19 @@ Application overlay HTML snippet.
   <ul id="customer-search-results" class="search-results-list">
   </ul>
 </div><!-- customer-search -->
+<!-- #### Customer search results template -->
+<template id="customer_search_results-template"><![CDATA[
+  <%
+  var i = 0, customer;
+  for (; i < customers.length; i += 1) {
+  customer = customers[i]; %>
+  <li class="search-result">
+    <a class="bbq search-result" href="#customers/view?key=<%= customer.key %>">
+      <%= customer.names[0].first %> <%= customer.names[0].last %>
+    </a>
+  </li>
+  <% } %>
+]]></template>
 
 </div>
 </overlay>

@@ -251,14 +251,76 @@ function mod_tabset() {
 }
 
 function mod_search(jq_commandset) {
+  var state = null
+
+    , panels = {
+        customers: jq('#customer-search').hide()
+      , jobs: jq('#job-search').hide()
+      }
+
+    , jq_customer_results = jq('#customer-search-results')
+    , customer_results_template = jq('#customer_search_results-template')
+                                    .template()
+    ;
 
   jq.commandControl.bind('search', function (ev, command, params) {
+    if (command === 'customers' || command === 'jobs') {
+      if (state) {
+        panels[state].hide();
+      }
+      panels[command].show();
+      state = command;
+    }
+    else if (state) {
+      panels[state].hide();
+      state = null;
+    }
   });
 
   jq_commandset.bind('commandstate', function (ev, new_state, changes) {
-    if (un.indexOf(changes, 'search') === -1 && state !== 'none') {
+    if (un.indexOf(changes, 'search') === -1 && state !== null) {
       jq.commandControl.push('search', 'none');
     }
+  });
+
+  function maybe_customer_results(results) {
+    log.trace('customer search results length: '+
+        (results ? results.length : '0'));
+
+    cache(connection('id'), function (transaction) {
+      var rv = [];
+      results = results || [];
+
+      try {
+        un.each(results, function (customer) {
+          var key = customer('key');
+          transaction.put(key, customer, cache_exp);
+          rv.push({
+              key: key
+            , names: customer('entity').names
+          });
+        });
+        jq_customer_results
+          .html(customer_results_template({customers: rv}));
+      }
+      catch (e) {
+        throw_error(e);
+      }
+      finally {
+        transaction.close();
+      }
+    });
+  }
+
+  jq('#customer-search-button').click(function (ev) {
+    connection('query')
+      .start()
+      .eq('kind', 'customer')
+      .range('last_name', jq('#customer-search-lastname').val().toUpperCase())
+      .append(maybe_customer_results)
+      .send()
+      ;
+    return false;
   });
 }
 
