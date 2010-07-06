@@ -22,5 +22,6 @@
     if (node) {
       return un.template(node.nodeValue, data);
     }
+    return null;
   };
 }(jQuery, _, window));

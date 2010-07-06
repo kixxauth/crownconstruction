@@ -262,10 +262,10 @@ exports.confirmInt = function (x, def) {
 };
 
 exports.curry = function (fn) {
-  args = Array.prototype.slice.call(arguments, 1);
+  var args = Array.prototype.slice.call(arguments, 1);
   return function () {
     if (arguments.length) {
-      fn.apply($N, args.concat(Array.prototype.slice(arguments)));
+      fn.apply($N, args.concat(Array.prototype.slice.call(arguments)));
     }
     else {
       fn.apply($N, args);

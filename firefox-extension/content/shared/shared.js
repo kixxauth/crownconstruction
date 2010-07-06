@@ -43,123 +43,18 @@ SHARED.throw_error = function (log) {
   };
 };
 
-SHARED.CommandControl = function (jQuery, throw_error) {
-  var self = {}
-    , command_state = {}
-    , registry = {}
-    , observers = []
-    ;
-
-  self.register = function (namespace, command, fn) {
-    if (typeof fn === 'function') {
-      registry[namespace] = registry[namespace] || {};
-      registry[namespace][command] = registry[namespace][command] || [];
-      registry[namespace][command].push(fn);
-    }
-  };
-
-  function dispatch(namespace, command, args) {
-    // TODO DEBUG REMOVE
-    dump('dispatching state "'+ command +'" for "'+ namespace +'"\n');
-    if (!(registry[namespace] || {})[command]) {
-      return;
-    }
-
-    var i = 0, len = registry[namespace][command].length;
-
-    for (; i < len; i += 1) {
-      try {
-      registry[namespace][command][i].call(null, args);
-      }
-      catch (e) {
-        throw_error(e);
-      }
-    }
-  }
-
-  self.observe = function (fn) {
-    if (typeof fn === 'function') {
-      observers.push(fn);
-    }
-  };
-
-  self.broadcast = function (changes) {
-    var i = 0, key;
-
-    for (; i < changes.length; i += 1) {
-      key = changes[i];
-      dispatch(key, command_state[key].state, command_state[key].params);
-    }
-    // The state MUST be broadcast AFTER the commands are dispatched.
-    for (i = 0; i < observers.length; i += 1) {
-      try {
-        observers[i](command_state);
-      }
-      catch (e) {
-        throw_error(e);
-      }
-    }
-  };
-
-  function update_state(key, val) {
-    var parts = val.split('?')
-      , state = parts[0]
-      , params = jQuery.deparam.querystring(parts[1], true)
-      ;
-    command_state[key] = {state:state, params:params, encoded: val};
-    return key;
-  }
-
-  self.push = function (state) {
-    var key, val, changes = [];
-
-    for (key in state) {
-      if (Object.prototype.hasOwnProperty.call(state, key)) {
-        val = state[key];
-
-        // TODO DEBUG REMOVE
-        dump('commands.push() '+ key +' : '+ val +'\n');
-
-        if (!command_state[key]) {
-          // TODO DEBUG REMOVE
-          dump('updating state "'+ key +'"\n');
-          command_state[key] = {};
-          changes.push(update_state(key, val));
-        }
-        else if (command_state[key].encoded !== val) {
-          // TODO DEBUG REMOVE
-          dump('updating state "'+ key +'"\n');
-          changes.push(update_state(key, val));
-        }
-      }
-    }
-
-    self.broadcast(changes);
-  };
-
-  jQuery(window).bind('hashchange', function(ev) {
-    // TODO DEBUG REMOVE
-    dump('--->>> hashchange event\n');
-    dump('window.location.hash = '+ window.location.hash +'\n');
-    self.push(ev.getState());
-  });
-
-  return self;
-};
-
 SHARED.ViewControl = (function (window) {
-function ViewControl(connection, cache, mapview, cache_expiration, logging) {
+function ViewControl(spec) {
   if(!(this instanceof ViewControl)) {
-    return new ViewControl(
-      connection, cache, mapview, cache_expiration, logging);
+    return new ViewControl(spec);
   }
 
-  this.connection = connection;
-  this.connection_id = connection('id');
-  this.log = logging.get('View_Control');
-  this.cache = cache;
-  this.cache_expiration = cache_expiration;
-  this.mapview = mapview;
+  this.connection = spec.connection;
+  this.connection_id = spec.connection('id');
+  this.log = spec.logging.get('View_Control:'+ spec.name);
+  this.cache = spec.cache;
+  this.cache_expiration = spec.cache_expiration;
+  this.mapview = spec.mapview;
 }
 
 ViewControl.prototype = {};
@@ -391,4 +286,89 @@ ViewControl.prototype.commit = function () {
 
 return ViewControl;
 }(window));
+
+/*
+function ViewModule(spec) {
+  if (!(this instanceof ViewModule)) {
+    return new ViewModule(spec);
+  }
+  this.name = spec.name;
+  this.jq = spec.jQuery;
+  this.cache = spec.db.cache;
+  this.cache_exp = spec.db.expiration;
+  this.logging = spec.logging;
+  this.log = this.logging.get(this.name +'_ViewModule')
+  this.viewControl = ViewControl(spec.db.connection
+                           , this.cache
+                           , spec.db.mapview
+                           , this.cache_exp
+                           , this.logging);
+  spec.eventsMod.addListener('db.committed', this.viewControl.commit());
+  this.commands = spec.commands;
+  this.tabset = spec.tabset;
+  this.panels = spec.panels;
+}
+
+ViewModule.prototype = {};
+
+ViewModule.prototype.init = function (spec) {
+  var self = this
+    , currently_showing
+    ;
+
+  this.jq_tabpanel = jq('#'+ spec.tabpanel);
+  this.jq_view = jq('#'+ spec.tabpanel +'-view');
+
+  this.jq('input.fform', jq_view[0])
+    .live('keyup', function (ev) {
+      // TODO: Validation
+      self.viewControl.update(this.name, this.value);
+    });
+
+  this.jq('a.fform.append', jq_view[0])
+    .live('click', function (ev) {
+      var field = {}
+        , name = jq(this).attr('href')
+        , view
+        ;
+
+      field[name] = control.entity.data[name];
+      field[name].push({});
+      view = self.viewControl.append(field);
+      self.template[name](view[name]);
+      return false;
+    });
+
+  spec.commandSet.bind('commandstate', function (state) {
+    var panel = (state.panels || $N).state
+      , state = (state.customers || $N).state
+      ;
+
+    if (panel === self.name && state === 'view') {
+      self.log.trace('focus viewControl');
+      self.viewControl.focus();
+    }
+    else {
+      self.log.trace('blur viewControl');
+      self.viewControl.blur();
+    }
+  });
+
+  jq.commandControl.bind(this.name, function (command, params) {
+    self.log.trace('got command "'+ command +'"');
+    switch (command) {
+    case 'view':
+      if (params.key !== currently_showing) {
+        self.viewControl.show = show;
+        self.viewControl.open(params.key);
+      }
+      self.tabset.show(self.name);
+      self.panels(self.name +'-view');
+      break;
+    case 'create':
+      break;
+    }
+  });
+};
+*/
 

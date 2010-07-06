@@ -79,20 +79,136 @@ Application overlay HTML snippet.
   <!-- ### Customers panel -->
   <div id="customers" class="tab-panel">
     <!-- #### Customer view widget -->
-    <form id="customer-view" class="fform inner-tab-panel">
-      <fieldset id="customer-names" class="fform content-panel">
+    <form id="customers-view" class="fform inner-tab-panel">
+      <fieldset id="customers-names" class="fform content-panel">
         <h4 class="section-header">Names</h4>
       </fieldset>
-      <fieldset id="customer-phones" class="fform content-panel">
+      <fieldset id="customers-phones" class="fform content-panel">
         <h4 class="section-header">Phone Numbers</h4>
       </fieldset>
-      <fieldset id="customer-addresses" class="fform content-panel">
+      <fieldset id="customers-addresses" class="fform content-panel">
         <h4 class="section-header">Addresses</h4>
       </fieldset>
-      <fieldset id="customer-emails" class="fform content-panel">
+      <fieldset id="customers-emails" class="fform content-panel">
         <h4 class="section-header">Email Addresses</h4>
       </fieldset>
     </form><!-- customer-view -->
+
+    <!-- ### Customer view templates -->
+    <template id="customers_names-template"><![CDATA[
+      <h4 class="section-header">Names</h4>
+      <%
+      var i = 0, len = names.length, name;
+      for (; i < len; i += 1) {
+      name = names[i];  %>
+      <div class="input-section">
+        <div class="line">
+          <p class="input-float"><label class="live-label">last:</label>
+            <input class="clean-text-input fform lastname" type="text"
+              name="<%= name.last.path %>" value="<%= name.last.value %>" />
+          </p>
+          <p class="input-float"><label class="live-label">first:</label>
+            <input class="clean-text-input fform firstname" type="text"
+              name="<%= name.first.path %>" value="<%= name.first.value %>" />
+          </p>
+        </div>
+      </div>
+      <% } %>
+      <a href="names" class="append fform button" title="Add another contact person.">
+        <span class="icon">+</span>
+        Add another contact person.
+      </a>
+    ]]></template>
+    <template id="customers_addresses-template"><![CDATA[
+      <h4 class="section-header">Addresses</h4>
+      <%
+      var i = 0, len = addresses.length, address;
+      for (; i < len; i += 1) {
+      address = addresses[i]; %>
+      <div class="input-section">
+        <div class="line">
+          <p>
+            <label class="live-label">street:</label>
+            <input class="clean-text-input fform street-address" type="text"
+              name="<%= address.street.path %>" value="<%= address.street.value %>" />
+          </p>
+        </div>
+        <div class="line">
+          <p class="input-float">
+            <label class="live-label">city:</label>
+            <input class="clean-text-input fform city" type="text"
+              name="<%= address.city.path %>" value="<%= address.city.value %>" />
+          </p>
+          <p class="input-float">
+            <label class="live-label">state:</label>
+            <input class="clean-text-input fform state-address" type="text"
+              name="<%= address.state.path %>" value="<%= address.state.value %>" />
+          </p>
+          <p class="input-float">
+            <label class="live-label">zip:</label>
+            <input class="clean-text-input fform zip" type="text"
+              name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
+          </p>
+        </div>
+      </div>
+      <% } %>
+      <a href="addresses" class="append fform button" title="Add another customer address.">
+        <span class="icon">+</span>
+        Add another address.
+      </a>
+    ]]></template>
+    <template id="customers_phones-template"><![CDATA[
+      <h4 class="section-header">Phone Numbers</h4>
+      <%
+      var i = 0, len = phones.length, phone;
+      for (; i < len; i += 1) {
+      phone = phones[i]; %>
+      <div class="input-section">
+        <div class="line">
+          <p class="input-float">
+            <label class="live-label">number:</label>
+            <input class="clean-text-input fform phone" type="text"
+              name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
+          </p>
+          <p class="input-float">
+            <label class="live-label">label:</label>
+            <input class="clean-text-input fform label" type="text"
+              name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
+          </p>
+        </div>
+      </div>
+      <% } %>
+      <a href="phones" class="append fform button" title="Add another phone number.">
+        <span class="icon">+</span>
+        Add another phone number.
+      </a>
+    ]]></template>
+    <template id="customers_emails-template"><![CDATA[
+      <h4 class="section-header">Email Addresses</h4>
+      <%
+      var i = 0, len = emails.length, email;
+      for (; i < len; i += 1) {
+      email = emails[i]; %>
+      <div class="input-section">
+        <div class="line">
+          <p class="input-float">
+            <label class="live-label">email:</label>
+            <input class="clean-text-input fform email" type="text"
+              name="<%= email.email.path %>" value="<%= email.email.value %>" />
+          </p>
+          <p class="input-float">
+            <label class="live-label">label:</label>
+            <input class="clean-text-input fform label" type="text"
+              name="<%= email.label.path %>" value="<%= email.label.value %>" />
+          </p>
+        </div>
+      </div>
+      <% } %>
+      <a href="emails" class="append fform button" title="Add another email address.">
+        <span class="icon">+</span>
+        Add another email address.
+      </a>
+    ]]></template>
   </div><!-- panel-customers -->
 
   <!-- ### Jobs panel -->
@@ -175,22 +291,22 @@ Application overlay HTML snippet.
 
     <!-- #### Personnel view widget -->
     <form id="personnel-view" class="fform personnel-panel inner-tab-panel">
-      <fieldset id="employee-name" class="fform content-panel">
+      <fieldset id="personnel-name" class="fform content-panel">
         <h4 class="section-header">Name</h4>
       </fieldset>
-      <fieldset id="employee-phones" class="fform content-panel">
+      <fieldset id="personnel-phones" class="fform content-panel">
         <h4 class="section-header">Phone Numbers</h4>
       </fieldset>
-      <fieldset id="employee-groups" class="fform content-panel">
+      <fieldset id="personnel-groups" class="fform content-panel">
         <h4 class="section-header">Groups</h4>
       </fieldset>
-      <fieldset id="employee-addresses" class="fform content-panel">
+      <fieldset id="personnel-addresses" class="fform content-panel">
         <h4 class="section-header">Addresses</h4>
       </fieldset>
     </form><!-- personnel-view -->
 
     <!-- #### Personnel view templates -->
-    <template id="employee_name-template"><![CDATA[
+    <template id="personnel_name-template"><![CDATA[
       <h4 class="section-header">Name</h4>
       <div class="input-section">
         <div class="line">
@@ -205,7 +321,7 @@ Application overlay HTML snippet.
         </div>
       </div>
     ]]></template>
-    <template id="employee_addresses-template"><![CDATA[
+    <template id="personnel_addresses-template"><![CDATA[
       <h4 class="section-header">Addresses</h4>
       <%
       var i = 0, len = addresses.length, address;
@@ -244,7 +360,7 @@ Application overlay HTML snippet.
         Add another address.
       </a>
     ]]></template>
-    <template id="employee_phones-template"><![CDATA[
+    <template id="personnel_phones-template"><![CDATA[
       <h4 class="section-header">Phone Numbers</h4>
       <%
       var i = 0, len = phones.length, phone;
@@ -271,7 +387,7 @@ Application overlay HTML snippet.
         Add another phone number.
       </a>
     ]]></template>
-    <template id="employee_groups-template"><![CDATA[
+    <template id="personnel_groups-template"><![CDATA[
       <h4 class="section-header">Groups</h4>
       <div class="input-section">
         <div class="line">
@@ -294,7 +410,7 @@ Application overlay HTML snippet.
 <div id="job-search" class="content-panel search-panel">
   <h4 class="section-header">
     Job Search
-    <span class="search-panel-close-button">x</span>
+    <a href="search/none" class="bbq panel-close">x</a>
   </h4>
   <ul id="job-search-results" class="search-results-list">
   </ul>
@@ -304,7 +420,7 @@ Application overlay HTML snippet.
 <div id="customer-search" class="content-panel search-panel">
   <h4 class="section-header">
     Customer Search
-    <span class="search-panel-close-button">x</span>
+    <a href="search/none" class="bbq panel-close">x</a>
   </h4>
   <form id="customer-search-form">
     <p class="customer-search-form">
@@ -312,12 +428,6 @@ Application overlay HTML snippet.
         Last name starts with...
       </label>
       <input id="customer-search-lastname" class="customer-search-form" type="text" />
-    </p>
-    <p class="customer-search-form">
-      <label class="customer-search-form">
-        First name starts with...
-      </label>
-      <input id="customer-search-firstname" class="customer-search-form" type="text" />
     </p>
     <button id="customer-search-button">Find</button>
   </form>

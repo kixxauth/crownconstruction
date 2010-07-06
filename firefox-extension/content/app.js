@@ -200,7 +200,6 @@ db.connections(function (connections) {
 APP = function (require, log, jq, spec) {
 var un = _.noConflict()
   , connection = spec.connection
-  , Query = spec.db.Query
   , main_deck = spec.deck
   , cache_exp = spec.cache_expiration
   , util = spec.util
@@ -209,58 +208,25 @@ var un = _.noConflict()
   , curry = util.curry
   , events = require('events')
   , view = require('view')
-  , mapview = view.mapview
   , cache = require('memcache').cache
   , ViewControl = SHARED.ViewControl
   , throw_error = SHARED.throw_error(log)
-  , commands
   , tabset
   , $N = {}
   ;
 
-// ## Registered commands:
-//   * 'panels.customers'
-//   * 'panels.jobs'
-//   * 'panels.personnel'
-//   * 'search.customers'
-//   * 'search.jobs'
-//   * 'customers.create'
-//   * 'jobs.create'
-//   * 'personnel.directory'
-//   * 'personnel.create'
-
 function set_commands(workspace) {
   jq('a.bbq', workspace).live('click', function (ev) {
-    // TODO: DEBUG REMOVE 
     log.trace('a.bbq '+ jq(this).attr('href'));
-
-    var state = {}
-      , parts = jq(this).attr('href').split('/')
-      , id = parts[0]
-      , url = parts[1]
-      ;
-
-    state[id] = url;
-    jq.bbq.pushState(state);
+    var parts = jq(this).attr('href').split('/');
+    jq.commandControl.push(parts[0], parts[1]);
     return false;
   });
 
   jq('a.cmd', workspace).live('click', function (ev) {
-    // TODO: DEBUG REMOVE 
     log.trace('a.cmd '+ jq(this).attr('href'));
-
-    var state = {}
-      , parts = jq(this).attr('href').split('/')
-      , id = parts[0]
-      , url = parts[1]
-      ;
-
-    try {
-      state[id] = url;
-      commands.push(state);
-    } catch (e) {
-      log.error(e);
-    }
+    var parts = jq(this).attr('href').split('/');
+    jq.commandControl.broadcast(parts[0], parts[1]);
     return false;
   });
 }
@@ -268,18 +234,14 @@ function set_commands(workspace) {
 function mod_tabset() {
   var self = {}
     , deck = jq.deck(jq('#tabset').children())
-    , panels = ['customers', 'jobs', 'personnel']
+    , panels = ['customers', 'personnel', 'jobs']
     , current
     ;
 
-  un.each(panels, function (panel) {
-    commands.register('panels', panel, curry(deck, panel));
-  });
+  jq.commandControl.bind('panels', function (ev, panel) { deck(panel); });
 
   self.show = function (panel_id) {
-    logging.checkpoint('show panel', panel_id);
     if (panel_id !== current && un.indexOf(panels, panel_id) !== -1) {
-      logging.checkpoint('push state for', panel_id);
       jq.bbq.pushState({'panels': panel_id});
       current = panel_id;
     }
@@ -288,121 +250,96 @@ function mod_tabset() {
   return self;
 }
 
-function mod_search() {
-  var self = {}
-    , jq_job = jq('#job-search').hide()
-    , jq_customer = jq('#customer-search').hide()
-    ;
+function mod_search(jq_commandset) {
 
-  commands.register('search', 'customers', function () {
-    // 2 forms of this panel --
-    // one for customer search and one for job creation.
-    // TODO
-    logging.checkpoint('Show customer search panel.');
+  jq.commandControl.bind('search', function (ev, command, params) {
   });
 
-  commands.register('search', 'jobs', function () {
-    // TODO
-    logging.checkpoint('Show job search panel.');
-  });
-
-  return self;
-}
-
-function mod_customers() {
-  var self = {}
-    , deck = jq.deck(jq('#customers').children())
-    ;
-
-  commands.register('customers', 'create', function () {
-    // TODO
-    logging.checkpoint('Create new customer.');
-  });
-
-  return self;
-}
-
-function mod_jobs() {
-  var self = {}
-    , deck = jq.deck(jq('#jobs').children())
-    ;
-
-  commands.register('jobs', 'create', function () {
-    // TODO
-    logging.checkpoint('Create new job.');
-    commands.dispatch('search', 'customers');
-  });
-
-  return self;
-}
-
-function mod_personnel() {
-  var jq_personnel = jq('#personnel')
-    , deck = jq.deck(jq_personnel.children())
-    , control = ViewControl(connection, cache, mapview, cache_exp, logging)
-
-    // Cache templates
-    , directory_template = jq('#personnel_directory-template').template()
-    , name_template = jq('#employee_name-template').template()
-    , addresses_template = jq('#employee_addresses-template').template()
-    , phones_template = jq('#employee_phones-template').template()
-    , groups_template = jq('#employee_groups-template').template()
-
-    // Cache jQuery collection
-    , jq_directory = jq('#personnel-group-list')
-    , jq_name = jq('#employee-name')
-    , jq_addresses = jq('#employee-addresses')
-    , jq_phones = jq('#employee-phones')
-    , jq_groups = jq('#employee-groups')
-
-    , template = {}
-    , currently_showing
-    ;
-
-  template.name = function (name) {
-    jq_name.html(name_template({name: name}));
-  };
-
-  template.addresses = function (addresses) {
-    jq_addresses.html(addresses_template({addresses: addresses}));
-  };
-
-  template.phones = function (phones) {
-    jq_phones.html(phones_template({phones: phones}));
-  };
-
-  template.groups = function (groups) {
-    jq_groups.html(groups_template({groups: groups}));
-  };
-
-  function show(key, employee) {
-    logging.inspect('employee view', employee);
-    try {
-      if (!key) {
-        throw new Error('Missing employee entity key.');
-      }
-      if (!employee) {
-        throw new Error('Missing employee entity.');
-      }
-
-      un.each(employee, function (value, name) {
-        template[name](value);
-      });
-
-      currently_showing = key;
+  jq_commandset.bind('commandstate', function (ev, new_state, changes) {
+    if (un.indexOf(changes, 'search') === -1 && state !== 'none') {
+      jq.commandControl.push('search', 'none');
     }
-    catch (e) {
+  });
+}
+
+function get_ViewControl(name) {
+  return ViewControl({
+      connection: connection
+    , cache: cache
+    , mapview: view.mapview
+    , cache_expiration: cache_exp
+    , name: name
+    , logging: logging
+  });
+}
+
+function view_focus(modname, control) {
+  return function (state) {
+    var panel = (state.panels || $N).state;
+    state = (state.customers || $N).state;
+    if (panel === modname && state === 'view') {
+      control.focus();
+    }
+    else {
+      control.blur();
+    }
+  };
+}
+
+function rendering(mod_name, fields) {
+  var templates = {}
+    , field_vals = {}
+    ;
+
+  un.each(fields, function (field_name) {
+    log.trace('getting template #'+ mod_name +'_'+ field_name +'-template');
+    templates[field_name] = jq('#'+ mod_name +'_'+ field_name +'-template')
+                              .template();
+    field_vals[field_name] = jq('#'+ mod_name +'-'+ field_name);
+  });
+
+  return function (name, data) {
+    try {
+      field_vals[name].html(templates[name](data));
+    } catch (e) {
       throw_error(e);
     }
+  };
+}
+
+function mod_customers(jq_commandset) {
+  var modname = 'customers'
+    , kind = 'customer'
+    , fieldnames = ['names', 'phones', 'addresses', 'emails']
+    , jq_view = jq('#'+ modname +'-view')
+    , tab_panels = jq.deck(jq('#'+ modname).children())
+    , commands = {}
+    , render = rendering(modname, fieldnames)
+    , control = get_ViewControl(modname)
+    , currently_viewing
+    ;
+
+  function show(key, view) {
+    un.each(view, function (value, name) {
+      var data = {};
+      data[name] = value;
+      render(name, data);
+    });
+    currently_viewing = key;
   }
 
-  jq('input.fform', jq_personnel[0])
+  function show_new(key, view) {
+    show(key, view);
+    jq.commandControl.push(modname, 'view?key='+ key);
+  }
+
+  jq('input.fform', jq_view[0])
     .live('keyup', function (ev) {
       // TODO: Validation
       control.update(this.name, this.value);
     });
 
-  jq('a.fform.append', jq_personnel[0])
+  jq('a.fform.append', jq_view[0])
     .live('click', function (ev) {
       var field = {}
         , name = jq(this).attr('href')
@@ -412,53 +349,96 @@ function mod_personnel() {
       field[name] = control.entity.data[name];
       field[name].push({});
       view = control.append(field);
-      template[name](view[name]);
+      render(name, view[name]);
       return false;
     });
 
-  function show_new(key, employee) {
-    show(key, employee);
-    jq.bbq.pushState({personnel: 'view?key='+ key});
-  }
-
-  control.busy = function () {
-    // TODO
-    // Show busy indicator.
-    alert('Busy...');
-  };
-
-  events.addListener('db.committed', control.commit());
-
-  commands.observe(function (state) {
-    // TODO DEBUG REMOVE
-    logging.inspect('personnel state observer', state);
-    var panel = (state.panels || $N).state
-      , personnel = (state.personnel || $N).state
-      ;
-
-    if (panel === 'personnel' && personnel === 'view') {
-      control.focus();
-    }
-    else {
-      control.blur();
-    }
-  });
-
-  commands.register('personnel', 'view', function (params) {
-    if (params.key != currently_showing) {
+  commands.view = function (params) {
+    if (params.key !== currently_viewing) {
       control.show = show;
       control.open(params.key);
     }
-    tabset.show('personnel');
-    deck('personnel-view');
-  });
+    tabset.show(modname);
+    tab_panels(modname +'-view');
+  };
 
-  commands.register('personnel', 'create', function () {
+  commands.create = function () {
+    log.trace(modname +'::create');
     control.show = show_new;
-    control.create('employee');
-  });
+    control.create(kind);
+  };
 
-  commands.register('personnel', 'directory', function () {
+  events.addListener('db.committed', control.commit());
+  jq_commandset.bind('commandstate', view_focus(modname, control));
+  jq.commandControl.bind(modname, function (ev, command, params) {
+    commands[command](params);
+  });
+}
+
+function mod_personnel(jq_commandset) {
+  var modname = 'personnel'
+    , kind = 'employee'
+    , fieldnames = ['name', 'phones', 'addresses', 'groups']
+    , jq_view = jq('#'+ modname +'-view')
+    , jq_directory = jq('#personnel-group-list')
+    , directory_template = jq('#personnel_directory-template').template()
+    , tab_panels = jq.deck(jq('#'+ modname).children())
+    , commands = {}
+    , render = rendering(modname, fieldnames)
+    , control = get_ViewControl(modname)
+    , currently_viewing
+    ;
+
+  function show(key, view) {
+    un.each(view, function (value, name) {
+      var data = {};
+      data[name] = value;
+      render(name, data);
+    });
+    currently_viewing = key;
+  }
+
+  function show_new(key, view) {
+    show(key, view);
+    jq.commandControl.push(modname, 'view?key='+ key);
+  }
+
+  jq('input.fform', jq_view[0])
+    .live('keyup', function (ev) {
+      // TODO: Validation
+      control.update(this.name, this.value);
+    });
+
+  jq('a.fform.append', jq_view[0])
+    .live('click', function (ev) {
+      var field = {}
+        , name = jq(this).attr('href')
+        , view
+        ;
+
+      field[name] = control.entity.data[name];
+      field[name].push({});
+      view = control.append(field);
+      render(name, view[name]);
+      return false;
+    });
+
+  commands.view = function (params) {
+    if (params.key !== currently_viewing) {
+      control.show = show;
+      control.open(params.key);
+    }
+    tabset.show(modname);
+    tab_panels(modname +'-view');
+  };
+
+  commands.create = function () {
+    log.trace(modname +'::create');
+    control.show = show_new;
+    control.create(kind);
+  };
+
+  commands.directory = function () {
     function maybe_results(results) {
       log.debug('Employee directory results: '+
         (isArray(results) ? results.length : 'invalid'));
@@ -493,7 +473,7 @@ function mod_personnel() {
           });
 
           jq_directory.html(directory_template({groups: groups}));
-          deck('personnel-directory');
+          tab_panels('personnel-directory');
         }
         catch (e) {
           throw_error(e);
@@ -510,17 +490,40 @@ function mod_personnel() {
       .append(maybe_results)
       .send()
       ;
-    tabset.show('personnel');
+    tabset.show(modname);
+  };
+
+  events.addListener('db.committed', control.commit());
+  jq_commandset.bind('commandstate', view_focus(modname, control));
+  jq.commandControl.bind(modname, function (ev, command, params) {
+    logging.checkpoint('got command', command);
+    commands[command](params);
   });
 }
 
+function mod_jobs() {
+  /*
+  var self = {}
+    , deck = jq.deck(jq('#jobs').children())
+    ;
+
+  commands.register('jobs', 'create', function () {
+    // TODO
+    logging.checkpoint('Create new job.');
+    commands.dispatch('search', 'customers');
+  });
+
+  return self;
+  */
+}
+
 jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
-  commands = SHARED.CommandControl(jq, throw_error);
+  var commandset = jq('#commandset').commandSet();
   tabset = mod_tabset();
-  mod_search();
-  mod_customers();
-  mod_jobs();
-  mod_personnel();
+  mod_search(commandset);
+  mod_customers(commandset);
+  //mod_jobs();
+  mod_personnel(commandset);
   set_commands(jq_workspace[0]);
 
   var interval = window.setInterval(function () {
