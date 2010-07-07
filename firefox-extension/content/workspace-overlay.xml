@@ -49,7 +49,7 @@ Application overlay HTML snippet.
         <a href="search/jobs" id="jobs-search" class="bbq navigation sub-section">Search</a>
       </li>
       <li class="navigation sub-section">
-        <a href="jobs/create" class="cmd navigation">Create</a>
+        <a href="search/customers?mode=newjob" class="cmd navigation">Create</a>
       </li>
     </ul>
   </li><!-- jobs -->
@@ -214,41 +214,152 @@ Application overlay HTML snippet.
   <!-- ### Jobs panel -->
   <div id="jobs" class="tab-panel">
     <!-- #### Job view widget -->
-    <form id="job-view" class="fform inner-tab-panel">
-      <fieldset id="job-header" class="fform content-panel">
-        <h4 class="section-header">Job Name</h4>
+    <form id="jobs-view" class="fform inner-tab-panel">
+      <fieldset id="jobs-header" class="fform content-panel">
+        <h4 class="section-header">Job Info</h4>
       </fieldset>
-      <fieldset id="job-addresses" class="fform content-panel">
-        <h4 class="section-header">Work Addresses</h4>
-      </fieldset>
-      <fieldset id="job-customer" class="fform content-panel">
-        <h4 class="section-header">Customer</h4>
-      </fieldset>
-      <fieldset id="job-dates" class="fform content-panel">
+      <template id="jobs_header-template"><![CDATA[
+        <h4 class="section-header">Job Info</h4>
+        <div class="input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Job ID:</label>
+              <input class="clean-text-input fform job-id" type="text"
+                name="<%= strname.path %>" value="<%= strname.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <p class="input-float"><label class="live-label">description:</label>
+              <input class="clean-text-input fform job-id" type="text"
+                name="<%= description.path %>" value="<%= description.value %>" />
+            </p>
+          </div>
+        </div>
+      ]]></template>
+      <fieldset id="jobs-dates" class="fform content-panel">
         <h4 class="section-header">Dates</h4>
       </fieldset>
-      <fieldset id="job-payments" class="fform content-panel">
+      <template id="jobs_dates-template"><![CDATA[
+        <h4 class="section-header">Dates</h4>
+        <div class="input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Contract Date:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= contractdate.path %>" value="<%= contractdate.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <h5 class="section-label">Start Date</h5>
+            <p class="input-float"><label class="live-label">Estimated:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= est_startdate.path %>" value="<%= est_startdate.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Actual:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= startdate.path %>" value="<%= startdate.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <h5 class="section-label">Complete Date</h5>
+            <p class="input-float"><label class="live-label">Estimated:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= est_completedate.path %>" value="<%= est_completedate.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Actual:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= completedate.path %>" value="<%= completedate.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <h5 class="section-label">Handoff</h5>
+            <p class="input-float"><label class="live-label">Scheduled:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= handoff.scheduled.path %>" value="<%= handoff.scheduled.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Completed:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= handoff.completed.path %>" value="<%= handoff.completed.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <h5 class="section-label">Walkthrough</h5>
+            <p class="input-float"><label class="live-label">Scheduled:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= walkthrough.scheduled.path %>" value="<%= walkthrough.scheduled.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Completed:</label>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= walkthrough.completed.path %>" value="<%= walkthrough.completed.value %>" />
+            </p>
+          </div>
+        </div>
+      ]]></template>
+      <fieldset id="jobs-payments" class="fform content-panel">
         <h4 class="section-header">Payments</h4>
       </fieldset>
-      <fieldset id="job-special-orders" class="fform content-panel">
+      <template id="jobs_payments-template"><![CDATA[
+        <h4 class="section-header">Payments</h4>
+        <table class="input">
+          <th>
+            <td>Due</td>
+            <td>Memo</td>
+            <td>Amount</td>
+          </th>
+        <%
+        var i = 0, payment;
+        for (; i < payments.length; i += 1) {
+          payment = payments[i]; %>
+          <tr>
+            <td>
+              <input class="clean-text-input fform date" type="text"
+                name="<%= payment.due.path %>" value="<%= payment.due.value %>" />
+            </td>
+            <td>
+              <input class="clean-text-input fform memo" type="text"
+                name="<%= payment.memo.path %>" value="<%= payment.memo.value %>" />
+            </td>
+            <td>
+              <input class="clean-text-input fform money-6" type="text"
+                name="<%= payment.amount.path %>" value="<%= payment.amount.value %>" />
+            </td>
+          </tr>
+        <% } %>
+        </table>
+        <table class="input">
+          <th>
+            <td>Direct Pays</td>
+          </th>
+        <%
+        i = 0;
+        for (; i < direct_pays.length; i += 1) {
+          payment = direct_pays[i]; %>
+          <tr>
+            <td>
+              <input class="clean-text-input fform memo" type="text"
+                name="<%= payment.path %>" value="<%= payment.value %>" />
+            </td>
+          </tr>
+        <% } %>
+        </table>
+      ]]></template>
+      <fieldset id="jobs-special-orders" class="fform content-panel">
         <h4 class="section-header">Special Orders</h4>
       </fieldset>
-      <fieldset id="job-subcontractors" class="fform content-panel">
+      <fieldset id="jobs-subcontractors" class="fform content-panel">
         <h4 class="section-header">Sub Conractors</h4>
       </fieldset>
-      <fieldset id="job-siding" class="fform content-panel">
+      <fieldset id="jobs-siding" class="fform content-panel">
         <h4 class="section-header">Siding</h4>
       </fieldset>
-      <fieldset id="job-roofing" class="fform content-panel">
+      <fieldset id="jobs-roofing" class="fform content-panel">
         <h4 class="section-header">Roofing</h4>
       </fieldset>
-      <fieldset id="job-permits" class="fform content-panel">
+      <fieldset id="jobs-permits" class="fform content-panel">
         <h4 class="section-header">Permits</h4>
       </fieldset>
-      <fieldset id="job-estimate" class="fform content-panel">
+      <fieldset id="jobs-estimate" class="fform content-panel">
         <h4 class="section-header">Estimate</h4>
       </fieldset>
-      <fieldset id="job-profitandtaxes" class="fform content-panel">
+      <fieldset id="jobs-profitandtaxes" class="fform content-panel">
         <h4 class="section-header">Finances</h4>
       </fieldset>
     </form><!-- job-view -->
@@ -434,6 +545,7 @@ Application overlay HTML snippet.
   <ul id="customer-search-results" class="search-results-list">
   </ul>
 </div><!-- customer-search -->
+
 <!-- #### Customer search results template -->
 <template id="customer_search_results-template"><![CDATA[
   <%
@@ -441,7 +553,7 @@ Application overlay HTML snippet.
   for (; i < customers.length; i += 1) {
   customer = customers[i]; %>
   <li class="search-result">
-    <a class="bbq search-result" href="#customers/view?key=<%= customer.key %>">
+    <a class="<%= link_class %> search-result" href="<%= link_hash %><%= customer.key %>">
       <%= customer.names[0].first %> <%= customer.names[0].last %>
     </a>
   </li>

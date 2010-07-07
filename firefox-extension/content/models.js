@@ -42,6 +42,13 @@ INDEXES.index_customer_key = function (val) {
   return ['ref_customer', val];
 };
 
+INDEXES.job_start_date = function (val) {
+  if (!val) {
+    return ['est_startdate', 0];
+  }
+  return ['est_startdate', Date.parse(val)];
+};
+
 MODELS.customer = function (db) {
   return {
     names: db.list(
@@ -108,7 +115,9 @@ MODELS.job = function (db) {
     roundtrip_miles: db.num(),
     allotted_miles: db.num(),
     startdate: db.str(),
+    est_startdate: db.str({index: INDEXES.job_start_date}),
     completedate: db.str(),
+    est_completedate: db.str(),
     contractdate: db.str(),
     description: db.str(),
     taxlabor: db.num(),

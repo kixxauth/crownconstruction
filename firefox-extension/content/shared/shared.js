@@ -213,7 +213,7 @@ ViewControl.prototype.open = function (key) {
   });
 };
 
-ViewControl.prototype.create = function (kind) {
+ViewControl.prototype.create = function (kind, data) {
   this.log.trace('called create()');
   this.stop_timer();
   this.key = null;
@@ -223,6 +223,9 @@ ViewControl.prototype.create = function (kind) {
   var self = this
     , entity = this.connection('create', kind);
 
+  if (data) {
+    entity('update', data);
+  }
   this.receive_entity(entity);
 
   this.cache(this.connection_id, function(transaction) {

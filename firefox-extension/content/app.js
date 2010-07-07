@@ -258,6 +258,7 @@ function mod_search(jq_commandset) {
       , jobs: jq('#job-search').hide()
       }
 
+    , customer_search_mode = 'customers'
     , jq_customer_results = jq('#customer-search-results')
     , customer_results_template = jq('#customer_search_results-template')
                                     .template()
@@ -267,6 +268,12 @@ function mod_search(jq_commandset) {
     if (command === 'customers' || command === 'jobs') {
       if (state) {
         panels[state].hide();
+      }
+      if (command === 'customers') {
+        if (customer_search_mode !== params.mode) {
+          jq_customer_results.html('');
+        }
+        customer_search_mode = params.mode;
       }
       panels[command].show();
       state = command;
@@ -301,7 +308,13 @@ function mod_search(jq_commandset) {
           });
         });
         jq_customer_results
-          .html(customer_results_template({customers: rv}));
+          .html(customer_results_template({
+                  customers: rv
+                , link_class: (customer_search_mode === 'newjob' ?
+                    'cmd' : 'bbq')
+                , link_hash: (customer_search_mode === 'newjob' ?
+                    'jobs/create?customer=' : 'customers/view?key=')
+                }));
       }
       catch (e) {
         throw_error(e);
@@ -354,7 +367,6 @@ function rendering(mod_name, fields) {
     ;
 
   un.each(fields, function (field_name) {
-    log.trace('getting template #'+ mod_name +'_'+ field_name +'-template');
     templates[field_name] = jq('#'+ mod_name +'_'+ field_name +'-template')
                               .template();
     field_vals[field_name] = jq('#'+ mod_name +'-'+ field_name);
@@ -367,74 +379,6 @@ function rendering(mod_name, fields) {
       throw_error(e);
     }
   };
-}
-
-function mod_customers(jq_commandset) {
-  var modname = 'customers'
-    , kind = 'customer'
-    , fieldnames = ['names', 'phones', 'addresses', 'emails']
-    , jq_view = jq('#'+ modname +'-view')
-    , tab_panels = jq.deck(jq('#'+ modname).children())
-    , commands = {}
-    , render = rendering(modname, fieldnames)
-    , control = get_ViewControl(modname)
-    , currently_viewing
-    ;
-
-  function show(key, view) {
-    un.each(view, function (value, name) {
-      var data = {};
-      data[name] = value;
-      render(name, data);
-    });
-    currently_viewing = key;
-  }
-
-  function show_new(key, view) {
-    show(key, view);
-    jq.commandControl.push(modname, 'view?key='+ key);
-  }
-
-  jq('input.fform', jq_view[0])
-    .live('keyup', function (ev) {
-      // TODO: Validation
-      control.update(this.name, this.value);
-    });
-
-  jq('a.fform.append', jq_view[0])
-    .live('click', function (ev) {
-      var field = {}
-        , name = jq(this).attr('href')
-        , view
-        ;
-
-      field[name] = control.entity.data[name];
-      field[name].push({});
-      view = control.append(field);
-      render(name, view[name]);
-      return false;
-    });
-
-  commands.view = function (params) {
-    if (params.key !== currently_viewing) {
-      control.show = show;
-      control.open(params.key);
-    }
-    tabset.show(modname);
-    tab_panels(modname +'-view');
-  };
-
-  commands.create = function () {
-    log.trace(modname +'::create');
-    control.show = show_new;
-    control.create(kind);
-  };
-
-  events.addListener('db.committed', control.commit());
-  jq_commandset.bind('commandstate', view_focus(modname, control));
-  jq.commandControl.bind(modname, function (ev, command, params) {
-    commands[command](params);
-  });
 }
 
 function mod_personnel(jq_commandset) {
@@ -563,32 +507,184 @@ function mod_personnel(jq_commandset) {
   });
 }
 
-function mod_jobs() {
-  /*
-  var self = {}
-    , deck = jq.deck(jq('#jobs').children())
+function mod_customers(jq_commandset) {
+  var modname = 'customers'
+    , kind = 'customer'
+    , fieldnames = ['names', 'phones', 'addresses', 'emails']
+    , jq_view = jq('#'+ modname +'-view')
+    , tab_panels = jq.deck(jq('#'+ modname).children())
+    , commands = {}
+    , render = rendering(modname, fieldnames)
+    , control = get_ViewControl(modname)
+    , currently_viewing
     ;
 
-  commands.register('jobs', 'create', function () {
-    // TODO
-    logging.checkpoint('Create new job.');
-    commands.dispatch('search', 'customers');
-  });
+  function show(key, view) {
+    un.each(view, function (value, name) {
+      var data = {};
+      data[name] = value;
+      render(name, data);
+    });
+    currently_viewing = key;
+  }
 
-  return self;
-  */
+  function show_new(key, view) {
+    show(key, view);
+    jq.commandControl.push(modname, 'view?key='+ key);
+  }
+
+  jq('input.fform', jq_view[0])
+    .live('keyup', function (ev) {
+      // TODO: Validation
+      control.update(this.name, this.value);
+    });
+
+  jq('a.fform.append', jq_view[0])
+    .live('click', function (ev) {
+      var field = {}
+        , name = jq(this).attr('href')
+        , view
+        ;
+
+      field[name] = control.entity.data[name];
+      field[name].push({});
+      view = control.append(field);
+      render(name, view[name]);
+      return false;
+    });
+
+  commands.view = function (params) {
+    if (params.key !== currently_viewing) {
+      control.show = show;
+      control.open(params.key);
+    }
+    tabset.show(modname);
+    tab_panels(modname +'-view');
+  };
+
+  commands.create = function () {
+    log.trace(modname +'::create');
+    control.show = show_new;
+    control.create(kind);
+  };
+
+  events.addListener('db.committed', control.commit());
+  jq_commandset.bind('commandstate', view_focus(modname, control));
+  jq.commandControl.bind(modname, function (ev, command, params) {
+    commands[command](params);
+  });
+}
+
+function mod_jobs(jq_commandset) {
+  var modname = 'jobs'
+    , kind = 'job'
+    , fieldnames = [
+        'header'
+      , 'dates'
+      , 'payments'
+      , 'special-orders'
+      , 'subcontractors'
+      , 'siding'
+      , 'roofing'
+      , 'permits'
+      , 'estimate'
+      , 'profitandtaxes'
+      ]
+    , jq_view = jq('#'+ modname +'-view')
+    , tab_panels = jq.deck(jq('#'+ modname).children())
+    , commands = {}
+    , render = rendering(modname, fieldnames)
+    , control = get_ViewControl(modname)
+    , currently_viewing
+    ;
+
+  function toshow(key, view) {
+  }
+
+  function show(key, view) {
+    //logging.inspect('view', view);
+    render('header', {strname: view.strname, description: view.description});
+    render('dates', {
+        contractdate: view.contractdate
+      , est_startdate: view.est_startdate
+      , startdate: view.startdate
+      , est_completedate: view.est_completedate
+      , completedate: view.completedate
+      , handoff: view.handoff
+      , walkthrough: view.walkthrough
+    });
+    render('payments', {
+        payments: view.payments
+      , direct_pays: view.direct_pays
+    });
+    currently_viewing = key;
+  }
+
+  function show_new(key, view) {
+    show(key, view);
+    jq.commandControl.push(modname, 'view?key='+ key);
+  }
+
+  jq('input.fform', jq_view[0])
+    .live('keyup', function (ev) {
+      // TODO: Validation
+      control.update(this.name, this.value);
+    });
+
+  // TODO: Appending may also need modification and data mapping.
+  jq('a.fform.append', jq_view[0])
+    .live('click', function (ev) {
+      var field = {}
+        , name = jq(this).attr('href')
+        , view
+        ;
+
+      field[name] = control.entity.data[name];
+      field[name].push({});
+      view = control.append(field);
+      render(name, view[name]);
+      return false;
+    });
+
+  commands.view = function (params) {
+    log.trace(modname +'::view');
+    if (params.key !== currently_viewing) {
+      control.show = show;
+      control.open(params.key);
+    }
+    tabset.show(modname);
+    tab_panels(modname +'-view');
+  };
+
+  commands.create = function (params) {
+    log.trace(modname +'::create');
+    if (!params.customer) {
+      throw_error(new Error('Cannot create a job without a customer.'));
+    }
+    control.show = show_new;
+    control.create(kind, {customer: params.customer});
+  };
+
+  events.addListener('db.committed', control.commit());
+  jq_commandset.bind('commandstate', view_focus(modname, control));
+  jq.commandControl.bind(modname, function (ev, command, params) {
+    commands[command](params);
+  });
 }
 
 jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
-  var commandset = jq('#commandset').commandSet();
+  var interval
+    , commandset = jq('#commandset').commandSet()
+    ;
+
   tabset = mod_tabset();
   mod_search(commandset);
   mod_customers(commandset);
-  //mod_jobs();
+  mod_jobs(commandset);
   mod_personnel(commandset);
   set_commands(jq_workspace[0]);
 
-  var interval = window.setInterval(function () {
+  interval = window.setInterval(function () {
     try {
       connection('commit')(null, function (err) {
         log.warn(err);
