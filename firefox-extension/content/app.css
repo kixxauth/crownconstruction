@@ -2,3 +2,64 @@
 Styles and branding for Crown Construction.
 ===========================================
 */
+
+@fullcol: 7.25%;
+@fullgutter: 1%;
+@fullpixel: 0.078125;
+
+@brand: #3e6a99;
+
+@panel_border: #aaa;
+
+#login-panel {
+  width: (@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2);
+  border: 1px solid @panel_border;
+  margin-left: (100 - ((@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2))) / 2;
+  min-height: 24em;
+  margin-top: 10%;
+}
+
+#login-form-logo {
+  position: relative;
+  left: 50%;
+  margin-left: -138px;
+  margin-top: 2em;
+}
+
+h1.login {
+  margin-top: 1em;
+  margin-bottom: 2em;
+  padding: .2em 0 .3em;
+  text-align: center;
+  background: @brand;
+  color: #fff;
+  font-weight: bold;
+  font-size: 110%;
+}
+
+p.login.input {
+  width: 50%;
+  margin-top: 1em;
+  margin-left: 25%;
+}
+
+#username, #passkey {
+  width: 64%;
+  float: right;
+  padding: .2em .1em .3em .1em;
+}
+
+p.login.submit {
+  margin: 2em 0 1em;
+}
+
+#login-button {
+  margin-left: 25%;
+  font-weight: bold;
+  padding: .2em .5em .3em .5em;
+}
+
+#label-db {
+  margin-left: 12%;
+  font-size: 80%;
+}
