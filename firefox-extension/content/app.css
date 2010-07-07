@@ -7,13 +7,23 @@ Styles and branding for Crown Construction.
 @fullgutter: 1%;
 @fullpixel: 0.078125;
 
-@brand: #3e6a99;
+@border_width: 0.1em;
 
 @panel_border: #aaa;
+@ink: #333;
+@warning: #8e1014;
+
+@brand: #3e6a99;
+
+p.warning {
+  border: @border_width solid @warning;
+  padding: .2em 1em .3em;
+  color: @warning;
+}
 
 #login-panel {
   width: (@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2);
-  border: 1px solid @panel_border;
+  border: @border_width solid @panel_border;
   margin-left: (100 - ((@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2))) / 2;
   min-height: 24em;
   margin-top: 10%;
@@ -61,5 +71,10 @@ p.login.submit {
 
 #label-db {
   margin-left: 12%;
+  font-size: 80%;
+}
+
+p.login.warning {
+  display: none;
   font-size: 80%;
 }

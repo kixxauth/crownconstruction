@@ -20,6 +20,8 @@
       <input id="use-fake-db" name="use-fake-db" type="checkbox" class="login" />
     </p>
     <p id="login-warning-box" class="login warning"></p>
+    <p id="username-warning-box" class="login warning"></p>
+    <p id="passkey-warning-box" class="login warning"></p>
   </form>
 </div><!-- login-panel -->
 

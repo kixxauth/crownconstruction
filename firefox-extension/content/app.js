@@ -77,6 +77,11 @@ var db = spec.db
   , util = require('util')
   , deck = spec.deck
   , platform = spec.platform
+  , handle_login_cmd
+  , username_keyup, passkey_keyup
+  , check_username, check_passkey
+  , check_invalid_username, check_invalid_passkey
+  , show_username_warning, show_passkey_warning
   ;
 
 function start_application(connection) {
@@ -86,79 +91,298 @@ function start_application(connection) {
     spec.cache_expiration = pref.value();
     APP(require, log, jq, spec);
   }, 40000);
+  jq('#login-button').unbind('click', handle_login_cmd);
 }
+
+show_username_warning = (function () {
+  var showing = false;
+  return function (message) {
+    if(!message) {
+      jq('#username-warning-box').hide();
+      showing = false;
+      return;
+    }
+
+    if (showing) {
+      jq('#username-warning-box').text(message);
+      return;
+    }
+
+    var target = jq('#username')
+      , width = target.width() * 1.1
+      , height = target.height() * -0.3
+      ;
+
+    showing = true;
+    target.popover({
+        container: '#username-warning-box'
+      , message: message
+      , animate: {fadeIn: 400}
+      , offsets: {top: height, left: width}
+      });
+  };
+}());
+
+show_passkey_warning = (function () {
+  var showing = false;
+  return function (message) {
+    if(!message) {
+      jq('#passkey-warning-box').hide();
+      showing = false;
+      return;
+    }
+
+    if (showing) {
+      jq('#passkey-warning-box').text(message);
+      return;
+    }
+
+    var target = jq('#passkey')
+      , width = target.width() * 1.1
+      , height = target.height() * -0.3
+      ;
+
+    showing = true;
+    target.popover({
+        container: '#passkey-warning-box'
+      , message: message
+      , animate: {fadeIn: 400}
+      , offsets: {top: height, left: width}
+      });
+  };
+}());
+
+function dispatch_username_warning(message) {
+  switch (message) {
+  case 'User does not exist.':
+    show_username_warning('This username does not exist.');
+    break;
+  case 'too short':
+    show_username_warning(
+        'A username must have at least one character.');
+    break;
+  case 'too long':
+    show_username_warning(
+        'A username cannot contain more than 70 characters.');
+    break;
+  case 'invalid characters':
+    show_username_warning('A username may only contain the '+
+        'characters "a" - "z", "A" - "Z", "0" - "9", and "_".');
+    break;
+  default:
+    SHARED.throw_error(log)(new Error(
+      'Unexpected login error: "'+ message +'".'));
+  }
+}
+
+function dispatch_passkey_warning(message) {
+  switch (message) {
+  case 'Authentication denied.':
+    show_passkey_warning('Invalid passkey.');
+    break;
+  case 'too short':
+    show_passkey_warning(
+        'A passkey must have at least 4 characters.');
+    break;
+  case 'too long':
+    show_passkey_warning(
+        'A passkey cannot contain more than 140 characters.');
+    break;
+  case 'invalid characters':
+    show_passkey_warning(
+        'A passkey may only contain visible characters.');
+    break;
+  default:
+    SHARED.throw_error(log)(new Error(
+      'Unexpected login error: "'+ message +'".'));
+  }
+}
+
+function show_login_warning(message) {
+  var target = jq('p.login.submit')
+    , height = target.height() * 1.3
+    ;
+  target.popover({
+      container: '#login-warning-box'
+    , message: message
+    , animate: {show: 0}
+    , offsets: {top: height}
+    });
+}
+
+function dispatch_login_warning(message) {
+  switch (message) {
+  case 'Authentication denied.':
+    dispatch_passkey_warning(message);
+    window.setTimeout(function () {
+      jq('#passkey')
+        .focus()
+        .keyup(passkey_keyup)
+        ;
+    }, 0);
+    break;
+  case 'User does not exist.':
+    dispatch_username_warning(message);
+    window.setTimeout(function () {
+      jq('#username')
+        .focus()
+        .keyup(username_keyup)
+        ;
+    }, 0);
+    break;
+  case 'DCubeError: Request error.':
+    // TODO: This should be a dialog.
+    show_login_warning('Lost network connection.');
+    break;
+  default:
+    SHARED.throw_error(log)(new Error(
+      'Unexpected login error: "'+ message +'".'));
+  }
+}
+
+function try_login(username, passkey) {
+  // TODO: Cache key of user session data.
+  var query = db.Query()
+    , promise
+    ;
+
+  query.query()
+    .eq('kind', 'user_session')
+    .eq('user', username)
+    ;
+
+  // TODO: Get dbname from login form.
+  promise = db.connect('crown_construction_sandbox'
+                     , MODELS
+                     , username
+                     , passkey
+                     , query);
+
+  promise(start_application, 
+    // DCubeError: 'Request error.'
+    // 'User does not exist.'
+    // 'Authentication denied.'
+    // DB does not exist???
+    // Unauthenticated on DB???
+    function (err) {
+      log.debug(err);
+      log.warn('Login DB connection request problem.');
+      dispatch_login_warning(err +'');
+    }
+  );
+}
+
+function validate_passkey(passkey) {
+  try {
+    passkey = SHARED.validateString(
+                passkey, 4, 140, /[\b\t\v\f\r\n]/);
+  }
+  catch (e) {
+    // 'too short', 'too long', 'invalid characters'
+    return [false, e];
+  }
+  return [passkey];
+}
+
+function validate_username(username) {
+  try {
+    username = SHARED.validateString(
+                 username, 1, 70, /\W/);
+  }
+  catch (e) {
+    // 'too short', 'too long', 'invalid characters'
+    return [false, e];
+  }
+  return [username];
+}
+
+function check_corrected_username() {
+  var username = validate_username(this.value);
+  if (!username[0]) {
+    dispatch_username_warning(username[1]);
+    check_username = check_invalid_username;
+  }
+}
+
+check_invalid_username = function () {
+  var username = validate_username(this.value);
+  if (!username[0]) {
+    dispatch_username_warning(username[1]);
+    return;
+  }
+  show_username_warning(false);
+  check_username = check_corrected_username;
+};
+
+check_username = check_invalid_username;
+
+username_keyup = function (ev) {
+  check_username.call(this);
+};
+
+function check_corrected_passkey() {
+  var passkey = validate_passkey(this.value);
+  if (!passkey[0]) {
+    dispatch_passkey_warning(passkey[1]);
+    check_passkey = check_invalid_passkey;
+  }
+}
+
+check_invalid_passkey = function () {
+  var passkey = validate_passkey(this.value);
+  if (!passkey[0]) {
+    dispatch_passkey_warning(passkey[1]);
+    return;
+  }
+  show_passkey_warning(false);
+  check_passkey = check_corrected_passkey;
+};
+
+check_passkey = check_invalid_passkey;
+
+passkey_keyup = function (ev) {
+  check_passkey.call(this);
+};
+
+handle_login_cmd = function (ev) {
+  var username = jq('#username').unbind('keyup', username_keyup).val()
+    , passkey = jq('#passkey').unbind('keyup', passkey_keyup).val()
+    ;
+
+  show_username_warning(false);
+  show_passkey_warning(false);
+  username = validate_username(username);
+  passkey = validate_passkey(passkey);
+
+  if (username[0] && passkey[0]) {
+    try_login(username[0], passkey[0]);
+    return false;
+  }
+
+  if (username[1]) {
+    window.setTimeout(function () {
+      jq('#username')
+        .focus()
+        .keyup(username_keyup)
+        ;
+    }, 0);
+    dispatch_username_warning(username[1]);
+    return false;
+  }
+
+  window.setTimeout(function () {
+    jq('#passkey')
+      .focus()
+      .keyup(passkey_keyup)
+      ;
+  }, 0);
+  dispatch_passkey_warning(passkey[1]);
+  return false;
+};
 
 function show_login() {
   jq('#login').load(LOGIN_OVERLAY, function () {
-    var jq_login_warn = jq('#login-warning-box').hide()
-      ;
-
-    function show_username_warning(msg) {
-      jq_login_warn.html(msg).show();
-    }
-
-    function show_passkey_warning(msg) {
-      jq_login_warn.html(msg).show();
-    }
-
-    function try_login(username, passkey) {
-      // TODO: Cache key of user session data.
-      var query = db.Query()
-        , promise
-        ;
-
-      query.query()
-        .eq('kind', 'user_session')
-        .eq('user', username)
-        ;
-
-      // TODO: Get dbname from login form.
-      promise = db.connect('crown_construction_sandbox'
-                         , MODELS
-                         , username
-                         , passkey
-                         , query);
-      promise(start_application, 
-        // DCubeError: 'Request error.'
-        // 'User does not exist.'
-        // 'Authentication denied.'
-        // DB does not exist???
-        // Unauthenticated on DB???
-        function (err) {
-          jq_login_warn.html(err).show();
-        }
-      );
-    }
-
-    function handle_cmd(ev) {
-      var username = jq('#username').val()
-        , passkey = jq('#passkey').val()
-        ;
-
-      try {
-        username = SHARED.validateString(username, 1, 70, /\W/);
-      }
-      catch (u_err) {
-        // 'too short', 'too long', 'invalid characters'
-        show_username_warning(u_err);
-        return false;
-      }
-
-      try {
-        passkey = SHARED.validateString(passkey, 4, 140, /[\b\t\v\f\r\n]/);
-      }
-      catch (p_err) {
-        // 'too short', 'too long', 'invalid characters'
-        show_passkey_warning(p_err);
-        return false;
-      }
-
-      try_login(username, passkey);
-
-      return false;
-    }
-
-    jq('#login-button').click(handle_cmd);
+    jq('#login-button').click(handle_login_cmd);
     deck('login');
     jq('#username').focus();
   });
