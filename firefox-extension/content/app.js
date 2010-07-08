@@ -426,7 +426,7 @@ function show_login() {
 
 function show_connections(connections) {
   jq('#connections').load(CONNECTIONS_OVERLAY, function () {
-    var jq_connections = jq('#connctions-list')
+    var jq_connections = jq('#connections-list')
       .html(jq('#connections-list-template')
               .template({connections: connections}));
 

@@ -21,12 +21,26 @@ p.warning {
   color: @warning;
 }
 
-#login-panel {
+#login-panel, #connections-list-panel {
   width: (@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2);
   border: @border_width solid @panel_border;
   margin-left: (100 - ((@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2))) / 2;
   min-height: 24em;
   margin-top: 10%;
+}
+
+#connections-list {
+  list-style-type: none;
+  width: 80%;
+  margin: 2em 0 2em 10%;
+}
+
+li.connections {
+  margin-top: 2em;
+}
+
+a.connections {
+  display: block;
 }
 
 #login-form-logo {

@@ -1,8 +1,8 @@
 <overlay>
 <div id="connections">
 
-<div id="connctions-list-panel" class="panel connections">
-  <ul id="connctions-list">
+<div id="connections-list-panel" class="panel connections">
+  <ul id="connections-list">
   </ul>
 </div>
 
