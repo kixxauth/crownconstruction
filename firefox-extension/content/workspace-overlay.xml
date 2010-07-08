@@ -15,57 +15,48 @@ Application overlay HTML snippet.
 ## Navigation side bar
 -->
 <ul id="navigation">
-  <!-- ### Search navigation -->
-  <li class="navigation section search">
-    <span class="navigation section">Search</span>
-    <ul class="navigation options">
-      <li class="navigation sub-section">
-        <a href="search/jobs" id="search-jobs" class="bbq navigation sub-section">Jobs</a>
-      </li>
-      <li class="navigation sub-section">
-        <a href="search/customers" id="search-customers" class="bbq navigation sub-section">Customers</a>
-      </li>
-    </ul>
-  </li><!-- search -->
-
-  <!-- ### Customers navigation -->
-  <li class="navigation section customers">
-    <a href="panels/customers" class="bbq navigation">Customers</a>
-    <ul class="navigation options">
-      <li class="navigation sub-section">
-        <a href="search/customers" id="customers-search" class="bbq navigation sub-section">Search</a>
-      </li>
-      <li class="navigation sub-section">
-        <a href="customers/create" class="cmd navigation">Create</a>
-      </li>
-    </ul>
-  </li><!-- customers -->
-
-  <!-- ### Jobs navigation -->
-  <li class="navigation section jobs">
-    <a href="panels/jobs" class="bbq navigation">Jobs</a>
-    <ul class="navigation options">
-      <li class="navigation sub-section">
-        <a href="search/jobs" id="jobs-search" class="bbq navigation sub-section">Search</a>
-      </li>
-      <li class="navigation sub-section">
-        <a href="search/customers?mode=newjob" class="cmd navigation">Create</a>
-      </li>
-    </ul>
-  </li><!-- jobs -->
-
-  <!-- ### Personnel navigation -->
-  <li class="navigation section personnel">
-    <a href="panels/personnel" class="bbq navigation">Personnel</a>
-    <ul class="navigation options">
-      <li class="navigation sub-section">
-        <a href="personnel/directory" class="bbq navigation">Directory</a>
-      </li>
-      <li class="navigation sub-section">
-        <a href="personnel/create" class="cmd navigation">Create</a>
-      </li>
-    </ul>
-  </li><!-- personnel -->
+  <li class="navigation section">
+    <a href="panels/default" class="bbq navigation">
+      <span class="navigation twisty">+</span>
+      Start
+    </a>
+  </li>
+  <li class="navigation section">
+    <h4 class="navigation">Search</h4>
+  </li>
+  <li class="navigation section">
+    <a href="search/customers" class="bbq navigation">
+      <span class="navigation twisty">+</span>
+      Customers
+    </a>
+  </li>
+  <li class="navigation section">
+    <a href="search/jobs" class="bbq navigation">
+      <span class="navigation twisty">+</span>
+      Jobs
+    </a>
+  </li>
+  <li class="navigation section">
+    <h4 class="navigation">Panels</h4>
+  </li>
+  <li class="navigation section">
+    <a href="panels/customers" class="bbq navigation">
+      <span class="navigation twisty">+</span>
+      Customers
+    </a>
+  </li>
+  <li class="navigation section">
+    <a href="panels/jobs" class="bbq navigation">
+      <span class="navigation twisty">+</span>
+      Jobs
+    </a>
+  </li>
+  <li class="navigation section">
+    <a href="panels/personnel" class="bbq navigation">
+      <span class="navigation twisty">+</span>
+      Personnel
+    </a>
+  </li>
 </ul><!-- navigation -->
 
 <!--
@@ -76,143 +67,200 @@ Application overlay HTML snippet.
 -->
 
 <div id="tabset">
+  <!-- ### Default panel -->
+  <div id="default" class="tab-panel">
+    <!-- #### Default panel navigation -->
+    <ul id="default-panel-navigation" class="panel-navigation">
+      <li class="panel-navigation">
+        <a href="default/home" class="bbq panel-navigation">
+          <h3 class="panel-navigation">Start</h3>
+        </a>
+      </li>
+      <li class="panel-navigation">
+        <a href="default/controls" class="bbq panel-navigation">Controls</a>
+      </li>
+    </ul>
+    <!-- #### Default home widget -->
+    <div id="default-home" class="inner-tab-panel">
+      <p>Default home.</p>
+    </div>
+    <!-- #### Default controls widget -->
+    <div id="default-controls" class="inner-tab-panel">
+      <p>Control panel.</p>
+    </div><!-- default-controls -->
+  </div><!-- panel-default -->
+
   <!-- ### Customers panel -->
   <div id="customers" class="tab-panel">
+    <!-- #### Customer panel navigation -->
+    <ul id="customers-panel-navigation" class="panel-navigation">
+      <li class="panel-navigation">
+        <a href="customers/home" class="bbq panel-navigation">
+          <h3 class="panel-navigation">Customers</h3>
+        </a>
+      </li>
+      <li class="panel-navigation">
+        <a href="customers/create" class="cmd panel-navigation">Create</a>
+      </li>
+      <li class="panel-navigation">
+        <a href="search/customers" class="bbq panel-navigation">Find</a>
+      </li>
+    </ul>
+    <!-- #### Customer home widget -->
+    <div id="customers-home" class="inner-tab-panel">
+      <p>Customers home.</p>
+    </div>
     <!-- #### Customer view widget -->
     <form id="customers-view" class="fform inner-tab-panel">
       <fieldset id="customers-names" class="fform content-panel">
         <h4 class="section-header">Names</h4>
       </fieldset>
+      <template id="customers_names-template"><![CDATA[
+        <h4 class="section-header">Names</h4>
+        <%
+        var i = 0, len = names.length, name;
+        for (; i < len; i += 1) {
+        name = names[i];  %>
+        <div class="input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">last:</label>
+              <input class="clean-text-input fform lastname" type="text"
+                name="<%= name.last.path %>" value="<%= name.last.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">first:</label>
+              <input class="clean-text-input fform firstname" type="text"
+                name="<%= name.first.path %>" value="<%= name.first.value %>" />
+            </p>
+          </div>
+        </div>
+        <% } %>
+        <a href="names" class="append fform button" title="Add another contact person.">
+          <span class="icon">+</span>
+          Add another contact person.
+        </a>
+      ]]></template>
       <fieldset id="customers-phones" class="fform content-panel">
         <h4 class="section-header">Phone Numbers</h4>
       </fieldset>
+      <template id="customers_phones-template"><![CDATA[
+        <h4 class="section-header">Phone Numbers</h4>
+        <%
+        var i = 0, len = phones.length, phone;
+        for (; i < len; i += 1) {
+        phone = phones[i]; %>
+        <div class="input-section">
+          <div class="line">
+            <p class="input-float">
+              <label class="live-label">number:</label>
+              <input class="clean-text-input fform phone" type="text"
+                name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
+            </p>
+            <p class="input-float">
+              <label class="live-label">label:</label>
+              <input class="clean-text-input fform label" type="text"
+                name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
+            </p>
+          </div>
+        </div>
+        <% } %>
+        <a href="phones" class="append fform button" title="Add another phone number.">
+          <span class="icon">+</span>
+          Add another phone number.
+        </a>
+      ]]></template>
       <fieldset id="customers-addresses" class="fform content-panel">
         <h4 class="section-header">Addresses</h4>
       </fieldset>
+      <template id="customers_addresses-template"><![CDATA[
+        <h4 class="section-header">Addresses</h4>
+        <%
+        var i = 0, len = addresses.length, address;
+        for (; i < len; i += 1) {
+        address = addresses[i]; %>
+        <div class="input-section">
+          <div class="line">
+            <p>
+              <label class="live-label">street:</label>
+              <input class="clean-text-input fform street-address" type="text"
+                name="<%= address.street.path %>" value="<%= address.street.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <p class="input-float">
+              <label class="live-label">city:</label>
+              <input class="clean-text-input fform city" type="text"
+                name="<%= address.city.path %>" value="<%= address.city.value %>" />
+            </p>
+            <p class="input-float">
+              <label class="live-label">state:</label>
+              <input class="clean-text-input fform state-address" type="text"
+                name="<%= address.state.path %>" value="<%= address.state.value %>" />
+            </p>
+            <p class="input-float">
+              <label class="live-label">zip:</label>
+              <input class="clean-text-input fform zip" type="text"
+                name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
+            </p>
+          </div>
+        </div>
+        <% } %>
+        <a href="addresses" class="append fform button" title="Add another customer address.">
+          <span class="icon">+</span>
+          Add another address.
+        </a>
+      ]]></template>
       <fieldset id="customers-emails" class="fform content-panel">
         <h4 class="section-header">Email Addresses</h4>
       </fieldset>
+      <template id="customers_emails-template"><![CDATA[
+        <h4 class="section-header">Email Addresses</h4>
+        <%
+        var i = 0, len = emails.length, email;
+        for (; i < len; i += 1) {
+        email = emails[i]; %>
+        <div class="input-section">
+          <div class="line">
+            <p class="input-float">
+              <label class="live-label">email:</label>
+              <input class="clean-text-input fform email" type="text"
+                name="<%= email.email.path %>" value="<%= email.email.value %>" />
+            </p>
+            <p class="input-float">
+              <label class="live-label">label:</label>
+              <input class="clean-text-input fform label" type="text"
+                name="<%= email.label.path %>" value="<%= email.label.value %>" />
+            </p>
+          </div>
+        </div>
+        <% } %>
+        <a href="emails" class="append fform button" title="Add another email address.">
+          <span class="icon">+</span>
+          Add another email address.
+        </a>
+      ]]></template>
     </form><!-- customer-view -->
-
-    <!-- ### Customer view templates -->
-    <template id="customers_names-template"><![CDATA[
-      <h4 class="section-header">Names</h4>
-      <%
-      var i = 0, len = names.length, name;
-      for (; i < len; i += 1) {
-      name = names[i];  %>
-      <div class="input-section">
-        <div class="line">
-          <p class="input-float"><label class="live-label">last:</label>
-            <input class="clean-text-input fform lastname" type="text"
-              name="<%= name.last.path %>" value="<%= name.last.value %>" />
-          </p>
-          <p class="input-float"><label class="live-label">first:</label>
-            <input class="clean-text-input fform firstname" type="text"
-              name="<%= name.first.path %>" value="<%= name.first.value %>" />
-          </p>
-        </div>
-      </div>
-      <% } %>
-      <a href="names" class="append fform button" title="Add another contact person.">
-        <span class="icon">+</span>
-        Add another contact person.
-      </a>
-    ]]></template>
-    <template id="customers_addresses-template"><![CDATA[
-      <h4 class="section-header">Addresses</h4>
-      <%
-      var i = 0, len = addresses.length, address;
-      for (; i < len; i += 1) {
-      address = addresses[i]; %>
-      <div class="input-section">
-        <div class="line">
-          <p>
-            <label class="live-label">street:</label>
-            <input class="clean-text-input fform street-address" type="text"
-              name="<%= address.street.path %>" value="<%= address.street.value %>" />
-          </p>
-        </div>
-        <div class="line">
-          <p class="input-float">
-            <label class="live-label">city:</label>
-            <input class="clean-text-input fform city" type="text"
-              name="<%= address.city.path %>" value="<%= address.city.value %>" />
-          </p>
-          <p class="input-float">
-            <label class="live-label">state:</label>
-            <input class="clean-text-input fform state-address" type="text"
-              name="<%= address.state.path %>" value="<%= address.state.value %>" />
-          </p>
-          <p class="input-float">
-            <label class="live-label">zip:</label>
-            <input class="clean-text-input fform zip" type="text"
-              name="<%= address.zip.path %>" value="<%= address.zip.value %>" />
-          </p>
-        </div>
-      </div>
-      <% } %>
-      <a href="addresses" class="append fform button" title="Add another customer address.">
-        <span class="icon">+</span>
-        Add another address.
-      </a>
-    ]]></template>
-    <template id="customers_phones-template"><![CDATA[
-      <h4 class="section-header">Phone Numbers</h4>
-      <%
-      var i = 0, len = phones.length, phone;
-      for (; i < len; i += 1) {
-      phone = phones[i]; %>
-      <div class="input-section">
-        <div class="line">
-          <p class="input-float">
-            <label class="live-label">number:</label>
-            <input class="clean-text-input fform phone" type="text"
-              name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
-          </p>
-          <p class="input-float">
-            <label class="live-label">label:</label>
-            <input class="clean-text-input fform label" type="text"
-              name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
-          </p>
-        </div>
-      </div>
-      <% } %>
-      <a href="phones" class="append fform button" title="Add another phone number.">
-        <span class="icon">+</span>
-        Add another phone number.
-      </a>
-    ]]></template>
-    <template id="customers_emails-template"><![CDATA[
-      <h4 class="section-header">Email Addresses</h4>
-      <%
-      var i = 0, len = emails.length, email;
-      for (; i < len; i += 1) {
-      email = emails[i]; %>
-      <div class="input-section">
-        <div class="line">
-          <p class="input-float">
-            <label class="live-label">email:</label>
-            <input class="clean-text-input fform email" type="text"
-              name="<%= email.email.path %>" value="<%= email.email.value %>" />
-          </p>
-          <p class="input-float">
-            <label class="live-label">label:</label>
-            <input class="clean-text-input fform label" type="text"
-              name="<%= email.label.path %>" value="<%= email.label.value %>" />
-          </p>
-        </div>
-      </div>
-      <% } %>
-      <a href="emails" class="append fform button" title="Add another email address.">
-        <span class="icon">+</span>
-        Add another email address.
-      </a>
-    ]]></template>
   </div><!-- panel-customers -->
 
   <!-- ### Jobs panel -->
   <div id="jobs" class="tab-panel">
+    <!-- #### Jobs panel navigation -->
+    <ul id="jobs-panel-navigation" class="panel-navigation">
+      <li class="panel-navigation">
+        <a href="jobs/home" class="bbq panel-navigation">
+          <h3 class="panel-navigation">Jobs</h3>
+        </a>
+      </li>
+      <li class="panel-navigation">
+        <a href="search/customers?mode=newjob" class="cmd panel-navigation">Create</a>
+      </li>
+      <li class="panel-navigation">
+        <a href="search/jobs" class="bbq panel-navigation">Find</a>
+      </li>
+    </ul>
+    <!-- #### Jobs home widget -->
+    <div id="jobs-home" class="inner-tab-panel">
+      <p>Jobs home.</p>
+    </div>
     <!-- #### Job view widget -->
     <form id="jobs-view" class="fform inner-tab-panel">
       <fieldset id="jobs-header" class="fform content-panel">
@@ -367,6 +415,24 @@ Application overlay HTML snippet.
 
   <!-- ### Personnel panel -->
   <div id="personnel" class="tab-panel">
+    <!-- #### Personnel panel navigation -->
+    <ul id="personnel-panel-navigation" class="panel-navigation">
+      <li class="panel-navigation">
+        <a href="personnel/home" class="bbq panel-navigation">
+          <h3 class="panel-navigation">Personnel</h3>
+        </a>
+      </li>
+      <li class="panel-navigation">
+        <a href="personnel/create" class="cmd panel-navigation">Create</a>
+      </li>
+      <li class="panel-navigation">
+        <a href="personnel/directory" class="bbq panel-navigation">Directory</a>
+      </li>
+    </ul>
+    <!-- #### Personnel home widget -->
+    <div id="personnel-home" class="inner-tab-panel">
+      <p>Personnel home.</p>
+    </div>
     <!-- #### Personnel directory widget -->
     <div id="personnel-directory" class="personnel-panel inner-tab-panel">
       <ul id="personnel-group-list">

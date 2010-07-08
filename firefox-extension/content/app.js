@@ -510,6 +510,43 @@ function mod_tabset() {
   return self;
 }
 
+function mod_default(jq_commandset) {
+  var modname = 'default'
+    , tab_panels = jq.deck(jq('#'+ modname).children('.inner-tab-panel'))
+    , commands = {}
+    ;
+
+  commands.home = function () {
+    tabset.show(modname);
+    tab_panels(modname +'-home');
+  };
+
+  commands.controls = function () {
+    tabset.show(modname);
+    tab_panels(modname +'-controls');
+  };
+
+  jq.commandControl.bind(modname, function (ev, command, params) {
+    commands[command](params);
+  });
+
+  jq.commandControl.bind('panels', function (ev, command, params) {
+    if (command === modname) {
+      if (!jq.commandControl.get()[modname]) {
+        jq.commandControl.push(modname, 'home');
+      }
+    }
+  });
+
+  function start_handler(ev) {
+    if (!jq.commandControl.get().panels) {
+      jq.commandControl.push('panels', 'default');
+    }
+    jq(window).unbind('hashchange', start_handler);
+  }
+  jq(window).bind('hashchange', start_handler);
+}
+
 function mod_search(jq_commandset) {
   var state = null
 
@@ -648,7 +685,7 @@ function mod_personnel(jq_commandset) {
     , jq_view = jq('#'+ modname +'-view')
     , jq_directory = jq('#personnel-group-list')
     , directory_template = jq('#personnel_directory-template').template()
-    , tab_panels = jq.deck(jq('#'+ modname).children())
+    , tab_panels = jq.deck(jq('#'+ modname).children('.inner-tab-panel'))
     , commands = {}
     , render = rendering(modname, fieldnames)
     , control = get_ViewControl(modname)
@@ -688,6 +725,11 @@ function mod_personnel(jq_commandset) {
       render(name, view[name]);
       return false;
     });
+
+  commands.home = function () {
+    tabset.show(modname);
+    tab_panels(modname +'-home');
+  };
 
   commands.view = function (params) {
     if (params.key !== currently_viewing) {
@@ -761,9 +803,18 @@ function mod_personnel(jq_commandset) {
 
   events.addListener('db.committed', control.commit());
   jq_commandset.bind('commandstate', view_focus(modname, control));
+
   jq.commandControl.bind(modname, function (ev, command, params) {
     logging.checkpoint('got command', command);
     commands[command](params);
+  });
+
+  jq.commandControl.bind('panels', function (ev, command, params) {
+    if (command === modname) {
+      if (!jq.commandControl.get()[modname]) {
+        jq.commandControl.push(modname, 'home');
+      }
+    }
   });
 }
 
@@ -772,7 +823,7 @@ function mod_customers(jq_commandset) {
     , kind = 'customer'
     , fieldnames = ['names', 'phones', 'addresses', 'emails']
     , jq_view = jq('#'+ modname +'-view')
-    , tab_panels = jq.deck(jq('#'+ modname).children())
+    , tab_panels = jq.deck(jq('#'+ modname).children('.inner-tab-panel'))
     , commands = {}
     , render = rendering(modname, fieldnames)
     , control = get_ViewControl(modname)
@@ -813,6 +864,11 @@ function mod_customers(jq_commandset) {
       return false;
     });
 
+  commands.home = function () {
+    tabset.show(modname);
+    tab_panels(modname +'-home');
+  };
+
   commands.view = function (params) {
     if (params.key !== currently_viewing) {
       control.show = show;
@@ -830,8 +886,17 @@ function mod_customers(jq_commandset) {
 
   events.addListener('db.committed', control.commit());
   jq_commandset.bind('commandstate', view_focus(modname, control));
+
   jq.commandControl.bind(modname, function (ev, command, params) {
     commands[command](params);
+  });
+
+  jq.commandControl.bind('panels', function (ev, command, params) {
+    if (command === modname) {
+      if (!jq.commandControl.get()[modname]) {
+        jq.commandControl.push(modname, 'home');
+      }
+    }
   });
 }
 
@@ -851,15 +916,12 @@ function mod_jobs(jq_commandset) {
       , 'profitandtaxes'
       ]
     , jq_view = jq('#'+ modname +'-view')
-    , tab_panels = jq.deck(jq('#'+ modname).children())
+    , tab_panels = jq.deck(jq('#'+ modname).children('.inner-tab-panel'))
     , commands = {}
     , render = rendering(modname, fieldnames)
     , control = get_ViewControl(modname)
     , currently_viewing
     ;
-
-  function toshow(key, view) {
-  }
 
   function show(key, view) {
     //logging.inspect('view', view);
@@ -906,6 +968,11 @@ function mod_jobs(jq_commandset) {
       return false;
     });
 
+  commands.home = function () {
+    tabset.show(modname);
+    tab_panels(modname +'-home');
+  };
+
   commands.view = function (params) {
     log.trace(modname +'::view');
     if (params.key !== currently_viewing) {
@@ -927,8 +994,17 @@ function mod_jobs(jq_commandset) {
 
   events.addListener('db.committed', control.commit());
   jq_commandset.bind('commandstate', view_focus(modname, control));
+
   jq.commandControl.bind(modname, function (ev, command, params) {
     commands[command](params);
+  });
+
+  jq.commandControl.bind('panels', function (ev, command, params) {
+    if (command === modname) {
+      if (!jq.commandControl.get()[modname]) {
+        jq.commandControl.push(modname, 'home');
+      }
+    }
   });
 }
 
@@ -939,6 +1015,7 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
 
   tabset = mod_tabset();
   mod_search(commandset);
+  mod_default(commandset);
   mod_customers(commandset);
   mod_jobs(commandset);
   mod_personnel(commandset);
@@ -959,6 +1036,7 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
   }, 3000);
 
   main_deck('workspace');
+  jq(window).trigger('hashchange');
 });
 
 // TODO Watch and notify db status.

@@ -31,7 +31,7 @@
 body {
   font-family: @typeface;
   font-weight: normal;
-  font-size: 120%;
+  font-size: 14px;
   color: #000;
 }
 
@@ -50,9 +50,14 @@ input, textarea {
   background: #fff;
 }
 
-button {
+button, .button {
   font-family: @typeface;
   border: 1px solid #000;
   background: #fff;
   cursor: pointer;
+  padding: .2em .2em .3em;
+}
+
+ul {
+  list-style-type: none;
 }

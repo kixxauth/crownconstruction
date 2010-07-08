@@ -12,25 +12,113 @@ Styles and branding for Crown Construction.
 @panel_border: #aaa;
 @ink: #333;
 @warning: #8e1014;
+@warning_bg: #faf6f0;
+@green_button: #65ac0d;
 
 @brand: #3e6a99;
+
+@menu_height: 2em;
+@topmargin: @menu_height + 1;
+
+@bottom_padding: 2em;
+
+#rounded {
+  .one {
+    -moz-border-radius: 1em;
+    -webkit-border-radius: 1em;
+    border-radius: 1em;
+  }
+  .two {
+    -moz-border-radius: 0.2em;
+    -webkit-border-radius: 0.2em;
+    border-radius: 0.2em;
+  }
+  .three {
+    -moz-border-radius: 0.3em;
+    -webkit-border-radius: 0.3em;
+    border-radius: 0.3em;
+  }
+  .five {
+    -moz-border-radius: 0.5em;
+    -webkit-border-radius: 0.5em;
+    border-radius: 0.5em;
+  }
+}
+
+button, .button {
+  #rounded > .two;
+}
 
 p.warning {
   border: @border_width solid @warning;
   padding: .2em 1em .3em;
   color: @warning;
+  #rounded > .five;
+  background-color: @warning_bg;
 }
 
+@navwidth: (@fullcol * 2) + @fullgutter;
+@navcof: 100 / @navwidth;
+
+#navigation {
+  position: absolute;
+  top: @topmargin;
+  left: @fullgutter;
+  width: @navwidth;
+  padding-bottom: @bottom_padding;
+}
+
+a.bbq.navigation {
+  display: block;
+}
+
+@tabswidth: (@fullcol * 10) + (@fullgutter * 9);
+@tabscof: 100 / @tabswidth;
+
+#tabset {
+  position: absolute;
+  top: @topmargin;
+  left: @navwidth + (@fullgutter * 2);
+  width: @tabswidth;
+  padding-bottom: @bottom_padding;
+}
+
+ul.panel-navigation {
+  overflow: hidden;
+}
+
+li.panel-navigation {
+  float: left;
+  margin-right: 1em;
+}
+
+@searchwidth: (@fullcol * 9) + (@fullgutter * 8);
+@searchcof: 100 / @searchwidth;
+
+div.search-panel {
+  position: absolute;
+  top: @topmargin * 2;
+  left: @navwidth + (@fullgutter * 3) + @fullcol;
+  width: @searchwidth;
+  padding-bottom: @bottom_padding;
+}
+
+@loginwidth: (@fullcol * 6) + (@fullgutter * 5) - (@fullpixel * 2);
+
 #login-panel, #connections-list-panel {
-  width: (@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2);
+  width: @loginwidth;
   border: @border_width solid @panel_border;
-  margin-left: (100 - ((@fullcol * 7) + (@fullgutter * 6) - (@fullpixel * 2))) / 2;
+  #rounded > .three;
+  margin-left: (100 - @loginwidth) / 2;
   min-height: 24em;
   margin-top: 10%;
+  padding-bottom: @bottom_padding;
+  font-size: 130%;
+  color: @ink;
+  background: #fff;
 }
 
 #connections-list {
-  list-style-type: none;
   width: 80%;
   margin: 2em 0 2em 10%;
 }
@@ -62,15 +150,17 @@ h1.login {
 }
 
 p.login.input {
-  width: 50%;
+  width: 70%;
   margin-top: 1em;
-  margin-left: 25%;
+  margin-left: 12%;
 }
 
 #username, #passkey {
-  width: 64%;
+  border: 1px solid @ink;
+  #rounded > .two;
+  width: 70%;
   float: right;
-  padding: .2em .1em .3em .1em;
+  padding: .2em .2em .3em .2em;
 }
 
 p.login.submit {
@@ -78,9 +168,13 @@ p.login.submit {
 }
 
 #login-button {
-  margin-left: 25%;
+  margin-left: 20%;
   font-weight: bold;
-  padding: .2em .5em .3em .5em;
+	background: @green_button url(./shared/fade-30.png) repeat-x;
+  border-color: #aaa;
+  font-size: 110%;
+  padding: .4em .5em .5em;
+  color: #fff;
 }
 
 #label-db {
@@ -91,4 +185,5 @@ p.login.submit {
 p.login.warning {
   display: none;
   font-size: 80%;
+  width: (100 - @loginwidth) / 2;
 }
