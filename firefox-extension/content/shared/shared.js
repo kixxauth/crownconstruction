@@ -43,6 +43,34 @@ SHARED.throw_error = function (log) {
   };
 };
 
+SHARED.spinner = (function () {
+  var opened = {};
+
+  return function (name, target, spinner) {
+    if (!target || !spinner) {
+      opened[name].target.css('opacity', 1);
+      opened[name].spinner.hide();
+      return;
+    }
+
+    var coords = target.offset()
+      , x = (target.width() / 2) + coords.left
+      , y = (target.height() / 2) + coords.top
+      ;
+
+    target.css('opacity', 0);
+    spinner
+      .css({
+          position: 'absolute'
+        , top: y - 8
+        , left: x - 8
+      })
+      .show()
+      ;
+    opened[name] = {target: target, spinner: spinner};
+  };
+}());
+
 SHARED.ViewControl = (function (window) {
 function ViewControl(spec) {
   if(!(this instanceof ViewControl)) {

@@ -84,37 +84,6 @@ var db = spec.db
   , show_username_warning, show_passkey_warning
   ;
 
-function show_button() {
-  jq('#animated-spinner').hide();
-  jq('#login-button').css('opacity', 1);
-}
-
-function show_spinner() {
-  var button = jq('#login-button')
-    , coords = button.offset()
-    , x = (button.width() / 2) + coords.left
-    , y = (button.height() / 2) + coords.top
-    , spinner = jq('#animated-spinner')
-    ;
-
-  if (!spinner.length) {
-    spinner = jq('<img id="animated-spinner" width="16" height="16" '+
-                 'src="ui-anim_basic_16x16.gif" />')
-      .appendTo('#main')
-      .hide();
-  }
-
-  button.css('opacity', 0);
-  spinner
-    .css({
-        position: 'absolute'
-      , top: y - 8
-      , left: x - 8
-    })
-    .show()
-    ;
-}
-
 function start_application(connection) {
   spec.util = util;
   spec.connection = connection;
@@ -300,7 +269,7 @@ function try_login(username, passkey) {
       log.debug(err);
       log.warn('Login DB connection request problem.');
       dispatch_login_warning(err +'');
-      show_button();
+      SHARED.spinner('login');
     }
   );
 }
@@ -382,7 +351,7 @@ handle_login_cmd = function (ev) {
     , passkey = jq('#passkey').unbind('keyup', passkey_keyup).val()
     ;
 
-  show_spinner();
+  SHARED.spinner('login', jq('#login-button'), jq('#animated-spinner'));
   show_username_warning(false);
   show_passkey_warning(false);
   username = validate_username(username);
@@ -399,7 +368,7 @@ handle_login_cmd = function (ev) {
         .focus()
         .keyup(username_keyup)
         ;
-      show_button();
+      SHARED.spinner('login');
     }, 0);
     dispatch_username_warning(username[1]);
     return false;
@@ -410,7 +379,7 @@ handle_login_cmd = function (ev) {
       .focus()
       .keyup(passkey_keyup)
       ;
-    show_button();
+    SHARED.spinner('login');
   }, 0);
   dispatch_passkey_warning(passkey[1]);
   return false;
@@ -591,17 +560,26 @@ function mod_search(jq_commandset) {
     log.trace('customer search results length: '+
         (results ? results.length : '0'));
 
+    if (!results || !results.length) {
+      jq_customer_results
+        .html('<li class="search-result">'+
+              'No results were found.</li>');
+      SHARED.spinner('customer-search');
+      return;
+    }
+
     cache(connection('id'), function (transaction) {
       var rv = [];
       results = results || [];
 
       try {
         un.each(results, function (customer) {
-          var key = customer('key');
+          var key = customer('key'), data = customer('entity');
           transaction.put(key, customer, cache_exp);
           rv.push({
               key: key
-            , names: customer('entity').names
+            , names: data.names
+            , addresses: data.addresses
           });
         });
         jq_customer_results
@@ -618,6 +596,7 @@ function mod_search(jq_commandset) {
       }
       finally {
         transaction.close();
+        SHARED.spinner('customer-search');
       }
     });
   }
@@ -630,6 +609,7 @@ function mod_search(jq_commandset) {
       .append(maybe_customer_results)
       .send()
       ;
+    SHARED.spinner('customer-search', jq(this), jq('#animated-spinner'));
     return false;
   });
 }
@@ -824,11 +804,19 @@ function mod_customers(jq_commandset) {
     , fieldnames = ['names', 'phones', 'addresses', 'emails']
     , jq_view = jq('#'+ modname +'-view')
     , tab_panels = jq.deck(jq('#'+ modname).children('.inner-tab-panel'))
+    , tab_selectors = {
+        home: jq('li.panel-navigation.customers.home')
+      , search: jq('li.panel-navigation.customers.search')
+      , create: jq('li.panel-navigation.customers.create')
+      , view: jq('li.panel-navigation.customers.view')
+      }
     , commands = {}
     , render = rendering(modname, fieldnames)
     , control = get_ViewControl(modname)
     , currently_viewing
     ;
+
+  tab_selectors.view.hide();
 
   function show(key, view) {
     un.each(view, function (value, name) {
@@ -866,6 +854,8 @@ function mod_customers(jq_commandset) {
 
   commands.home = function () {
     tabset.show(modname);
+    logging.checkpoint('tab', tab_selectors.home.length);
+    tab_selectors.home.addClass('active');
     tab_panels(modname +'-home');
   };
 

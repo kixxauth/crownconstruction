@@ -14,11 +14,14 @@
   <% dbname = connections[i].dbname; %>
   <% id = connections[i].id; %>
   <li class="connections">
-    <a href="<%= id %>" class="connections"><%= username %> on <%= dbname %></a>
+    <a href="<%= id %>" class="exists connections button"><%= username %> on <%= dbname %></a>
   </li>
   <% } %>
   <li class="connections">
-    <a href="create" class="create connections">Create a new connection.</a>
+    <span class="connections spacer">or...</span>
+  </li>
+  <li class="connections">
+    <a href="create" class="create connections button">Create a new connection.</a>
   </li>
   ]]>
 </template>
