@@ -84,6 +84,37 @@ var db = spec.db
   , show_username_warning, show_passkey_warning
   ;
 
+function show_button() {
+  jq('#animated-spinner').hide();
+  jq('#login-button').css('opacity', 1);
+}
+
+function show_spinner() {
+  var button = jq('#login-button')
+    , coords = button.offset()
+    , x = (button.width() / 2) + coords.left
+    , y = (button.height() / 2) + coords.top
+    , spinner = jq('#animated-spinner')
+    ;
+
+  if (!spinner.length) {
+    spinner = jq('<img id="animated-spinner" width="16" height="16" '+
+                 'src="ui-anim_basic_16x16.gif" />')
+      .appendTo('#main')
+      .hide();
+  }
+
+  button.css('opacity', 0);
+  spinner
+    .css({
+        position: 'absolute'
+      , top: y - 8
+      , left: x - 8
+    })
+    .show()
+    ;
+}
+
 function start_application(connection) {
   spec.util = util;
   spec.connection = connection;
@@ -92,6 +123,7 @@ function start_application(connection) {
     APP(require, log, jq, spec);
   }, 40000);
   jq('#login-button').unbind('click', handle_login_cmd);
+  jq('#animated-spinner').hide();
 }
 
 show_username_warning = (function () {
@@ -268,6 +300,7 @@ function try_login(username, passkey) {
       log.debug(err);
       log.warn('Login DB connection request problem.');
       dispatch_login_warning(err +'');
+      show_button();
     }
   );
 }
@@ -349,6 +382,7 @@ handle_login_cmd = function (ev) {
     , passkey = jq('#passkey').unbind('keyup', passkey_keyup).val()
     ;
 
+  show_spinner();
   show_username_warning(false);
   show_passkey_warning(false);
   username = validate_username(username);
@@ -365,6 +399,7 @@ handle_login_cmd = function (ev) {
         .focus()
         .keyup(username_keyup)
         ;
+      show_button();
     }, 0);
     dispatch_username_warning(username[1]);
     return false;
@@ -375,6 +410,7 @@ handle_login_cmd = function (ev) {
       .focus()
       .keyup(passkey_keyup)
       ;
+    show_button();
   }, 0);
   dispatch_passkey_warning(passkey[1]);
   return false;
