@@ -441,8 +441,73 @@ var un = _.noConflict()
   , ViewControl = SHARED.ViewControl
   , throw_error = SHARED.throw_error(log)
   , tabset
+  , tabselectors
   , $N = {}
   ;
+
+function mod_tab_selectors() {
+  var self = {}
+    , tab_selectors = {}
+    , panels = {
+        'default': ['home', 'controls']
+      , 'customers': ['home', 'view', 'search', 'create']
+      , 'jobs': ['home', 'view', 'search', 'create']
+      , 'personnel': ['home', 'view', 'directory', 'create']
+      }
+    , base_color = jq('#default-panel-navigation').css('background-color')
+    , current = {}
+    ;
+
+  un.each(panels, function (panel, panelname) {
+    tab_selectors[panelname] = {};
+    un.each(panel, function (tabname) {
+      tab_selectors[panelname][tabname] = jq(
+        'li.panel-navigation.'+ panelname +'.'+ tabname);
+    });
+  });
+
+  tab_selectors.customers.view.hide();
+  tab_selectors.jobs.view.hide();
+  tab_selectors.personnel.view.hide();
+
+  self.highlight = function (panelname, tabname) {
+    tab_selectors[panelname][tabname]
+      .css({
+          'background-color': '#f8ad01'
+        , 'background-image': 'url(./shared/fade-20.png)'
+        , 'background-repeat': 'repeat-x'
+        })
+      .delay(800)
+      .animate({'background-color': base_color}, 400)
+      ;
+  };
+
+  self.activate = function (panelname, tabname) {
+    if (current[panelname]) {
+      current[panelname].removeClass('active');
+    }
+    current[panelname] = tab_selectors[panelname][tabname].addClass('active');
+  };
+
+  self.insert = function (panelname, tabname, href) {
+    tab_selectors[panelname][tabname]
+      .children('a.panel-navigation')
+      .attr('href', href)
+      .end()
+      .show()
+      ;
+    self.activate(panelname, tabname);
+  };
+
+  self.get = function (panelname, tabname) {
+    if (!tabname) {
+      return tab_selectors[panelname];
+    }
+    return tab_selectors[panelname][tabname];
+  };
+
+  return self;
+}
 
 function set_commands(workspace) {
   jq('a.bbq', workspace).live('click', function (ev) {
@@ -488,11 +553,13 @@ function mod_default(jq_commandset) {
   commands.home = function () {
     tabset.show(modname);
     tab_panels(modname +'-home');
+    tabselectors.activate(modname, 'home');
   };
 
   commands.controls = function () {
     tabset.show(modname);
     tab_panels(modname +'-controls');
+    tabselectors.activate(modname, 'controls');
   };
 
   jq.commandControl.bind(modname, function (ev, command, params) {
@@ -709,6 +776,7 @@ function mod_personnel(jq_commandset) {
   commands.home = function () {
     tabset.show(modname);
     tab_panels(modname +'-home');
+    tabselectors.activate(modname, 'home');
   };
 
   commands.view = function (params) {
@@ -718,12 +786,14 @@ function mod_personnel(jq_commandset) {
     }
     tabset.show(modname);
     tab_panels(modname +'-view');
+    tabselectors.insert(modname, 'view', modname +'/view?key='+ params.key);
   };
 
   commands.create = function () {
     log.trace(modname +'::create');
     control.show = show_new;
     control.create(kind);
+    tabselectors.highlight(modname, 'create');
   };
 
   commands.directory = function () {
@@ -779,6 +849,7 @@ function mod_personnel(jq_commandset) {
       .send()
       ;
     tabset.show(modname);
+    tabselectors.activate(modname, 'directory');
   };
 
   events.addListener('db.committed', control.commit());
@@ -804,19 +875,15 @@ function mod_customers(jq_commandset) {
     , fieldnames = ['names', 'phones', 'addresses', 'emails']
     , jq_view = jq('#'+ modname +'-view')
     , tab_panels = jq.deck(jq('#'+ modname).children('.inner-tab-panel'))
-    , tab_selectors = {
-        home: jq('li.panel-navigation.customers.home')
-      , search: jq('li.panel-navigation.customers.search')
-      , create: jq('li.panel-navigation.customers.create')
-      , view: jq('li.panel-navigation.customers.view')
-      }
     , commands = {}
     , render = rendering(modname, fieldnames)
     , control = get_ViewControl(modname)
     , currently_viewing
     ;
 
-  tab_selectors.view.hide();
+  tabselectors.get(modname, 'search').click(function () {
+    tabselectors.highlight(modname, 'search');
+  });
 
   function show(key, view) {
     un.each(view, function (value, name) {
@@ -854,9 +921,8 @@ function mod_customers(jq_commandset) {
 
   commands.home = function () {
     tabset.show(modname);
-    logging.checkpoint('tab', tab_selectors.home.length);
-    tab_selectors.home.addClass('active');
     tab_panels(modname +'-home');
+    tabselectors.activate(modname, 'home');
   };
 
   commands.view = function (params) {
@@ -866,12 +932,14 @@ function mod_customers(jq_commandset) {
     }
     tabset.show(modname);
     tab_panels(modname +'-view');
+    tabselectors.insert(modname, 'view', modname +'/view?key='+ params.key);
   };
 
   commands.create = function () {
     log.trace(modname +'::create');
     control.show = show_new;
     control.create(kind);
+    tabselectors.highlight(modname, 'create');
   };
 
   events.addListener('db.committed', control.commit());
@@ -912,6 +980,10 @@ function mod_jobs(jq_commandset) {
     , control = get_ViewControl(modname)
     , currently_viewing
     ;
+
+  tabselectors.get(modname, 'search').click(function () {
+    tabselectors.highlight(modname, 'search');
+  });
 
   function show(key, view) {
     //logging.inspect('view', view);
@@ -961,6 +1033,7 @@ function mod_jobs(jq_commandset) {
   commands.home = function () {
     tabset.show(modname);
     tab_panels(modname +'-home');
+    tabselectors.activate(modname, 'home');
   };
 
   commands.view = function (params) {
@@ -971,6 +1044,7 @@ function mod_jobs(jq_commandset) {
     }
     tabset.show(modname);
     tab_panels(modname +'-view');
+    tabselectors.insert(modname, 'view', modname +'/view?key='+ params.key);
   };
 
   commands.create = function (params) {
@@ -980,6 +1054,7 @@ function mod_jobs(jq_commandset) {
     }
     control.show = show_new;
     control.create(kind, {customer: params.customer});
+    tabselectors.highlight(modname, 'create');
   };
 
   events.addListener('db.committed', control.commit());
@@ -1004,6 +1079,7 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
     ;
 
   tabset = mod_tabset();
+  tabselectors = mod_tab_selectors();
   mod_search(commandset);
   mod_default(commandset);
   mod_customers(commandset);

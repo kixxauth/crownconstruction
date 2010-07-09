@@ -71,7 +71,7 @@ Application overlay HTML snippet.
   <div id="default" class="tab-panel">
     <!-- #### Default panel navigation -->
     <ul id="default-panel-navigation" class="panel-navigation">
-      <li class="panel-navigation default home">
+      <li class="panel-navigation first default home">
         <a href="default/home" class="bbq panel-navigation">Start</a>
       </li>
       <li class="panel-navigation default controls">
@@ -92,13 +92,10 @@ Application overlay HTML snippet.
   <div id="customers" class="tab-panel">
     <!-- #### Customer panel navigation -->
     <ul id="customers-panel-navigation" class="panel-navigation">
-      <li class="panel-navigation customers home">
+      <li class="panel-navigation first customers home">
         <a href="customers/home" class="bbq panel-navigation">
           Customers Panel
         </a>
-      </li>
-      <li class="panel-navigation customers view">
-        <span class="panel-navigation"></span>
       </li>
       <li class="panel-navigation customers search">
         <a href="search/customers" class="bbq panel-navigation">
@@ -108,6 +105,11 @@ Application overlay HTML snippet.
       <li class="panel-navigation customers create">
         <a href="customers/create" class="cmd panel-navigation">
           Create New
+        </a>
+      </li>
+      <li class="panel-navigation customers view">
+        <a href="customers/view" class="bbq panel-navigation">
+          View Customer
         </a>
       </li>
     </ul>
@@ -250,7 +252,7 @@ Application overlay HTML snippet.
   <div id="jobs" class="tab-panel">
     <!-- #### Jobs panel navigation -->
     <ul id="jobs-panel-navigation" class="panel-navigation">
-      <li class="panel-navigation jobs home">
+      <li class="panel-navigation first jobs home">
         <a href="jobs/home" class="bbq panel-navigation">
           Jobs Panel
         </a>
@@ -263,6 +265,11 @@ Application overlay HTML snippet.
       <li class="panel-navigation jobs create">
         <a href="search/customers?mode=newjob" class="cmd panel-navigation">
           Create New Job
+        </a>
+      </li>
+      <li class="panel-navigation jobs view">
+        <a href="jobs/view" class="bbq panel-navigation">
+          View Job
         </a>
       </li>
     </ul>
@@ -426,7 +433,7 @@ Application overlay HTML snippet.
   <div id="personnel" class="tab-panel">
     <!-- #### Personnel panel navigation -->
     <ul id="personnel-panel-navigation" class="panel-navigation">
-      <li class="panel-navigation personnel home">
+      <li class="panel-navigation first personnel home">
         <a href="personnel/home" class="bbq panel-navigation">
           Personnel Panel
         </a>
@@ -439,6 +446,11 @@ Application overlay HTML snippet.
       <li class="panel-navigation personnel create">
         <a href="personnel/create" class="cmd panel-navigation">
           Create
+        </a>
+      </li>
+      <li class="panel-navigation personnel view">
+        <a href="personnel/view" class="bbq panel-navigation">
+          View Employee
         </a>
       </li>
     </ul>

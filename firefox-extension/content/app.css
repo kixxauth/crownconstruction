@@ -116,21 +116,11 @@ LESS CSS classes.
   }
 }
 
-#rounded-top-right {
-  .two {
-    -moz-border-radius-topright: 0.2em;
-    -webkit-border-top-right-radius: 0.2em;
-    border-top-right-radius: 0.2em;
-  }
+#rounded-topleft {
   .three {
-    -moz-border-radius-topright: 0.3em;
-    -webkit-border-top-right-radius: 0.3em;
-    border-top-right-radius: 0.3em;
-  }
-  .five {
-    -moz-border-radius-topright: 0.5em;
-    -webkit-border-top-right-radius: 0.5em;
-    border-top-right-radius: 0.5em;
+    -moz-border-radius-topleft: 0.3em;
+    -webkit-border-top-left-radius: 0.3em;
+    border-top-left-radius: 0.3em;
   }
 }
 
@@ -237,8 +227,7 @@ ul.panel-navigation {
   border-right: @border_width solid @panel_border;
   border-left: @border_width solid @panel_border;
   #rounded-top > .three;
-  padding-left: .5em;
-	background: @brand url(./shared/fade-20.png) repeat-x;
+	background: @brand url(./shared/fade-20.png) 0 -5px repeat-x;
 }
 
 li.panel-navigation {
@@ -246,14 +235,28 @@ li.panel-navigation {
   float: left;
   border-right: @border_width solid (@panel_border + 111);
   padding: .2em 1em .3em;
-  background: transparent;
+  background-color: @brand;
+  background-image: url(./shared/fade-20.png);
+  background-repeat: repeat-x;
+  background-position: 0 -5px;
+}
+
+li.panel-navigation.first {
+  #rounded-topleft > .three; /* to match ul.panel-navigation */
+  padding-left: 1.5em;
+}
+
+li.panel-navigation:hover {
+  background-position: 0 0;
+  background-color: @brand - #101010;
 }
 
 li.panel-navigation.active {
-	background: @green_button url(./shared/fade-20.png) repeat-x;
+	background: @green_button url(./shared/fade-20.png) 0 -5px repeat-x;
 }
 
-span.panel-navigation, a.panel-navigation {
+a.panel-navigation {
+  display: block;
   font-weight: bold;
   color: #fff;
 }
