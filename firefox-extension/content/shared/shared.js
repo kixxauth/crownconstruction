@@ -291,6 +291,18 @@ ViewControl.prototype.blur = function () {
   this.in_focus = false;
 };
 
+ViewControl.prototype.windowFocus = function () {
+  this.log.trace('called windowFocus()');
+  if (this.in_focus) {
+    this.start_timer();
+  }
+};
+
+ViewControl.prototype.windowBlur = function () {
+  this.log.trace('called windowBlur()');
+  this.stop_timer();
+};
+
 ViewControl.prototype.update = function (path, val) {
   this.log.trace('called update()');
   var parts = path.split('.'), field = parts.pop();
