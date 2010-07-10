@@ -410,7 +410,7 @@ InitConnection.prototype.request = function (queries, callbacks) {
     , self = this
     ;
 
-  log.trace('Making connection request for '+ this.id);
+  log.info('Making connection request for '+ this.id);
   promise(
     function (results) {
       log.trace('Got connection response for '+ self.id);

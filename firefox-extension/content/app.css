@@ -31,6 +31,7 @@ LESS CSS constants.
 
 /* Workspace colors. */
 @panel_border: #777;
+@panel_bg: #fff;
 @icon_border: #8e1014;
 @icon_bg: #bc151a;
 @icon_bg_hover: #eb4c51;
@@ -124,6 +125,11 @@ LESS CSS classes.
   }
 }
 
+/*
+Common classes.
+---------------
+*/
+
 #input {
   .norm {
     border: 1px solid @ink;
@@ -141,20 +147,17 @@ button, .button {
   .green {
     background-color: @green_button;
     background-image: url(./shared/fade-30.png);
+    background-position: 0 -5px;
     background-repeat: repeat-x;
-    border-color: @green_button - #090909;
+    border-color: @green_button - #121212;
     color: #fff;
   }
   .green-hover {
-    background-color: @green_button + #090909;
+    background-position: 0 0;
+    background-color: @green_button - #101010;
     border-color: @green_button;
   }
 }
-
-/*
-Common classes.
----------------
-*/
 
 p.warning {
   border: @border_width solid @warning;
@@ -184,25 +187,75 @@ a.panel-close:hover {
   background-color: @icon_bg_hover;
 }
 
+.content-panel {
+  color: @ink;
+  background-color: @panel_bg;
+}
+
 /*
-Workspace Navigation.
+Workspace Sidebar.
 ---------------------
 */
-@navwidth: (@fullcol * 2) + @fullgutter;
-@navcof: 100 / @navwidth;
+@sidewidth: (@fullcol * 2) + @fullgutter;
+@sidecof: 100 / @sidewidth;
+
+#sidebar {
+  position: absolute;
+  top: 0;
+  left: @fullgutter;
+  width: @sidewidth;
+}
+
+#sidebar-logo {
+  margin: 1em 0 0 1em;
+}
+
 
 /* Main navigation panel. */
 #navigation {
-  position: absolute;
-  top: @topmargin;
-  left: @fullgutter;
-  width: @navwidth;
-  padding-bottom: @bottom_padding;
+  margin-top: 1.5em;
+  padding: 1em 0 2em;
+  border: @border_width solid @panel_border;
+  #rounded > .three;
+  font-weight: bold;
+  color: #fff;
+  background: transparent url(./panel_bg.png);
+}
+
+li.navigation {
+  margin: .3em (@fullgutter * @sidecof) 0 (@fullgutter * @sidecof);
+}
+
+h4.navigation {
+  font-size: 120%;
+  margin-top: .7em;
+  border-bottom: 1px solid #777;
+  padding-bottom: .2em;
 }
 
 /* Navigation panel links. */
-a.bbq.navigation {
+a.navigation {
   display: block;
+  color: #fff;
+  padding: .1em .3em .2em;
+  outline: none;
+}
+
+a.navigation.active {
+  background-color: #222;
+}
+
+span.navigation.twisty {
+  display: block;
+  float: left;
+  width: 16px;
+  height: 16px;
+  margin-right: .3em;
+  margin-top: .2em;
+  background-image: url(./shared/ui-icons_ffffff_256x240.png);
+  background-position: -48px -192px;
+  background-repeat: no-repeat;
+  text-indent: -99999px;
 }
 
 /*
@@ -216,7 +269,7 @@ Workspace Tabs.
 #tabset {
   position: absolute;
   top: @topmargin;
-  left: @navwidth + (@fullgutter * 2);
+  left: @sidewidth + (@fullgutter * 2);
   width: @tabswidth;
 }
 
@@ -269,6 +322,79 @@ a.panel-navigation {
   #rounded-bottom > .three;
   min-height: 600px;
   padding-bottom: @bottom_padding;
+  overflow: hidden;
+  margin-bottom: 3em;
+}
+
+/*
+### Forms.
+*/
+
+fieldset.fform {
+  margin-top: 1em;
+  border: @border_width solid @panel_border;
+  #rounded > .three;
+  font-weight: bold;
+}
+
+h4.section-header {
+  font-size: 120%;
+  margin: .5em 1em;
+  text-indent: 1em;
+  border-bottom: @border_width solid @panel_border;
+}
+
+div.input-section {
+  margin: 1em 0 1em 1em;
+}
+
+input.clean-text-input {
+  border: none;
+  border-bottom: 2px dashed @panel_bg - #101010;
+  color: @ink;
+  font-size: 120%;
+  padding: .2em .1em .3em;
+}
+
+label.live-label {
+  display: block;
+  color: @ink + #303030;
+}
+
+div.line {
+  overflow: hidden;
+}
+
+div.line>p {
+  margin-right: 1em;
+  margin-bottom: 1em;
+}
+
+p.input-float {
+  float: left;
+}
+
+a.append.fform.button {
+  display: block;
+  margin: 0 1em .5em;
+  #buttons > .green;
+}
+
+a.append.fform.button:hover {
+  #buttons > .green-hover;
+}
+
+/* customer view */
+#customers-names, #customers-addresses, #customers-phones, #customers-emails {
+  width: (((@fullcol * 5) + (@fullgutter * 3)) * @tabscof) - (@border_width * 2);
+}
+#customers-names, #customers-addresses {
+  float: left;
+  margin-left: @fullgutter * @tabscof;
+}
+#customers-phones, #customers-emails {
+  float: right;
+  margin-right: @fullgutter * @tabscof;
 }
 
 /*
@@ -281,7 +407,7 @@ Search panels.
 div.search-panel {
   position: absolute;
   top: @topmargin * 2;
-  left: @navwidth + (@fullgutter * 3) + @fullcol;
+  left: @sidewidth + (@fullgutter * 3) + @fullcol;
   width: @searchwidth;
   padding-bottom: @bottom_padding;
   border: @border_width solid @panel_border;
@@ -319,7 +445,6 @@ a.search-result {
 #customer-search-form {
   margin-top: 2em;
   margin-left: (@fullgutter + @fullcol) * @searchcof;
-  font-size: 110%;
 }
 
 #customer-search-lastname {
@@ -340,7 +465,7 @@ a.search-result {
 }
 
 span.customer.search-result.name {
-  font-size: 110%;
+  font-size: 115%;
   color: @link;
   display: block;
   text-decoration: underline;
@@ -417,7 +542,7 @@ h1.login {
   background: @brand;
   color: #fff;
   font-weight: bold;
-  font-size: 110%;
+  font-size: 120%;
 }
 
 p.login.input {
@@ -440,7 +565,7 @@ p.login.submit {
   margin-left: 20%;
   font-weight: bold;
   #buttons > .green;
-  font-size: 110%;
+  font-size: 120%;
   padding: .4em .5em .5em;
 }
 
@@ -457,4 +582,41 @@ p.login.warning {
   display: none;
   font-size: 80%;
   width: (100 - @loginwidth) / 2;
+}
+
+/*
+Form input sizes.
+-----------------
+*/
+
+input.lastname, input.firstname {
+  width: 12em;
+}
+
+input.street-address {
+  width: 24em;
+}
+
+input.city {
+  width: 12em;
+}
+
+input.state-address {
+  width: 2em;
+}
+
+input.zip {
+  width: 5em;
+}
+
+input.label {
+  width: 12em;
+}
+
+input.phone {
+  width: 8em;
+}
+
+input.email {
+  width: 24em;
 }

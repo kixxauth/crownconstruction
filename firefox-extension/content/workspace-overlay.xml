@@ -12,52 +12,55 @@ Application overlay HTML snippet.
 </ul><!-- menu-bar -->
 
 <!--
-## Navigation side bar
+## Side bar
 -->
-<ul id="navigation">
-  <li class="navigation section">
-    <a href="panels/default" class="bbq navigation">
-      <span class="navigation twisty">+</span>
-      Start
-    </a>
-  </li>
-  <li class="navigation section">
-    <h4 class="navigation">Search</h4>
-  </li>
-  <li class="navigation section">
-    <a href="search/customers" class="bbq navigation">
-      <span class="navigation twisty">+</span>
-      Customers
-    </a>
-  </li>
-  <li class="navigation section">
-    <a href="search/jobs" class="bbq navigation">
-      <span class="navigation twisty">+</span>
-      Jobs
-    </a>
-  </li>
-  <li class="navigation section">
-    <h4 class="navigation">Panels</h4>
-  </li>
-  <li class="navigation section">
-    <a href="panels/customers" class="bbq navigation">
-      <span class="navigation twisty">+</span>
-      Customers
-    </a>
-  </li>
-  <li class="navigation section">
-    <a href="panels/jobs" class="bbq navigation">
-      <span class="navigation twisty">+</span>
-      Jobs
-    </a>
-  </li>
-  <li class="navigation section">
-    <a href="panels/personnel" class="bbq navigation">
-      <span class="navigation twisty">+</span>
-      Personnel
-    </a>
-  </li>
-</ul><!-- navigation -->
+<div id="sidebar">
+  <img id="sidebar-logo" class="navigation" src="weblogo.png" width="80%" />
+  <ul id="navigation">
+    <li class="navigation section">
+      <a href="panels/default" class="bbq navigation panels default">
+        <span class="navigation twisty">+</span>
+        Start
+      </a>
+    </li>
+    <li class="navigation section">
+      <h4 class="navigation">Search</h4>
+    </li>
+    <li class="navigation section">
+      <a href="search/customers" class="bbq navigation search customers">
+        <span class="navigation twisty">+</span>
+        Customers
+      </a>
+    </li>
+    <li class="navigation section">
+      <a href="search/jobs" class="bbq navigation search jobs">
+        <span class="navigation twisty">+</span>
+        Jobs
+      </a>
+    </li>
+    <li class="navigation section">
+      <h4 class="navigation">Panels</h4>
+    </li>
+    <li class="navigation section">
+      <a href="panels/customers" class="bbq navigation panels customers">
+        <span class="navigation twisty">+</span>
+        Customers
+      </a>
+    </li>
+    <li class="navigation section">
+      <a href="panels/jobs" class="bbq navigation panels jobs">
+        <span class="navigation twisty">+</span>
+        Jobs
+      </a>
+    </li>
+    <li class="navigation section">
+      <a href="panels/personnel" class="bbq navigation panels personnel">
+        <span class="navigation twisty">+</span>
+        Personnel
+      </a>
+    </li>
+  </ul><!-- navigation -->
+</div><!-- sidebar -->
 
 <!--
 ## Main application tabset
@@ -607,7 +610,7 @@ Application overlay HTML snippet.
 -->
 
 <!-- ### Job search panel -->
-<div id="job-search" class="content-panel search-panel">
+<div id="job-search" class="search-panel">
   <h4 class="search-header">
     Job Search
     <a href="search/none" class="bbq panel-close">x</a>
@@ -617,7 +620,7 @@ Application overlay HTML snippet.
 </div><!-- job-search -->
 
 <!-- ### Customer search panel -->
-<div id="customer-search" class="content-panel search-panel">
+<div id="customer-search" class="search-panel">
   <h4 class="search-header">
     Customer Search
     <a href="search/none" class="bbq panel-close">x</a>

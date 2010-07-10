@@ -439,9 +439,12 @@ var un = _.noConflict()
   , view = require('view')
   , cache = require('memcache').cache
   , ViewControl = SHARED.ViewControl
+  , register_control
   , throw_error = SHARED.throw_error(log)
+  , autosave = {}
   , tabset
   , tabselectors
+  , navset
   , $N = {}
   ;
 
@@ -504,6 +507,70 @@ function mod_tab_selectors() {
       return tab_selectors[panelname];
     }
     return tab_selectors[panelname][tabname];
+  };
+
+  return self;
+}
+
+autosave.interval = null;
+autosave.start = function () {
+  if (autosave.interval !== null) {
+    return;
+  }
+  autosave.interval = window.setInterval(function () {
+    try {
+      connection('commit')(null, function (err) {
+        log.warn(err);
+        log.warn('Shutting down commit loop.');
+        window.clearInterval(autosave.interval);
+        throw_error(new Error('Encountered network error -- '+
+            'Shutting down commit loop.'));
+      });
+    } catch (e) {
+      log.warn(e);
+    }
+  }, 3000);
+};
+
+autosave.clear = function () {
+  window.clearInterval(autosave.interval);
+  autosave.interval = null;
+};
+
+function mod_navset() {
+  var self = {}
+    , selectors = {}
+    , items = {
+        panels: ['customers', 'jobs', 'personnel', 'default']
+      , search: ['customers', 'jobs']
+      }
+    , current
+    ;
+
+  un.each(items, function (item, itemname) {
+    selectors[itemname] = {};
+    un.each(item, function (panelname) {
+      selectors[itemname][panelname] = jq(
+        'a.navigation.'+ itemname +'.'+ panelname);
+    });
+  });
+
+  self.activate = function (item_name, panel_name) {
+    logging.checkpoint('activate', item_name +':'+ panel_name);
+    if (current === selectors[item_name][panel_name]) {
+      return;
+    }
+    if (current) {
+      current.removeClass('active');
+    }
+    current = selectors[item_name][panel_name].addClass('active');
+  };
+
+  self.get = function (item_name, panel_name) {
+    if (!panel_name) {
+      return selectors[item_name];
+    }
+    return selectors[item_name][panel_name];
   };
 
   return self;
@@ -693,9 +760,9 @@ function get_ViewControl(name) {
 }
 
 function view_focus(modname, control) {
-  return function (state) {
+  return function (ev, state) {
     var panel = (state.panels || $N).state;
-    state = (state.customers || $N).state;
+    state = (state[modname] || $N).state;
     if (panel === modname && state === 'view') {
       control.focus();
     }
@@ -725,6 +792,26 @@ function rendering(mod_name, fields) {
   };
 }
 
+register_control = (function () {
+  var controls = [];
+
+  jq(window).blur(function (ev) {
+    un.each(controls, function (control) {
+      control.windowBlur();
+    });
+  });
+
+  jq(window).focus(function (ev) {
+    un.each(controls, function (control) {
+      control.windowFocus();
+    });
+  });
+
+  return function(control) {
+    controls.push(control);
+  };
+}());
+
 function mod_personnel(jq_commandset) {
   var modname = 'personnel'
     , kind = 'employee'
@@ -738,6 +825,8 @@ function mod_personnel(jq_commandset) {
     , control = get_ViewControl(modname)
     , currently_viewing
     ;
+
+  register_control(control);
 
   function show(key, view) {
     un.each(view, function (value, name) {
@@ -764,12 +853,14 @@ function mod_personnel(jq_commandset) {
       var field = {}
         , name = jq(this).attr('href')
         , view
+        , data = {}
         ;
 
       field[name] = control.entity.data[name];
       field[name].push({});
       view = control.append(field);
-      render(name, view[name]);
+      data[name] = view[name];
+      render(name, data);
       return false;
     });
 
@@ -881,6 +972,8 @@ function mod_customers(jq_commandset) {
     , currently_viewing
     ;
 
+  register_control(control);
+
   tabselectors.get(modname, 'search').click(function () {
     tabselectors.highlight(modname, 'search');
   });
@@ -910,12 +1003,14 @@ function mod_customers(jq_commandset) {
       var field = {}
         , name = jq(this).attr('href')
         , view
+        , data = {}
         ;
 
       field[name] = control.entity.data[name];
       field[name].push({});
       view = control.append(field);
-      render(name, view[name]);
+      data[name] = view[name];
+      render(name, data);
       return false;
     });
 
@@ -981,12 +1076,13 @@ function mod_jobs(jq_commandset) {
     , currently_viewing
     ;
 
+  register_control(control);
+
   tabselectors.get(modname, 'search').click(function () {
     tabselectors.highlight(modname, 'search');
   });
 
   function show(key, view) {
-    //logging.inspect('view', view);
     render('header', {strname: view.strname, description: view.description});
     render('dates', {
         contractdate: view.contractdate
@@ -1021,12 +1117,14 @@ function mod_jobs(jq_commandset) {
       var field = {}
         , name = jq(this).attr('href')
         , view
+        , data = {}
         ;
 
       field[name] = control.entity.data[name];
       field[name].push({});
       view = control.append(field);
-      render(name, view[name]);
+      data[name] = view[name];
+      render(name, data);
       return false;
     });
 
@@ -1074,11 +1172,26 @@ function mod_jobs(jq_commandset) {
 }
 
 jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
-  var interval
-    , commandset = jq('#commandset').commandSet()
+  var commandset = jq('#commandset').commandSet()
     ;
 
   tabset = mod_tabset();
+
+  navset = mod_navset();
+  commandset.bind('commandstate', function (ev, state) {
+    var panel = (state.panels || $N).state
+      , search = (state.search || $N).state
+      , items
+      ;
+
+    if (panel) {
+      navset.activate('panels', panel);
+    }
+    if (search && search !== 'none') {
+      navset.activate('search', search);
+    }
+  });
+
   tabselectors = mod_tab_selectors();
   mod_search(commandset);
   mod_default(commandset);
@@ -1087,22 +1200,13 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
   mod_personnel(commandset);
   set_commands(jq_workspace[0]);
 
-  interval = window.setInterval(function () {
-    try {
-      connection('commit')(null, function (err) {
-        log.warn(err);
-        log.warn('Shutting down commit loop.');
-        window.clearInterval(interval);
-        throw_error(new Error('Encountered network error -- '+
-            'Shutting down commit loop.'));
-      });
-    } catch (e) {
-      log.warn(e);
-    }
-  }, 3000);
-
+  autosave.start();
   main_deck('workspace');
-  jq(window).trigger('hashchange');
+  jq(window)
+    .blur(function (ev) { autosave.clear(); })
+    .focus(function (ev) { autosave.start(); })
+    .trigger('hashchange')
+    ;
 });
 
 // TODO Watch and notify db status.
