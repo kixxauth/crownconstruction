@@ -63,6 +63,10 @@ Blocker.prototype.next = function (cc, args, binding) {
     this.stack.push({cc: cc, args: args, binding: binding});
   }
 
+  if (this.locked) {
+    log.warn('Namespace is locked.');
+  }
+
   if (this.stack.length && !this.locked) {
     this.locked = true;
     cont = this.stack.shift();

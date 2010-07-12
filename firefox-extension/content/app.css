@@ -330,6 +330,10 @@ a.panel-navigation {
 ### Forms.
 */
 
+div.fform.section {
+  overflow: hidden;
+}
+
 fieldset.fform {
   margin-top: 1em;
   border: @border_width solid @panel_border;
@@ -344,7 +348,7 @@ h4.section-header {
   border-bottom: @border_width solid @panel_border;
 }
 
-div.input-section {
+div.input-section, table.input-section {
   margin: 1em 0 1em 1em;
 }
 
@@ -589,34 +593,34 @@ Form input sizes.
 -----------------
 */
 
-input.lastname, input.firstname {
+input.lastname, input.firstname, input.name, input.city, input.label {
   width: 12em;
 }
 
-input.street-address {
+input.street-address, input.memo, input.email {
   width: 24em;
-}
-
-input.city {
-  width: 12em;
 }
 
 input.state-address {
   width: 2em;
 }
 
-input.zip {
-  width: 5em;
-}
-
-input.label {
-  width: 12em;
-}
-
 input.phone {
   width: 8em;
 }
 
-input.email {
-  width: 24em;
+input.tag {
+  width: 7em;
+}
+
+input.number-three {
+  width: 4em;
+}
+
+input.number-four, input.zip {
+  width: 5em;
+}
+
+input.number-five {
+  width: 6em;
 }

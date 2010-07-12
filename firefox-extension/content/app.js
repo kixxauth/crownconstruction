@@ -445,6 +445,7 @@ var un = _.noConflict()
   , tabset
   , tabselectors
   , navset
+  , personnel_cache
   , $N = {}
   ;
 
@@ -536,6 +537,83 @@ autosave.clear = function () {
   window.clearInterval(autosave.interval);
   autosave.interval = null;
 };
+
+function mod_personnel_cache() {
+  var timeout
+    , transaction
+    , callback
+    , exp = cache_exp * 3
+    ;
+
+  function maybe_results(results) {
+    log.debug('Employee caching: '+
+      (isArray(results) ? results.length : 'invalid'));
+    try {
+      transaction.put('personnel', results, exp);
+    }
+    catch (e) {
+      throw_error(e);
+    }
+    finally {
+      transaction.close();
+    }
+    if (typeof callback === 'function') {
+      callback(results);
+      callback = null;
+    }
+  }
+
+  function loopy(time) {
+    timeout = window.setTimeout(function () {
+      timeout = null;
+      cache(connection('id'), function (t) {
+        transaction = t;
+        connection('query')
+          .start()
+          .eq('kind', 'employee')
+          .append(maybe_results)
+          .send()
+          ;
+        loopy();
+      });
+    }, time || (exp - 15000));
+  }
+
+  function get(cb) {
+    cache(connection('id'), function (t) {
+      var personnel = t.get('personnel');
+      if (personnel) {
+        t.close();
+        cb(personnel);
+        return;
+      }
+
+      transaction = t;
+      callback = cb;
+      connection('query')
+        .start()
+        .eq('kind', 'employee')
+        .append(maybe_results)
+        .send()
+        ;
+    });
+  }
+
+  loopy(1);
+  jq(window)
+    .blur(function (ev) {
+      window.clearTimeout(timeout);
+      timeout = null;
+    })
+    .focus(function (ev) {
+      if (typeof timeout !== 'number') {
+        loopy();
+      }
+    })
+    ;
+
+  return get;
+}
 
 function mod_navset() {
   var self = {}
@@ -888,57 +966,45 @@ function mod_personnel(jq_commandset) {
   };
 
   commands.directory = function () {
-    function maybe_results(results) {
-      log.debug('Employee directory results: '+
-        (isArray(results) ? results.length : 'invalid'));
+    personnel_cache(function (results) {
+      if (!isArray(results)) {
+        log.warn('No personnel results for directory.');
+        return;
+      }
 
-      cache(connection('id'), function (transaction) {
-        try {
-          var groups = {};
+      var groups = {};
 
-          // Collect all the group names and members.
-          jq.each(results, function (idx, result) {
-            var i = 0
-              , key = result('key')
-              , employee = result('entity')
-              , name = (employee.name.first +' '+ employee.name.last)
-              , parts = employee.groups.split(',')
-              , len = parts.length
-              , group_name
-              ;
+      // Collect all the group names and members.
+      jq.each(results, function (idx, result) {
+        if (typeof result !== 'function') {
+          log.debug(result);
+          log.error('Invalid response for personnel directory.');
+        }
 
-            transaction.put(key, result, cache_exp);
+        var i = 0
+          , key = result('key')
+          , employee = result('entity')
+          , name = (employee.name.first +' '+ employee.name.last)
+          , parts = employee.groups.split(',')
+          , len = parts.length
+          , group_name
+          ;
 
-            for (; i < len; i += 1) {
-              group_name = jq.trim(parts[i]);
-              if (!groups[group_name]) {
-                groups[group_name] = [];
-              }
-              groups[group_name].push({
-                  key: key
-                , name: name
-              });
-            }
+        for (; i < len; i += 1) {
+          group_name = jq.trim(parts[i]);
+          if (!groups[group_name]) {
+            groups[group_name] = [];
+          }
+          groups[group_name].push({
+              key: key
+            , name: name
           });
-
-          jq_directory.html(directory_template({groups: groups}));
-          tab_panels('personnel-directory');
-        }
-        catch (e) {
-          throw_error(e);
-        }
-        finally {
-          transaction.close();
         }
       });
-    }
 
-    connection('query')
-      .start()
-      .eq('kind', 'employee')
-      .append(maybe_results)
-      .send()
-      ;
+      jq_directory.html(directory_template({groups: groups}));
+      tab_panels('personnel-directory');
+    });
     tabset.show(modname);
     tabselectors.activate(modname, 'directory');
   };
@@ -1060,7 +1126,7 @@ function mod_jobs(jq_commandset) {
         'header'
       , 'dates'
       , 'payments'
-      , 'special-orders'
+      , 'special_orders'
       , 'subcontractors'
       , 'siding'
       , 'roofing'
@@ -1082,25 +1148,124 @@ function mod_jobs(jq_commandset) {
     tabselectors.highlight(modname, 'search');
   });
 
-  function show(key, view) {
-    render('header', {strname: view.strname, description: view.description});
-    render('dates', {
-        contractdate: view.contractdate
-      , est_startdate: view.est_startdate
-      , startdate: view.startdate
-      , est_completedate: view.est_completedate
-      , completedate: view.completedate
-      , handoff: view.handoff
-      , walkthrough: view.walkthrough
-    });
-    render('payments', {
-        payments: view.payments
-      , direct_pays: view.direct_pays
+  function render_all(key, view) {
+    logging.inspect('job', view);
+    un.each(view, function (data, name) {
+      render(name, data);
     });
     currently_viewing = key;
   }
 
+  function map_data(view, personnel, customer) {
+    logging.checkpoint('map_data()');
+    var rv = {};
+    customer = customer('entity');
+
+    rv.header = {
+      strname: view.strname
+    , customer_name: customer.names[0].last +', '+ customer.names[0].first
+    , sale_by: view.sale_by
+    , production_by: view.production_by
+    , description: view.description
+    };
+
+    rv.dates = {
+      contractdate: view.contractdate
+    , est_startdate: view.est_startdate
+    , startdate: view.startdate
+    , est_completedate: view.est_completedate
+    , completedate: view.completedate
+    , handoff: view.handoff
+    , walkthrough: view.walkthrough
+    };
+
+    rv.payments = {
+      payments: view.payments
+    , direct_pays: view.direct_pays
+    };
+
+    rv.special_orders = {special_orders: view.special_orders};
+    rv.subcontractors = {sub_contractors: view.sub_contractors};
+    rv.siding = {siding: view.siding};
+    rv.roofing = {roofing: view.roofing};
+    rv.permits = {permits: view.permits};
+
+    rv.estimate = {
+      estimate_by: view.estimate_by
+    , estimate_date: view.estimate_date
+    , roundtrip_miles: view.roundtrip_miles
+    , allotted_miles: view.allotted_miles
+    };
+
+    rv.profitandtaxes = {
+      estimated_profit: view.estimated_profit
+    , taxlabor: view.taxlabor
+    };
+
+    return rv;
+  }
+
+  function show(key, view) {
+    logging.checkpoint('show()');
+    cache(connection('id'), function (transaction) {
+      logging.checkpoint('in cache transaction');
+      var customer_key = view.customer.value
+        , customer
+        ;
+      try {
+        customer = transaction.get(customer_key);
+        if (!customer) {
+          logging.checkpoint('customer is not cached');
+          connection('get', customer_key, function (customer, err) {
+            try {
+              if (!customer) {
+                log.debug(err);
+                log.warn('Job .get() connection error.');
+              }
+
+              customer = isArray(customer) && customer[0] ? customer[0] : null;
+
+              if (customer) {
+                transaction.put(customer_key, customer, cache_exp);
+              }
+            }
+            catch (e) {
+              throw_error(e);
+            }
+            finally {
+              transaction.close();
+            }
+            personnel_cache(function (results) {
+              if (!isArray(results)) {
+                log.warn('No personnel results for job.');
+                return;
+              }
+              render_all(key, map_data(view, results, customer));
+            });
+          });
+          return;
+        }
+      }
+      catch (e) {
+        throw_error(e);
+      }
+      finally {
+        transaction.close();
+      }
+
+      logging.checkpoint('customer is cached');
+      personnel_cache(function (results) {
+        logging.checkpoint('inside personnel cache');
+        if (!isArray(results)) {
+          log.warn('No personnel results for job.');
+        }
+        render_all(key, map_data(view, results, customer));
+      });
+    });
+  }
+
   function show_new(key, view) {
+    logging.checkpoint('show_new()');
     show(key, view);
     jq.commandControl.push(modname, 'view?key='+ key);
   }
@@ -1175,13 +1340,12 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
   var commandset = jq('#commandset').commandSet()
     ;
 
+  personnel_cache = mod_personnel_cache();
   tabset = mod_tabset();
-
   navset = mod_navset();
   commandset.bind('commandstate', function (ev, state) {
     var panel = (state.panels || $N).state
       , search = (state.search || $N).state
-      , items
       ;
 
     if (panel) {
