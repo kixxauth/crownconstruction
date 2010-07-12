@@ -413,6 +413,24 @@ a.append.fform.button:hover {
   margin-right: @fullgutter * @tabscof;
 }
 
+/* job view */
+#jobs-estimate, #jobs-profitandtaxes {
+  width: (((@fullcol * 5) + (@fullgutter * 3)) * @tabscof) - (@border_width * 2);
+}
+#jobs-estimate {
+  float: left;
+  margin-left: @fullgutter * @tabscof;
+}
+#jobs-profitandtaxes {
+  float: right;
+  margin-right: @fullgutter * @tabscof;
+}
+
+#jobs-header, #jobs-dates, #jobs-payments, #jobs-special_orders, #jobs-subcontractors, #jobs-siding, #jobs-roofing, #jobs-permits {
+  margin-right: @fullgutter * @tabscof;
+  margin-left: @fullgutter * @tabscof;
+}
+
 /*
 Search panels.
 --------------
