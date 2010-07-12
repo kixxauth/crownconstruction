@@ -130,15 +130,15 @@ Application overlay HTML snippet.
     <form id="customers-view" class="fform inner-tab-panel">
       <div class="fform section">
         <fieldset id="customers-names" class="fform content-panel">
-          <h4 class="section-header">Names</h4>
+          <h4 class="fform section-header">Names</h4>
         </fieldset>
         <template id="customers_names-template"><![CDATA[
-          <h4 class="section-header">Names</h4>
+          <h4 class="fform section-header">Names</h4>
           <%
           var i = 0, len = names.length, name;
           for (; i < len; i += 1) {
           name = names[i];  %>
-          <div class="input-section">
+          <div class="fform input-section">
             <div class="line">
               <p class="input-float"><label class="live-label">last:</label>
                 <input class="clean-text-input fform lastname" type="text"
@@ -151,21 +151,21 @@ Application overlay HTML snippet.
             </div>
           </div>
           <% } %>
-          <a href="names" class="append fform button" title="Add another contact person.">
+          <a href="names/names" class="append fform button" title="Add another contact person.">
             <span class="icon">+</span>
             Add another contact person.
           </a>
         ]]></template>
         <fieldset id="customers-phones" class="fform content-panel">
-          <h4 class="section-header">Phone Numbers</h4>
+          <h4 class="fform section-header">Phone Numbers</h4>
         </fieldset>
         <template id="customers_phones-template"><![CDATA[
-          <h4 class="section-header">Phone Numbers</h4>
+          <h4 class="fform section-header">Phone Numbers</h4>
           <%
           var i = 0, len = phones.length, phone;
           for (; i < len; i += 1) {
           phone = phones[i]; %>
-          <div class="input-section">
+          <div class="fform input-section">
             <div class="line">
               <p class="input-float">
                 <label class="live-label">number:</label>
@@ -180,7 +180,7 @@ Application overlay HTML snippet.
             </div>
           </div>
           <% } %>
-          <a href="phones" class="append fform button" title="Add another phone number.">
+          <a href="phones/phones" class="append fform button" title="Add another phone number.">
             <span class="icon">+</span>
             Add another phone number.
           </a>
@@ -188,15 +188,15 @@ Application overlay HTML snippet.
       </div>
       <div class="fform section">
         <fieldset id="customers-addresses" class="fform content-panel">
-          <h4 class="section-header">Addresses</h4>
+          <h4 class="fform section-header">Addresses</h4>
         </fieldset>
         <template id="customers_addresses-template"><![CDATA[
-          <h4 class="section-header">Addresses</h4>
+          <h4 class="fform section-header">Addresses</h4>
           <%
           var i = 0, len = addresses.length, address;
           for (; i < len; i += 1) {
           address = addresses[i]; %>
-          <div class="input-section">
+          <div class="fform input-section">
             <div class="line">
               <p>
                 <label class="live-label">street:</label>
@@ -223,21 +223,21 @@ Application overlay HTML snippet.
             </div>
           </div>
           <% } %>
-          <a href="addresses" class="append fform button" title="Add another customer address.">
+          <a href="addresses/addresses" class="append fform button" title="Add another customer address.">
             <span class="icon">+</span>
             Add another address.
           </a>
         ]]></template>
         <fieldset id="customers-emails" class="fform content-panel">
-          <h4 class="section-header">Email Addresses</h4>
+          <h4 class="fform section-header">Email Addresses</h4>
         </fieldset>
         <template id="customers_emails-template"><![CDATA[
-          <h4 class="section-header">Email Addresses</h4>
+          <h4 class="fform section-header">Email Addresses</h4>
           <%
           var i = 0, len = emails.length, email;
           for (; i < len; i += 1) {
           email = emails[i]; %>
-          <div class="input-section">
+          <div class="fform input-section">
             <div class="line">
               <p class="input-float">
                 <label class="live-label">email:</label>
@@ -252,7 +252,7 @@ Application overlay HTML snippet.
             </div>
           </div>
           <% } %>
-          <a href="emails" class="append fform button" title="Add another email address.">
+          <a href="emails/emails" class="append fform button" title="Add another email address.">
             <span class="icon">+</span>
             Add another email address.
           </a>
@@ -293,21 +293,19 @@ Application overlay HTML snippet.
     <!-- #### Job view widget -->
     <form id="jobs-view" class="fform inner-tab-panel">
       <fieldset id="jobs-header" class="fform content-panel">
-        <h4 class="section-header">Job Info</h4>
+        <h4 class="fform section-header">Job Info</h4>
       </fieldset>
       <template id="jobs_header-template"><![CDATA[
-        <h4 class="section-header">Job Info</h4>
-        <div class="input-section">
+        <h4 class="fform section-header">Job Info</h4>
+        <div class="fform input-section">
           <div class="line">
+            <p class="fform input-float"><label class="live-label">Customer:</label>
+              <span class="fform inactive subhead"><%= customer_name %></span>
+            </p>
             <p class="input-float"><label class="live-label">Job ID:</label>
               <input class="clean-text-input fform tag" type="text"
                 name="<%= strname.path %>" value="<%= strname.value %>" />
             </p>
-            <p class="fform inactive input-float"><label class="live-label">Customer:</label>
-              <%= customer_name %>
-            </p>
-          </div>
-          <div class="line">
             <p class="input-float"><label class="live-label">Sales Person:</label>
               <select class="clean-text-input fform" name="<%= sale_by.path %>">
                 <option selected="true" value="aKey">Place Holder</option>
@@ -330,11 +328,11 @@ Application overlay HTML snippet.
         </div>
       ]]></template>
       <fieldset id="jobs-dates" class="fform content-panel">
-        <h4 class="section-header">Dates</h4>
+        <h4 class="fform section-header">Dates</h4>
       </fieldset>
       <template id="jobs_dates-template"><![CDATA[
-        <h4 class="section-header">Dates</h4>
-        <div class="input-section">
+        <h4 class="fform section-header">Dates</h4>
+        <div class="fform input-section">
           <div class="line">
             <p class="input-float"><label class="live-label">Contract Date:</label>
               <input class="clean-text-input fform date" type="text"
@@ -342,7 +340,7 @@ Application overlay HTML snippet.
             </p>
           </div>
           <div class="line">
-            <h5 class="section-label">Start Date</h5>
+            <h5 class="fform section-label">Start Date</h5>
             <p class="input-float"><label class="live-label">Estimated:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= est_startdate.path %>" value="<%= est_startdate.value %>" />
@@ -351,9 +349,7 @@ Application overlay HTML snippet.
               <input class="clean-text-input fform date" type="text"
                 name="<%= startdate.path %>" value="<%= startdate.value %>" />
             </p>
-          </div>
-          <div class="line">
-            <h5 class="section-label">Complete Date</h5>
+            <h5 class="fform section-label">Complete Date</h5>
             <p class="input-float"><label class="live-label">Estimated:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= est_completedate.path %>" value="<%= est_completedate.value %>" />
@@ -364,7 +360,7 @@ Application overlay HTML snippet.
             </p>
           </div>
           <div class="line">
-            <h5 class="section-label">Handoff</h5>
+            <h5 class="fform section-label">Handoff</h5>
             <p class="input-float"><label class="live-label">Scheduled:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= handoff.scheduled.path %>" value="<%= handoff.scheduled.value %>" />
@@ -373,9 +369,7 @@ Application overlay HTML snippet.
               <input class="clean-text-input fform date" type="text"
                 name="<%= handoff.completed.path %>" value="<%= handoff.completed.value %>" />
             </p>
-          </div>
-          <div class="line">
-            <h5 class="section-label">Walkthrough</h5>
+            <h5 class="fform section-label">Walkthrough</h5>
             <p class="input-float"><label class="live-label">Scheduled:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= walkthrough.scheduled.path %>" value="<%= walkthrough.scheduled.value %>" />
@@ -388,354 +382,248 @@ Application overlay HTML snippet.
         </div>
       ]]></template>
       <fieldset id="jobs-payments" class="fform content-panel">
-        <h4 class="section-header">Payments</h4>
+        <h4 class="fform section-header">Payments</h4>
       </fieldset>
       <template id="jobs_payments-template"><![CDATA[
-        <h4 class="section-header">Payments</h4>
-        <table class="fform input-section">
-          <th class="fform head">
-            <td class="fform head">Due</td>
-            <td class="fform head">Memo</td>
-            <td class="fform head">Amount</td>
-          </th>
+        <h4 class="fform section-header">Payments</h4>
         <%
         var i = 0, payment;
         for (; i < payments.length; i += 1) {
           payment = payments[i]; %>
-          <tr class="fform">
-            <td class="fform">
+        <div class="fform input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Due:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= payment.due.path %>" value="<%= payment.due.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Memo:</label>
               <input class="clean-text-input fform memo" type="text"
                 name="<%= payment.memo.path %>" value="<%= payment.memo.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Amount:</label>
               <input class="clean-text-input fform money-6" type="text"
                 name="<%= payment.amount.path %>" value="<%= payment.amount.value %>" />
-            </td>
-          </tr>
+            </p>
+          </div>
+        </div>
         <% } %>
-        </table>
-        <a href="payments" class="append fform button" title="Add a payment.">
+        <a href="payments/payments" class="append fform button" title="Add a payment.">
           <span class="icon">+</span>
           Add a payment.
         </a>
-        <table class="fform input-section">
-          <th class="fform head">
-            <td class="fform head">Direct Pays</td>
-          </th>
         <%
         i = 0;
         for (; i < direct_pays.length; i += 1) {
           payment = direct_pays[i]; %>
-          <tr class="fform">
-            <td class="fform">
+        <div class="fform input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Direct Payment</label>
               <input class="clean-text-input fform memo" type="text"
                 name="<%= payment.path %>" value="<%= payment.value %>" />
-            </td>
-          </tr>
+            </p>
+          </div>
+        </div>
         <% } %>
-        </table>
-        <a href="direct_pays" class="append fform button" title="Add a direct payment.">
+        <a href="payments/direct_pays" class="append fform button" title="Add a direct payment.">
           <span class="icon">+</span>
           Add a direct payment.
         </a>
       ]]></template>
       <fieldset id="jobs-special_orders" class="fform content-panel">
-        <h4 class="section-header">Special Orders</h4>
+        <h4 class="fform section-header">Special Orders</h4>
       </fieldset>
       <template id="jobs_special_orders-template"><![CDATA[
-        <h4 class="section-header">Special Orders</h4>
-        <table class="fform input-section">
-          <th class="fform head">
-            <td class="fform head">
-              Description
-            </td>
-            <td class="fform head">
-              Vendor
-            </td>
-            <td class="fform head">
-              Ordered By
-            </td>
-            <td class="fform head">
-              Order Date
-            </td>
-            <td class="fform head">
-              Delivery Date
-            </td>
-          </th>
+        <h4 class="fform section-header">Special Orders</h4>
         <%
-        var i, item;
+        var i = 0, item;
         for (; i < special_orders.length; i += 1) {
           item = special_orders[i]; %>
-          <tr class="fform">
-            <td class="fform">
+        <div class="fform input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Description:</label>
               <input class="clean-text-input fform memo" type="text"
                 name="<%= item.description.path %>" value="<%= item.description.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Vendor:</label>
               <input class="clean-text-input fform name" type="text"
                 name="<%= item.vendor.path %>" value="<%= item.vendor.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+          </div>
+          <div class="line">
+            <p class="input-float"><label class="live-label">Ordered By:</label>
               <input class="clean-text-input fform name" type="text"
                 name="<%= item.ordered_by.path %>" value="<%= item.ordered_by.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Order Date:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= item.order_date.path %>" value="<%= item.order_date.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Delivery Date:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= item.delivery_date.path %>" value="<%= item.delivery_date.value %>" />
-            </td>
-          </tr>
+            </p>
+          </div>
+        </div>
         <% } %>
-        </table>
-        <a href="special_orders" class="append fform button" title="Add a special order.">
+        <a href="special_orders/special_orders" class="append fform button" title="Add a special order.">
           <span class="icon">+</span>
           Add a special order.
         </a>
       ]]></template>
       <fieldset id="jobs-subcontractors" class="fform content-panel">
-        <h4 class="section-header">Sub Contractors</h4>
+        <h4 class="fform section-header">Sub Contractors</h4>
       </fieldset>
       <template id="jobs_subcontractors-template"><![CDATA[
-        <h4 class="section-header">Sub Conractors</h4>
-        <table class="fform input-section">
-          <th class="fform head">
-            <td class="fform head">
-              Contractor
-            </td>
-            <td class="fform head">
-              Description
-            </td>
-            <td class="fform head">
-              Phone Number
-            </td>
-            <td class="fform head">
-              Quote
-            </td>
-            <td class="fform head">
-              Start Date
-            </td>
-          </th>
+        <h4 class="fform section-header">Sub Contractors</h4>
         <%
-        var i, item;
+        var i = 0, item;
         for (; i < sub_contractors.length; i += 1) {
           item = sub_contractors[i]; %>
-          <tr class="fform">
-            <td class="fform">
+        <div class="fform input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Contractor:</label>
               <input class="clean-text-input fform name" type="text"
                 name="<%= item.contractor.path %>" value="<%= item.contractor.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Description:</label>
               <input class="clean-text-input fform memo" type="text"
                 name="<%= item.description.path %>" value="<%= item.description.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+          </div>
+          <div class="line">
+            <p class="input-float"><label class="live-label">Phone Number:</label>
               <input class="clean-text-input fform phone" type="text"
                 name="<%= item.phone.path %>" value="<%= item.phone.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Quote:</label>
               <input class="clean-text-input fform number-four" type="text"
                 name="<%= item.quote.path %>" value="<%= item.quote.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Start Date:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= item.startdate.path %>" value="<%= item.startdate.value %>" />
-            </td>
-          </tr>
+            </p>
+          </div>
+        </div>
         <% } %>
-        </table>
-        <a href="sub_contractor" class="append fform button" title="Add a sub contractor.">
+        <a href="subcontractors/sub_contractors" class="append fform button" title="Add a sub contractor.">
           <span class="icon">+</span>
           Add a sub contractor.
         </a>
       ]]></template>
       <fieldset id="jobs-siding" class="fform content-panel">
-        <h4 class="section-header">Siding</h4>
+        <h4 class="fform section-header">Siding</h4>
       </fieldset>
       <template id="jobs_siding-template"><![CDATA[
-        <h4 class="section-header">Sub Conractors</h4>
-        <table class="fform input-section">
-          <th class="fform head">
-            <td class="fform head">
-              Squares
-            </td>
-            <td class="fform head">
-              Type
-            </td>
-            <td class="fform head">
-              Style
-            </td>
-            <td class="fform head">
-              Brand
-            </td>
-            <td class="fform head">
-              Color
-            </td>
-            <td class="fform head">
-              Trim Color
-            </td>
-          </th>
-        <%
-        var i, item;
-        for (; i < siding.length; i += 1) {
-          item = siding[i]; %>
-          <tr class="fform">
-            <td class="fform">
+        <h4 class="fform section-header">Siding</h4>
+        <div class="fform input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Squares:</label>
               <input class="clean-text-input fform number-five" type="text"
-                name="<%= item.squares.path %>" value="<%= item.squares.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= siding.squares.path %>" value="<%= siding.squares.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Type:</label>
               <input class="clean-text-input fform tag" type="text"
-                name="<%= item.type.path %>" value="<%= item.type.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= siding.type.path %>" value="<%= siding.type.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Brand:</label>
               <input class="clean-text-input fform name" type="text"
-                name="<%= item.style.path %>" value="<%= item.style.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= siding.brand.path %>" value="<%= siding.brand.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <p class="input-float"><label class="live-label">Style:</label>
               <input class="clean-text-input fform name" type="text"
-                name="<%= item.brand.path %>" value="<%= item.brand.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= siding.style.path %>" value="<%= siding.style.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Color:</label>
               <input class="clean-text-input fform tag" type="text"
-                name="<%= item.color.path %>" value="<%= item.color.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= siding.color.path %>" value="<%= siding.color.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Trim Color:</label>
               <input class="clean-text-input fform tag" type="text"
-                name="<%= item.trim_color.path %>" value="<%= item.trim_color.value %>" />
-            </td>
-          </tr>
-        <% } %>
-        </table>
-        <a href="siding" class="append fform button" title="Add siding specs.">
-          <span class="icon">+</span>
-          Add siding specs.
-        </a>
+                name="<%= siding.trim_color.path %>" value="<%= siding.trim_color.value %>" />
+            </p>
+          </div>
+        </div>
       ]]></template>
       <fieldset id="jobs-roofing" class="fform content-panel">
-        <h4 class="section-header">Roofing</h4>
+        <h4 class="fform section-header">Roofing</h4>
       </fieldset>
       <template id="jobs_roofing-template"><![CDATA[
-        <h4 class="section-header">Roofing</h4>
-        <table class="fform input-section">
-          <th class="fform head">
-            <td class="fform head">
-              Squares
-            </td>
-            <td class="fform head">
-              Type
-            </td>
-            <td class="fform head">
-              Style
-            </td>
-            <td class="fform head">
-              Brand
-            </td>
-            <td class="fform head">
-              Color
-            </td>
-            <td class="fform head">
-              Tear Off
-            </td>
-          </th>
-        <%
-        var i, item;
-        for (; i < roofing.length; i += 1) {
-          item = roofing[i]; %>
-          <tr class="fform">
-            <td class="fform">
+        <h4 class="fform section-header">Roofing</h4>
+        <div class="fform input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Squares:</label>
               <input class="clean-text-input fform number-five" type="text"
-                name="<%= item.squares.path %>" value="<%= item.squares.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= roofing.squares.path %>" value="<%= roofing.squares.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Type:</label>
               <input class="clean-text-input fform tag" type="text"
-                name="<%= item.type.path %>" value="<%= item.type.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= roofing.type.path %>" value="<%= roofing.type.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Brand:</label>
               <input class="clean-text-input fform name" type="text"
-                name="<%= item.style.path %>" value="<%= item.style.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= roofing.brand.path %>" value="<%= roofing.brand.value %>" />
+            </p>
+          </div>
+          <div class="line">
+            <p class="input-float"><label class="live-label">Style:</label>
               <input class="clean-text-input fform name" type="text"
-                name="<%= item.brand.path %>" value="<%= item.brand.value %>" />
-            </td>
-            <td class="fform">
+                name="<%= roofing.style.path %>" value="<%= roofing.style.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Color:</label>
               <input class="clean-text-input fform tag" type="text"
-                name="<%= item.color.path %>" value="<%= item.color.value %>" />
-            </td>
-            <td class="fform">
-              <input class="clean-text-input fform tag" type="text"
-                name="<%= item.tearoff.path %>" value="<%= item.tearoff.value %>" />
-            </td>
-          </tr>
-        <% } %>
-        </table>
-        <a href="roofing" class="append fform button" title="Add roofing specs.">
-          <span class="icon">+</span>
-          Add roofing specs.
-        </a>
+                name="<%= roofing.color.path %>" value="<%= roofing.color.value %>" />
+            </p>
+            <p class="input-float"><label class="live-label">Tear Off:</label>
+              <input class="clean-text-input fform" type="checkbox"
+                name="<%= roofing.tearoff.path %>" checked="<%= roofing.tearoff.value %>" />
+            </p>
+          </div>
+        </div>
       ]]></template>
       <fieldset id="jobs-permits" class="fform content-panel">
-        <h4 class="section-header">Permits</h4>
+        <h4 class="fform section-header">Permits</h4>
       </fieldset>
       <template id="jobs_permits-template"><![CDATA[
-        <h4 class="section-header">Permits</h4>
-        <table class="fform input-section">
-          <th class="fform head">
-            <td class="fform head">
-              Type
-            </td>
-            <td class="fform head">
-              Date Received
-            </td>
-            <td class="fform head">
-              ID Number
-            </td>
-            <td class="fform head">
-              Phone Contact
-            </td>
-          </th>
+        <h4 class="fform section-header">Permits</h4>
         <%
-        var i, item;
+        var i = 0, item;
         for (; i < permits.length; i += 1) {
           item = permits[i]; %>
-          <tr class="fform">
-            <td class="fform">
+        <div class="fform input-section">
+          <div class="line">
+            <p class="input-float"><label class="live-label">Type:</label>
               <input class="clean-text-input fform label" type="text"
                 name="<%= item.type.path %>" value="<%= item.type.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Date Received:</label>
               <input class="clean-text-input fform date" type="text"
                 name="<%= item.date_received.path %>" value="<%= item.date_received.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">ID Number:</label>
               <input class="clean-text-input fform tag" type="text"
                 name="<%= item.permit_num.path %>" value="<%= item.permit_num.value %>" />
-            </td>
-            <td class="fform">
+            </p>
+            <p class="input-float"><label class="live-label">Phone Contact:</label>
               <input class="clean-text-input fform phone" type="text"
                 name="<%= item.phone.path %>" value="<%= item.phone.value %>" />
-            </td>
-          </tr>
+            </p>
+          </div>
+        </div>
         <% } %>
-        </table>
-        <a href="permits" class="append fform button" title="Add a permit.">
+        <a href="permits/permits" class="append fform button" title="Add a permit.">
           <span class="icon">+</span>
           Add a permit.
         </a>
       ]]></template>
       <fieldset id="jobs-estimate" class="fform content-panel">
-        <h4 class="section-header">Estimate</h4>
+        <h4 class="fform section-header">Estimate</h4>
       </fieldset>
       <template id="jobs_estimate-template"><![CDATA[
-        <h4 class="section-header">Estimate</h4>
-        <div class="input-section">
+        <h4 class="fform section-header">Estimate</h4>
+        <div class="fform input-section">
           <div class="line">
             <p class="input-float"><label class="live-label">Estimated By:</label>
               <select class="clean-text-input fform" name="<%= estimate_by.path %>">
@@ -761,11 +649,11 @@ Application overlay HTML snippet.
         </div>
       ]]></template>
       <fieldset id="jobs-profitandtaxes" class="fform content-panel">
-        <h4 class="section-header">Finances</h4>
+        <h4 class="fform section-header">Finances</h4>
       </fieldset>
       <template id="jobs_profitandtaxes-template"><![CDATA[
-        <h4 class="section-header">Finances</h4>
-        <div class="input-section">
+        <h4 class="fform section-header">Finances</h4>
+        <div class="fform input-section">
           <div class="line">
             <p class="input-float"><label class="live-label">Estimated Profit:</label>
               <input class="clean-text-input fform number-five" type="text"
@@ -847,11 +735,11 @@ Application overlay HTML snippet.
     <form id="personnel-view" class="fform personnel-panel inner-tab-panel">
       <div class="fform section">
         <fieldset id="personnel-name" class="fform content-panel">
-          <h4 class="section-header">Name</h4>
+          <h4 class="fform section-header">Name</h4>
         </fieldset>
         <template id="personnel_name-template"><![CDATA[
-          <h4 class="section-header">Name</h4>
-          <div class="input-section">
+          <h4 class="fform section-header">Name</h4>
+          <div class="fform input-section">
             <div class="line">
               <p class="input-float"><label class="live-label">last:</label>
                 <input class="clean-text-input fform lastname" type="text"
@@ -865,15 +753,15 @@ Application overlay HTML snippet.
           </div>
         ]]></template>
         <fieldset id="personnel-phones" class="fform content-panel">
-          <h4 class="section-header">Phone Numbers</h4>
+          <h4 class="fform section-header">Phone Numbers</h4>
         </fieldset>
         <template id="personnel_phones-template"><![CDATA[
-          <h4 class="section-header">Phone Numbers</h4>
+          <h4 class="fform section-header">Phone Numbers</h4>
           <%
           var i = 0, len = phones.length, phone;
           for (; i < len; i += 1) {
           phone = phones[i]; %>
-          <div class="input-section">
+          <div class="fform input-section">
             <div class="line">
               <p class="input-float">
                 <label class="live-label">number:</label>
@@ -889,7 +777,7 @@ Application overlay HTML snippet.
           </div>
           <%
           } %>
-          <a href="phones" class="append fform button" title="Add another phone number.">
+          <a href="phones/phones" class="append fform button" title="Add another phone number.">
             <span class="icon">+</span>
             Add another phone number.
           </a>
@@ -897,11 +785,11 @@ Application overlay HTML snippet.
       </div>
       <div class="fform section">
         <fieldset id="personnel-groups" class="fform content-panel">
-          <h4 class="section-header">Groups</h4>
+          <h4 class="fform section-header">Groups</h4>
         </fieldset>
         <template id="personnel_groups-template"><![CDATA[
-          <h4 class="section-header">Groups</h4>
-          <div class="input-section">
+          <h4 class="fform section-header">Groups</h4>
+          <div class="fform input-section">
             <div class="line">
               <p class="input-float">
                 <label class="live-label">groups:</label>
@@ -912,15 +800,15 @@ Application overlay HTML snippet.
           </div>
         ]]></template>
         <fieldset id="personnel-addresses" class="fform content-panel">
-          <h4 class="section-header">Addresses</h4>
+          <h4 class="fform section-header">Addresses</h4>
         </fieldset>
         <template id="personnel_addresses-template"><![CDATA[
-          <h4 class="section-header">Addresses</h4>
+          <h4 class="fform section-header">Addresses</h4>
           <%
           var i = 0, len = addresses.length, address;
           for (; i < len; i += 1) {
             address = addresses[i]; %>
-          <div class="input-section">
+          <div class="fform input-section">
             <div class="line">
               <p>
                 <label class="live-label">street:</label>
@@ -948,7 +836,7 @@ Application overlay HTML snippet.
           </div>
           <%
           } %>
-          <a href="addresses" class="append fform button" title="Add another customer address.">
+          <a href="addresses/addresses" class="append fform button" title="Add another customer address.">
             <span class="icon">+</span>
             Add another address.
           </a>

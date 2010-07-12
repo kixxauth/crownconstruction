@@ -324,6 +324,7 @@ a.panel-navigation {
   padding-bottom: @bottom_padding;
   overflow: hidden;
   margin-bottom: 3em;
+  background: transparent url(./panel_bg.png);
 }
 
 /*
@@ -341,15 +342,16 @@ fieldset.fform {
   font-weight: bold;
 }
 
-h4.section-header {
+h4.fform.section-header {
   font-size: 120%;
   margin: .5em 1em;
   text-indent: 1em;
   border-bottom: @border_width solid @panel_border;
 }
 
-div.input-section, table.input-section {
+div.fform.input-section {
   margin: 1em 0 1em 1em;
+  border-bottom: @border_width solid @panel_bg - #101010;
 }
 
 input.clean-text-input {
@@ -376,6 +378,16 @@ div.line>p {
 
 p.input-float {
   float: left;
+}
+
+h5.fform.section-label {
+  font-size: 120%;
+  font-weight: bold;
+}
+
+span.fform.inactive.subhead {
+  font-size: 140%;
+  font-weight: bold;
 }
 
 a.append.fform.button {

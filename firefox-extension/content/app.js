@@ -634,7 +634,6 @@ function mod_navset() {
   });
 
   self.activate = function (item_name, panel_name) {
-    logging.checkpoint('activate', item_name +':'+ panel_name);
     if (current === selectors[item_name][panel_name]) {
       return;
     }
@@ -865,7 +864,8 @@ function rendering(mod_name, fields) {
     try {
       field_vals[name].html(templates[name](data));
     } catch (e) {
-      throw_error(e);
+      log.debug(e);
+      throw_error('Unable to render tamplate "'+ name +'".');
     }
   };
 }
@@ -929,7 +929,8 @@ function mod_personnel(jq_commandset) {
   jq('a.fform.append', jq_view[0])
     .live('click', function (ev) {
       var field = {}
-        , name = jq(this).attr('href')
+        , parts = jq(this).attr('href').split('/')
+        , tpl_name = parts[0], name = parts[1]
         , view
         , data = {}
         ;
@@ -938,7 +939,7 @@ function mod_personnel(jq_commandset) {
       field[name].push({});
       view = control.append(field);
       data[name] = view[name];
-      render(name, data);
+      render(tpl_name, data);
       return false;
     });
 
@@ -1013,7 +1014,6 @@ function mod_personnel(jq_commandset) {
   jq_commandset.bind('commandstate', view_focus(modname, control));
 
   jq.commandControl.bind(modname, function (ev, command, params) {
-    logging.checkpoint('got command', command);
     commands[command](params);
   });
 
@@ -1067,7 +1067,8 @@ function mod_customers(jq_commandset) {
   jq('a.fform.append', jq_view[0])
     .live('click', function (ev) {
       var field = {}
-        , name = jq(this).attr('href')
+        , parts = jq(this).attr('href').split('/')
+        , tpl_name = parts[0], name = parts[1]
         , view
         , data = {}
         ;
@@ -1076,7 +1077,7 @@ function mod_customers(jq_commandset) {
       field[name].push({});
       view = control.append(field);
       data[name] = view[name];
-      render(name, data);
+      render(tpl_name, data);
       return false;
     });
 
@@ -1157,7 +1158,6 @@ function mod_jobs(jq_commandset) {
   }
 
   function map_data(view, personnel, customer) {
-    logging.checkpoint('map_data()');
     var rv = {};
     customer = customer('entity');
 
@@ -1206,16 +1206,13 @@ function mod_jobs(jq_commandset) {
   }
 
   function show(key, view) {
-    logging.checkpoint('show()');
     cache(connection('id'), function (transaction) {
-      logging.checkpoint('in cache transaction');
       var customer_key = view.customer.value
         , customer
         ;
       try {
         customer = transaction.get(customer_key);
         if (!customer) {
-          logging.checkpoint('customer is not cached');
           connection('get', customer_key, function (customer, err) {
             try {
               if (!customer) {
@@ -1253,9 +1250,7 @@ function mod_jobs(jq_commandset) {
         transaction.close();
       }
 
-      logging.checkpoint('customer is cached');
       personnel_cache(function (results) {
-        logging.checkpoint('inside personnel cache');
         if (!isArray(results)) {
           log.warn('No personnel results for job.');
         }
@@ -1265,7 +1260,6 @@ function mod_jobs(jq_commandset) {
   }
 
   function show_new(key, view) {
-    logging.checkpoint('show_new()');
     show(key, view);
     jq.commandControl.push(modname, 'view?key='+ key);
   }
@@ -1280,7 +1274,8 @@ function mod_jobs(jq_commandset) {
   jq('a.fform.append', jq_view[0])
     .live('click', function (ev) {
       var field = {}
-        , name = jq(this).attr('href')
+        , parts = jq(this).attr('href').split('/')
+        , tpl_name = parts[0], name = parts[1]
         , view
         , data = {}
         ;
@@ -1289,7 +1284,7 @@ function mod_jobs(jq_commandset) {
       field[name].push({});
       view = control.append(field);
       data[name] = view[name];
-      render(name, data);
+      render(tpl_name, data);
       return false;
     });
 
