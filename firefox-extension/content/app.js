@@ -1125,6 +1125,7 @@ function mod_jobs(jq_commandset) {
     , kind = 'job'
     , fieldnames = [
         'header'
+      , 'checkpoints'
       , 'dates'
       , 'payments'
       , 'special_orders'
@@ -1150,10 +1151,18 @@ function mod_jobs(jq_commandset) {
   });
 
   function render_all(key, view) {
-    logging.inspect('job', view);
+    jq('input.fform.date', jq_view[0]).each(function () {
+      jq(this).datepicker('destroy');
+    });
+
     un.each(view, function (data, name) {
       render(name, data);
     });
+
+    jq('input.fform.date', jq_view[0]).each(function () {
+      jq(this).datepicker();
+    });
+
     currently_viewing = key;
   }
 
@@ -1169,14 +1178,14 @@ function mod_jobs(jq_commandset) {
     , description: view.description
     };
 
+    rv.checkpoints = {handoff: view.handoff, walkthrough: view.walkthrough};
+
     rv.dates = {
       contractdate: view.contractdate
     , est_startdate: view.est_startdate
     , startdate: view.startdate
     , est_completedate: view.est_completedate
     , completedate: view.completedate
-    , handoff: view.handoff
-    , walkthrough: view.walkthrough
     };
 
     rv.payments = {

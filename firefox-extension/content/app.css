@@ -287,7 +287,6 @@ li.panel-navigation {
   font-size: 110%;
   float: left;
   border-right: @border_width solid (@panel_border + 111);
-  padding: .2em 1em .3em;
   background-color: @brand;
   background-image: url(./shared/fade-20.png);
   background-repeat: repeat-x;
@@ -296,7 +295,6 @@ li.panel-navigation {
 
 li.panel-navigation.first {
   #rounded-topleft > .three; /* to match ul.panel-navigation */
-  padding-left: 1.5em;
 }
 
 li.panel-navigation:hover {
@@ -310,8 +308,15 @@ li.panel-navigation.active {
 
 a.panel-navigation {
   display: block;
+  padding-top: .2em;
+  padding-right: 1em;
+  padding-left: 1em;
+  padding-bottom: .3em;
   font-weight: bold;
   color: #fff;
+}
+li.panel-navigation.first a.panel-navigation {
+  padding-left: 1.5em;
 }
 
 /* Content panel within a tab panel. */
@@ -414,19 +419,18 @@ a.append.fform.button:hover {
 }
 
 /* job view */
-#jobs-estimate, #jobs-profitandtaxes {
+#jobs-siding, #jobs-roofing, #jobs-estimate, #jobs-profitandtaxes, #jobs-dates, #jobs-checkpoints {
   width: (((@fullcol * 5) + (@fullgutter * 3)) * @tabscof) - (@border_width * 2);
 }
-#jobs-estimate {
+#jobs-siding, #jobs-dates, #jobs-profitandtaxes  {
   float: left;
   margin-left: @fullgutter * @tabscof;
 }
-#jobs-profitandtaxes {
+#jobs-roofing, #jobs-checkpoints, #jobs-estimate {
   float: right;
   margin-right: @fullgutter * @tabscof;
 }
-
-#jobs-header, #jobs-dates, #jobs-payments, #jobs-special_orders, #jobs-subcontractors, #jobs-siding, #jobs-roofing, #jobs-permits {
+#jobs-header, #jobs-payments, #jobs-special_orders, #jobs-subcontractors, #jobs-permits {
   margin-right: @fullgutter * @tabscof;
   margin-left: @fullgutter * @tabscof;
 }
