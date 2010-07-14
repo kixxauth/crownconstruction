@@ -273,6 +273,7 @@ Workspace Tabs.
 */
 @tabswidth: (@fullcol * 10) + (@fullgutter * 9);
 @tabscof: 100 / @tabswidth;
+@cardwidth: (((@fullcol * 5) + (@fullgutter * 3)) * @tabscof) - (@border_width * 2);
 
 /* Main tabs container. */
 #tabset {
@@ -415,9 +416,10 @@ a.append.fform.button:hover {
 
 /* Default panel */
 #default-controls-content-panel {
-  margin: 1em (@fullgutter * @tabscof);
+  margin: 2em (@fullcol * @tabscof);
   #rounded > .three;
   min-height: 600px;
+  overflow: hidden;
 }
 h2.default.controls.notice {
   text-align: center;
@@ -431,9 +433,11 @@ img.default.controls.notice {
   margin-right: -225px;
 }
 
+/* Customer panel */
+
 /* customer view */
 #customers-names, #customers-addresses, #customers-phones, #customers-emails {
-  width: (((@fullcol * 5) + (@fullgutter * 3)) * @tabscof) - (@border_width * 2);
+  width: @cardwidth;
 }
 #customers-names, #customers-addresses {
   float: left;
@@ -448,9 +452,11 @@ img.default.controls.notice {
   margin-left: @fullgutter * @tabscof;
 }
 
+/* Job Panel */
+
 /* job view */
 #jobs-siding, #jobs-roofing, #jobs-estimate, #jobs-profitandtaxes, #jobs-dates, #jobs-checkpoints {
-  width: (((@fullcol * 5) + (@fullgutter * 3)) * @tabscof) - (@border_width * 2);
+  width: @cardwidth;
 }
 #jobs-siding, #jobs-dates, #jobs-profitandtaxes  {
   float: left;
@@ -463,6 +469,41 @@ img.default.controls.notice {
 #jobs-header, #jobs-payments, #jobs-special_orders, #jobs-subcontractors, #jobs-permits {
   margin-right: @fullgutter * @tabscof;
   margin-left: @fullgutter * @tabscof;
+}
+
+/* Personnel Panel */
+
+/* personnel directory */
+li.personnel.directory.group.content-panel {
+  width: @cardwidth - ((@fullgutter * @tabscof) * 2);
+  border: @border_width solid @panel_border;
+  #rounded > .three;
+  float: left;
+  margin-top: 1em;
+  margin-left: @fullgutter * @tabscof;
+  padding: 1em (@fullgutter * @tabscof);
+}
+
+h4.personnel.directory.group {
+  font-size: 120%;
+  font-weight: bold;
+  text-indent: 1em;
+  border-bottom: @border_width solid @panel_border;
+  margin-bottom: 1em;
+  text-transform: capitalize;
+}
+
+/* employee view */
+fieldset.fform.personnel {
+  width: @cardwidth;
+}
+#personnel-name, #personnel-addresses {
+  float: left;
+  margin-left: @fullgutter * @tabscof;
+}
+#personnel-groups, #personnel-phones {
+  float: right;
+  margin-right: @fullgutter * @tabscof;
 }
 
 /*

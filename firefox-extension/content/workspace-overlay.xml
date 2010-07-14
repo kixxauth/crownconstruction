@@ -766,9 +766,9 @@ Application overlay HTML snippet.
       for (group_name in groups) {
         if (Object.prototype.hasOwnProperty.call(groups, group_name)) {
         group = groups[group_name]; %>
-      <li class="personnel-group">
-        <h4 class="personnel-group-name"><%= group_name %></h4>
-        <ul class="personnel-group-members">
+      <li class="personnel directory group content-panel">
+        <h4 class="personnel directory group"><%= group_name %></h4>
+        <ul class="personnel directory members">
           <%
           for (i = 0; i < group.length; i += 1) {
             member = group[i]; %>
@@ -790,7 +790,7 @@ Application overlay HTML snippet.
     <!-- #### Personnel view widget -->
     <form id="personnel-view" class="fform personnel-panel inner-tab-panel">
       <div class="fform section">
-        <fieldset id="personnel-name" class="fform content-panel">
+        <fieldset id="personnel-name" class="fform personnel content-panel">
           <h4 class="fform section-header">Name</h4>
         </fieldset>
         <template id="personnel_name-template"><![CDATA[
@@ -808,39 +808,7 @@ Application overlay HTML snippet.
             </div>
           </div>
         ]]></template>
-        <fieldset id="personnel-phones" class="fform content-panel">
-          <h4 class="fform section-header">Phone Numbers</h4>
-        </fieldset>
-        <template id="personnel_phones-template"><![CDATA[
-          <h4 class="fform section-header">Phone Numbers</h4>
-          <%
-          var i = 0, len = phones.length, phone;
-          for (; i < len; i += 1) {
-          phone = phones[i]; %>
-          <div class="fform input-section">
-            <div class="line">
-              <p class="input-float">
-                <label class="live-label">number:</label>
-                <input class="clean-text-input fform phone" type="text"
-                  name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
-              </p>
-              <p class="input-float">
-                <label class="live-label">label:</label>
-                <input class="clean-text-input fform label" type="text"
-                  name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
-              </p>
-            </div>
-          </div>
-          <%
-          } %>
-          <a href="phones/phones" class="append fform button" title="Add another phone number.">
-            <span class="icon">+</span>
-            Add another phone number.
-          </a>
-        ]]></template>
-      </div>
-      <div class="fform section">
-        <fieldset id="personnel-groups" class="fform content-panel">
+        <fieldset id="personnel-groups" class="fform personnel content-panel">
           <h4 class="fform section-header">Groups</h4>
         </fieldset>
         <template id="personnel_groups-template"><![CDATA[
@@ -855,7 +823,9 @@ Application overlay HTML snippet.
             </div>
           </div>
         ]]></template>
-        <fieldset id="personnel-addresses" class="fform content-panel">
+      </div>
+      <div class="fform section">
+        <fieldset id="personnel-addresses" class="fform personnel content-panel">
           <h4 class="fform section-header">Addresses</h4>
         </fieldset>
         <template id="personnel_addresses-template"><![CDATA[
@@ -895,6 +865,36 @@ Application overlay HTML snippet.
           <a href="addresses/addresses" class="append fform button" title="Add another customer address.">
             <span class="icon">+</span>
             Add another address.
+          </a>
+        ]]></template>
+        <fieldset id="personnel-phones" class="fform personnel content-panel">
+          <h4 class="fform section-header">Phone Numbers</h4>
+        </fieldset>
+        <template id="personnel_phones-template"><![CDATA[
+          <h4 class="fform section-header">Phone Numbers</h4>
+          <%
+          var i = 0, len = phones.length, phone;
+          for (; i < len; i += 1) {
+          phone = phones[i]; %>
+          <div class="fform input-section">
+            <div class="line">
+              <p class="input-float">
+                <label class="live-label">number:</label>
+                <input class="clean-text-input fform phone" type="text"
+                  name="<%= phone.phone.path %>" value="<%= phone.phone.value %>" />
+              </p>
+              <p class="input-float">
+                <label class="live-label">label:</label>
+                <input class="clean-text-input fform label" type="text"
+                  name="<%= phone.label.path %>" value="<%= phone.label.value %>" />
+              </p>
+            </div>
+          </div>
+          <%
+          } %>
+          <a href="phones/phones" class="append fform button" title="Add another phone number.">
+            <span class="icon">+</span>
+            Add another phone number.
           </a>
         ]]></template>
       </div>
