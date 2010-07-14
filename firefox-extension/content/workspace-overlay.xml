@@ -9,6 +9,9 @@ Application overlay HTML snippet.
 ## Top menu bar
 -->
 <ul id="menu-bar">
+  <li class="menu-bar db-state-notice">
+    <p id="db-state-notice" class="db-state info"></p>
+  </li>
 </ul><!-- menu-bar -->
 
 <!--

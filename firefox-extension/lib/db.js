@@ -99,7 +99,7 @@ ChangeSet.prototype.update = function (k, v, idx) {
     this.set[k] = [v, idx];
     if (first && (this.length += 1) === 1) {
       events.trigger('db.state',
-          {id: this.connection, state: 'clean'}, true);
+          {id: this.connection, state: 'mutated'}, true);
     }
   }
   else if (this.set[k]) {

@@ -28,6 +28,7 @@ LESS CSS constants.
 @warning_bg: #faf6f0;
 @link: #1746c0;
 @green_button: #61a809;
+@highlight: #f8ad01;
 
 /* Workspace colors. */
 @panel_border: #777;
@@ -129,6 +130,10 @@ LESS CSS classes.
 Common classes.
 ---------------
 */
+
+a {
+  color: @link;
+}
 
 #input {
   .norm {
@@ -265,6 +270,44 @@ span.navigation.twisty {
   background-position: -48px -192px;
   background-repeat: no-repeat;
   text-indent: -99999px;
+}
+
+/*
+Menu bar.
+---------
+*/
+@menuwidth: (@fullcol * 10) + (@fullgutter * 9);
+@menucof: 100 / @menuwidth;
+
+/* Menu bar container. */
+#menu-bar {
+  position: absolute;
+  top: 0;
+  left: @sidewidth + (@fullgutter * 2);
+  width: @menuwidth;
+}
+
+li.menu-bar {
+  float: left;
+}
+
+#db-state-notice {
+  padding: .2em 1em .3em;
+  color: #fff;
+  #rounded-bottom > .five;
+  font-weight: bold;
+  width: 14em;
+  overflow: hidden;
+}
+
+p.db-state.inactive {
+  background-color: @green_button;
+}
+p.db-state.active {
+  background-color: @highlight;
+}
+p.db-state.update {
+  background-color: @brand;
 }
 
 /*

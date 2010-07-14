@@ -1579,13 +1579,48 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
   set_commands(jq_workspace[0]);
 
   events.addListener('db.state', function (db) {
-    logging.checkpoint(db.id +' is in state '+ db.state +'.');
+    if (db.state === 'clean') {
+      jq('#db-state-notice')
+        .removeClass('active')
+        .removeClass('update')
+        .addClass('inactive')
+        .text('No unsaved changes.')
+        ;
+    }
+    else {
+      jq('#db-state-notice')
+        .removeClass('inactive')
+        .removeClass('update')
+        .addClass('active')
+        .text('Unsaved changes detected.')
+        ;
+    }
   });
   events.addListener('db.committing', function (db) {
-    logging.checkpoint(db.id +' is committing.');
+    jq('#db-state-notice')
+      .removeClass('inactive')
+      .removeClass('active')
+      .addClass('update')
+      .text('Saving...')
+      ;
   });
   events.addListener('db.committed', function (db) {
-    logging.checkpoint(db.id +' committed in state '+ db.state +'.');
+    if (db.state === 'clean') {
+      jq('#db-state-notice')
+        .removeClass('active')
+        .removeClass('update')
+        .addClass('inactive')
+        .text('Saved.')
+        ;
+    }
+    else {
+      jq('#db-state-notice')
+        .removeClass('inactive')
+        .removeClass('update')
+        .addClass('active')
+        .text('Unsaved changes detected.')
+        ;
+    }
   });
 
   autosave.start();
