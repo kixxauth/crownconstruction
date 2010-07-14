@@ -548,10 +548,45 @@ function mod_personnel_cache() {
     ;
 
   function maybe_results(results) {
+    var groups;
     log.debug('Employee caching: '+
       (isArray(results) ? results.length : 'invalid'));
     try {
-      transaction.put('personnel', results, exp);
+      if (!isArray(results)) {
+        log.warn('No personnel results.');
+        return;
+      }
+
+      // Collect all the group names and members.
+      groups = {};
+      un.each(results, function (result) {
+        if (typeof result !== 'function') {
+          log.debug(result);
+          log.error('Invalid response for personnel directory.');
+        }
+
+        var i = 0
+          , key = result('key')
+          , employee = result('entity')
+          , name = (employee.name.first +' '+ employee.name.last)
+          , parts = employee.groups.split(',')
+          , group_name
+          ;
+
+        for (; i < parts.length; i += 1) {
+          group_name = jq.trim(parts[i]);
+          if (!groups[group_name]) {
+            groups[group_name] = [];
+          }
+          groups[group_name].push({
+              key: key
+            , name: name
+            , entity: result
+            , data: employee
+          });
+        }
+      });
+      transaction.put('personnel', groups, exp);
     }
     catch (e) {
       throw_error(e);
@@ -560,7 +595,7 @@ function mod_personnel_cache() {
       transaction.close();
     }
     if (typeof callback === 'function') {
-      callback(results);
+      callback(groups);
       callback = null;
     }
   }
@@ -970,42 +1005,7 @@ function mod_personnel(jq_commandset) {
 
   commands.directory = function () {
     personnel_cache(function (results) {
-      if (!isArray(results)) {
-        log.warn('No personnel results for directory.');
-        return;
-      }
-
-      var groups = {};
-
-      // Collect all the group names and members.
-      jq.each(results, function (idx, result) {
-        if (typeof result !== 'function') {
-          log.debug(result);
-          log.error('Invalid response for personnel directory.');
-        }
-
-        var i = 0
-          , key = result('key')
-          , employee = result('entity')
-          , name = (employee.name.first +' '+ employee.name.last)
-          , parts = employee.groups.split(',')
-          , len = parts.length
-          , group_name
-          ;
-
-        for (; i < len; i += 1) {
-          group_name = jq.trim(parts[i]);
-          if (!groups[group_name]) {
-            groups[group_name] = [];
-          }
-          groups[group_name].push({
-              key: key
-            , name: name
-          });
-        }
-      });
-
-      jq_directory.html(directory_template({groups: groups}));
+      jq_directory.html(directory_template({groups: results}));
       tab_panels('personnel-directory');
     });
     tabset.show(modname);
@@ -1031,7 +1031,7 @@ function mod_personnel(jq_commandset) {
 function mod_customers(jq_commandset) {
   var modname = 'customers'
     , kind = 'customer'
-    , fieldnames = ['names', 'phones', 'addresses', 'emails']
+    , fieldnames = ['names', 'phones', 'addresses', 'emails', 'jobs']
     , jq_view = jq('#'+ modname +'-view')
     , tab_panels = jq.deck(jq('#'+ modname).children('.inner-tab-panel'))
     , commands = {}
