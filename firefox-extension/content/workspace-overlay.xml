@@ -93,7 +93,12 @@ Application overlay HTML snippet.
     </div>
     <!-- #### Default controls widget -->
     <div id="default-controls" class="inner-tab-panel">
-      <p>Control panel.</p>
+      <div id="default-controls-content-panel" class="content-panel">
+        <h2 class="default controls notice">
+          The control panel is not quite operational yet.
+        </h2>
+        <img class="default controls notice" src="./shared/under-construction.jpg" />
+      </div>
     </div><!-- default-controls -->
   </div><!-- panel-default -->
 
@@ -907,8 +912,18 @@ Application overlay HTML snippet.
     Job Search
     <a href="search/none" class="bbq panel-close">x</a>
   </h4>
+  <h2 class="search notice">
+    Job search functionality is not available quite yet.
+  </h2>
+  <p class="search notice">
+    Sorry about that.
+    It is on the todo list though.
+  </p>
+  <img class="search notice" src="./shared/under-construction.jpg" />
+  <!--
   <ul id="job-search-results" class="search-results-list">
   </ul>
+  -->
 </div><!-- job-search -->
 
 <!-- ### Customer search panel -->

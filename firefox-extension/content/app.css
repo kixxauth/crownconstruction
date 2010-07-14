@@ -167,6 +167,15 @@ p.warning {
   background-color: @warning_bg;
 }
 
+h2.notice {
+  font-size: 160%;
+  font-weight: bold;
+}
+
+p.notice {
+  font-size: 120%;
+}
+
 /* Panel close icon/button */
 a.panel-close {
   float: right;
@@ -404,6 +413,24 @@ a.append.fform.button:hover {
   #buttons > .green-hover;
 }
 
+/* Default panel */
+#default-controls-content-panel {
+  margin: 1em (@fullgutter * @tabscof);
+  #rounded > .three;
+  min-height: 600px;
+}
+h2.default.controls.notice {
+  text-align: center;
+  margin-top: 2em;
+}
+
+img.default.controls.notice {
+  position: absolute;
+  top: 12em;
+  right: 50%;
+  margin-right: -225px;
+}
+
 /* customer view */
 #customers-names, #customers-addresses, #customers-phones, #customers-emails {
   width: (((@fullcol * 5) + (@fullgutter * 3)) * @tabscof) - (@border_width * 2);
@@ -483,6 +510,7 @@ a.search-result {
   display: block;
 }
 
+/* Customer search panel. */
 #customer-search-form {
   margin-top: 2em;
   margin-left: (@fullgutter + @fullcol) * @searchcof;
@@ -503,6 +531,19 @@ a.search-result {
 
 #customer-search-button:hover {
   #buttons > .green-hover;
+}
+
+/* Job search panel. */
+h2.search.notice, p.search.notice {
+  text-align: center;
+  margin-top: 1em;
+}
+
+img.search.notice {
+  position: absolute;
+  top: 12em;
+  right: 50%;
+  margin-right: -225px;
 }
 
 span.customer.search-result.name {
