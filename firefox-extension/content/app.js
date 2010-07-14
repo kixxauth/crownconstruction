@@ -441,12 +441,14 @@ var un = _.noConflict()
   , ViewControl = SHARED.ViewControl
   , register_control
   , throw_error = SHARED.throw_error(log)
+  , validate_round_currency = SHARED.validate_currency()
   , autosave = {}
   , tabset
   , tabselectors
   , navset
   , personnel_cache
   , $N = {}
+  , $F = function () {}
   ;
 
 function mod_tab_selectors() {
@@ -1141,6 +1143,7 @@ function mod_jobs(jq_commandset) {
     , commands = {}
     , render = rendering(modname, fieldnames)
     , control = get_ViewControl(modname)
+    , validate = {}
     , currently_viewing
     ;
 
@@ -1149,6 +1152,127 @@ function mod_jobs(jq_commandset) {
   tabselectors.get(modname, 'search').click(function () {
     tabselectors.highlight(modname, 'search');
   });
+
+  function simply_update() {
+    control.update(this.name, this.value);
+  }
+
+  function validate_number() {
+    var num = this.value;
+    if (!num) {
+      return;
+    }
+
+    num = isNaN(num) ? '0' : num;
+    this.value = num;
+    control.update(this.name, +num);
+  }
+
+  function validate_money() {
+    var results = validate_round_currency(this.value);
+    this.value = results[0];
+    control.update(this.name, results[1]);
+  }
+
+  function validate_date() {
+    if (!this.value) {
+      return;
+    }
+
+    var parts = this.value.split('/')
+      , month, day, year, timestamp, offset
+      ;
+
+    if (parts.length !== 3) {
+      return;
+    }
+
+    month = parts[0]; day = parts[1]; year = parts[2];
+    timestamp = new Date(year, month -1, day);
+    offset = timestamp.getTimezoneOffset() * 60 * 1000;
+    control.update(this.name, (timestamp - offset));
+  }
+
+  // Job ID
+  validate.strname = simply_update;
+  // Sales person ref
+  validate.sale_by = simply_update;
+  // Estimate person ref
+  validate.estimate_by = simply_update;
+  // Production person ref
+  validate.production_by = simply_update;
+  validate.estimate_date = validate_date;
+  validate.roundtrip_miles = validate_number;
+  validate.allotted_miles = validate_number;
+  validate.startdate = validate_date;
+  validate.est_startdate = validate_date;
+  validate.completedate = validate_date;
+  validate.est_completedate = validate_date;
+  validate.contractdate = validate_date;
+  validate.description = simply_update;
+  validate.taxlabor = validate_money;
+  validate.estimated_profit = validate_money;
+
+  validate.payments = function (key, field, i, leaf) {
+    switch (leaf) {
+    case 'due':
+      validate_date.call(this);
+      break;
+    case 'amount':
+      validate_money.call(this);
+      break;
+    default:
+      control.update(this.name, this.value);
+    }
+  };
+
+  validate.direct_pays = simply_update;
+  validate.handoff = validate_date;
+  validate.walkthrough = validate_date;
+
+  validate.special_orders = function (key, field, i, leaf) {
+    if (leaf === 'order_date' || leaf === 'delivery_date') {
+      validate_date.call(this);
+      return;
+    }
+    control.update(this.name, this.value);
+  };
+
+  validate.sub_contractors = function (key, field, i, leaf) {
+    if (leaf === 'quote') {
+      validate_money.call(this);
+      return;
+    }
+    if (leaf === 'startdate') {
+      validate_date.call(this);
+      return;
+    }
+    control.update(this.name, this.value);
+  };
+
+  validate.siding = function (key, field, leaf) {
+    if (leaf === 'squares') {
+      validate_number.call(this);
+      return;
+    }
+    control.update(this.name, this.value);
+  };
+
+  validate.roofing = function (key, field, leaf) {
+    if (leaf === 'squares') {
+      validate_number.call(this);
+      return;
+    }
+    control.update(this.name, this.value);
+  };
+
+  validate.permits = function (key, field, i, leaf) {
+    if (leaf === 'date_received') {
+      validate_date.call(this);
+      return;
+    }
+    control.update(this.name, this.value);
+  };
 
   function render_all(key, view) {
     jq('input.fform.date', jq_view[0]).each(function () {
@@ -1160,7 +1284,7 @@ function mod_jobs(jq_commandset) {
     });
 
     jq('input.fform.date', jq_view[0]).each(function () {
-      jq(this).datepicker();
+      jq(this).datepicker({onSelect: validate_date});
     });
 
     currently_viewing = key;
@@ -1275,8 +1399,8 @@ function mod_jobs(jq_commandset) {
 
   jq('input.fform', jq_view[0])
     .live('keyup', function (ev) {
-      // TODO: Validation
-      control.update(this.name, this.value);
+      var parts = this.name.split('.');
+      validate[parts[1]].apply(this, parts);
     });
 
   // TODO: Appending may also need modification and data mapping.
@@ -1286,14 +1410,12 @@ function mod_jobs(jq_commandset) {
         , parts = jq(this).attr('href').split('/')
         , tpl_name = parts[0], name = parts[1]
         , view
-        , data = {}
         ;
 
       field[name] = control.entity.data[name];
       field[name].push({});
-      view = control.append(field);
-      data[name] = view[name];
-      render(tpl_name, data);
+      view = map_data(control.append(field), null, $F);
+      render(tpl_name, view[tpl_name]);
       return false;
     });
 

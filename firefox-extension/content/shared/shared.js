@@ -43,6 +43,55 @@ SHARED.throw_error = function (log) {
   };
 };
 
+SHARED.validate_currency = function (spec) {
+  spec = spec || {};
+  var round = spec.round || 2
+    , symbol = spec.symbol || '$'
+    , decimal = spec.decimal || '.'
+    , thousand = spec.thousand || ','
+    , val_regex = new RegExp((
+          symbol.replace('$', '\\$').replace('.', '\\.') +
+          '|[^\\d()'+ thousand + decimal +']'), 'g')
+
+    , num_regex = new RegExp('[^\\d'+ decimal +']', 'g')
+    ;
+
+  return function (val) {
+    if (!val) {
+      return [val, 0];
+    }
+
+    var num = val, parts;
+
+    if (isNaN(num)) {
+      val = val.replace(val_regex, '');
+      num = val.replace(num_regex, '');
+      num = val.charAt(0) === '(' ? ('-'+ num) : num;
+      num = (num === '' || num === '-') ? '0' : num;
+      num = (decimal === '.') ? num : num.replace(decimal, '.');
+      if (isNaN(num)) {
+        num = val = '0';
+      }
+    }
+
+    parts = num.split(decimal);
+    num = Math.abs(parts[0]);
+
+    if (isNaN(num)) {
+      val = '0';
+      num = 0;
+    }
+
+    if (round !== -1) {
+      num += (parseFloat(
+                 parseFloat('1.'+ (parts.length > 1 ? parts[1] : '0'))
+                 .toFixed(round)) -1);
+    }
+
+    return [val, num];
+  };
+};
+
 SHARED.spinner = (function () {
   var opened = {};
 
@@ -329,89 +378,4 @@ ViewControl.prototype.commit = function () {
 
 return ViewControl;
 }(window));
-
-/*
-function ViewModule(spec) {
-  if (!(this instanceof ViewModule)) {
-    return new ViewModule(spec);
-  }
-  this.name = spec.name;
-  this.jq = spec.jQuery;
-  this.cache = spec.db.cache;
-  this.cache_exp = spec.db.expiration;
-  this.logging = spec.logging;
-  this.log = this.logging.get(this.name +'_ViewModule')
-  this.viewControl = ViewControl(spec.db.connection
-                           , this.cache
-                           , spec.db.mapview
-                           , this.cache_exp
-                           , this.logging);
-  spec.eventsMod.addListener('db.committed', this.viewControl.commit());
-  this.commands = spec.commands;
-  this.tabset = spec.tabset;
-  this.panels = spec.panels;
-}
-
-ViewModule.prototype = {};
-
-ViewModule.prototype.init = function (spec) {
-  var self = this
-    , currently_showing
-    ;
-
-  this.jq_tabpanel = jq('#'+ spec.tabpanel);
-  this.jq_view = jq('#'+ spec.tabpanel +'-view');
-
-  this.jq('input.fform', jq_view[0])
-    .live('keyup', function (ev) {
-      // TODO: Validation
-      self.viewControl.update(this.name, this.value);
-    });
-
-  this.jq('a.fform.append', jq_view[0])
-    .live('click', function (ev) {
-      var field = {}
-        , name = jq(this).attr('href')
-        , view
-        ;
-
-      field[name] = control.entity.data[name];
-      field[name].push({});
-      view = self.viewControl.append(field);
-      self.template[name](view[name]);
-      return false;
-    });
-
-  spec.commandSet.bind('commandstate', function (state) {
-    var panel = (state.panels || $N).state
-      , state = (state.customers || $N).state
-      ;
-
-    if (panel === self.name && state === 'view') {
-      self.log.trace('focus viewControl');
-      self.viewControl.focus();
-    }
-    else {
-      self.log.trace('blur viewControl');
-      self.viewControl.blur();
-    }
-  });
-
-  jq.commandControl.bind(this.name, function (command, params) {
-    self.log.trace('got command "'+ command +'"');
-    switch (command) {
-    case 'view':
-      if (params.key !== currently_showing) {
-        self.viewControl.show = show;
-        self.viewControl.open(params.key);
-      }
-      self.tabset.show(self.name);
-      self.panels(self.name +'-view');
-      break;
-    case 'create':
-      break;
-    }
-  });
-};
-*/
 

@@ -43,10 +43,7 @@ INDEXES.index_customer_key = function (val) {
 };
 
 INDEXES.job_start_date = function (val) {
-  if (!val) {
-    return ['est_startdate', 0];
-  }
-  return ['est_startdate', Date.parse(val)];
+  return ['est_startdate', val];
 };
 
 MODELS.customer = function (db) {
@@ -111,22 +108,22 @@ MODELS.job = function (db) {
     sale_by: db.str(),
     estimate_by: db.str(),
     production_by: db.str(),
-    estimate_date: db.str(),
+    estimate_date: db.num(),
     roundtrip_miles: db.num(),
     allotted_miles: db.num(),
-    startdate: db.str(),
-    est_startdate: db.str({index: INDEXES.job_start_date}),
-    completedate: db.str(),
-    est_completedate: db.str(),
-    contractdate: db.str(),
+    startdate: db.num(),
+    est_startdate: db.num({index: INDEXES.job_start_date}),
+    completedate: db.num(),
+    est_completedate: db.num(),
+    contractdate: db.num(),
     description: db.str(),
     taxlabor: db.num(),
     estimated_profit: db.num(),
     payments: db.list(
       db.dict({
-        due: db.str(),
+        due: db.num(),
         memo: db.str(),
-        amount: db.str()
+        amount: db.num()
       })
     ),
     jobs: db.list(
@@ -138,21 +135,21 @@ MODELS.job = function (db) {
       })
     ),
     direct_pays: db.list(db.str()),
-    handoff: db.dict({scheduled: db.str(), completed: db.str()}),
-    walkthrough: db.dict({scheduled: db.str(), completed: db.str()}),
+    handoff: db.dict({scheduled: db.num(), completed: db.num()}),
+    walkthrough: db.dict({scheduled: db.num(), completed: db.num()}),
     special_orders: db.list(db.dict({
       description: db.str(),
       vendor: db.str(),
       ordered_by: db.str(),
-      order_date: db.str(),
-      delivery_date: db.str()
+      order_date: db.num(),
+      delivery_date: db.num()
     })),
     sub_contractors: db.list(db.dict({
       contractor: db.str(),
       description: db.str(),
       phone: db.str(),
-      quote: db.str(),
-      startdate: db.str()
+      quote: db.num(),
+      startdate: db.num()
     })),
     siding: db.dict({
       squares: db.num(),
@@ -172,7 +169,7 @@ MODELS.job = function (db) {
     }),
     permits: db.list(db.dict({
       type: db.str(),
-      date_received: db.str(),
+      date_received: db.num(),
       permit_num: db.str(),
       phone: db.str()
     }))
