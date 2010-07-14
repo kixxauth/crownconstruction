@@ -258,6 +258,35 @@ Application overlay HTML snippet.
           </a>
         ]]></template>
       </div>
+      <div class="fform section">
+        <fieldset id="customers-jobs" class="fform content-panel">
+          <h4 class="fform section-header">Jobs</h4>
+        </fieldset>
+        <template id="customers_jobs-template"><![CDATA[
+          <h4 class="fform section-header">Jobs</h4>
+          <%
+          var i = 0, len = jobs.length, job;
+          for (; i < len; i += 1) {
+          job = jobs[i]; %>
+          <div class="fform input-section">
+            <div class="line">
+              <p class="input-float">
+                <a class="fform bbq" href="jobs/view?key=<%= job.key %>">
+                <%= job.strname || 'Unidentified Job'%>
+                </a>
+              </p>
+            </div>
+            <div class="line">
+              <p class="input-float">
+                <span class="fform inactive">
+                  <%= job.description || 'No job description.' %>
+                </span>
+              </p>
+            </div>
+          </div>
+          <% } %>
+        ]]></template>
+      </div>
     </form><!-- customer-view -->
   </div><!-- panel-customers -->
 

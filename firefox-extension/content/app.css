@@ -356,7 +356,6 @@ h4.fform.section-header {
 
 div.fform.input-section {
   margin: 1em 0 1em 1em;
-  border-bottom: @border_width solid @panel_bg - #101010;
 }
 
 input.clean-text-input {
@@ -416,6 +415,10 @@ a.append.fform.button:hover {
 #customers-phones, #customers-emails {
   float: right;
   margin-right: @fullgutter * @tabscof;
+}
+#customers-jobs {
+  margin-right: @fullgutter * @tabscof;
+  margin-left: @fullgutter * @tabscof;
 }
 
 /* job view */

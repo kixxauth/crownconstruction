@@ -113,6 +113,7 @@ SHARED.spinner = (function () {
           position: 'absolute'
         , top: y - 8
         , left: x - 8
+        , 'z-index': 9999
       })
       .show()
       ;

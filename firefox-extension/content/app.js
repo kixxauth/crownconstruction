@@ -1046,13 +1046,77 @@ function mod_customers(jq_commandset) {
     tabselectors.highlight(modname, 'search');
   });
 
-  function show(key, view) {
-    un.each(view, function (value, name) {
-      var data = {};
-      data[name] = value;
+  function render_all(key, view) {
+    un.each(view, function (data, name) {
       render(name, data);
     });
     currently_viewing = key;
+  }
+
+  function map_data(view, jobs) {
+    var rv = view;
+    rv.names = {names: view.names};
+    rv.addresses = {addresses: view.addresses};
+    rv.phones = {phones: view.phones};
+    rv.emails = {emails: view.emails};
+    rv.jobs = {jobs: []};
+    
+    un.each(jobs, function (job) {
+      if (typeof job !== 'function') {
+        log.warn('Invalid job entity supplied to cutomers::map_data().');
+        return;
+      }
+      var data = job('entity');
+      rv.jobs.jobs.push({
+          key: job('key')
+        , strname: data.strname
+        , description: data.description
+        });
+    });
+
+    logging.checkpoint('mapped customer data');
+    logging.inspect('jobs', rv.jobs);
+
+    return rv;
+  }
+
+  function show(key, view) {
+    cache(connection('id'), function (transaction) {
+      function maybe_results(results, err) {
+        try {
+          if (!results) {
+            log.warn('Remote query error in customers::show().');
+            log.debug(err);
+            transaction.close();
+            render_all(key, map_data(view, []));
+            return;
+          }
+          un.each(results, function (job) {
+            transaction.put(job('key'), job, cache_exp);
+          });
+          transaction.close();
+        }
+        catch (e) {
+          transaction.close();
+          throw_error(e);
+        }
+        render_all(key, map_data(view, results));
+      }
+
+      try {
+        connection('query')
+          .start()
+          .eq('kind', 'job')
+          .eq('ref_customer', key)
+          .append(maybe_results)
+          .send()
+          ;
+      }
+      catch (e) {
+        throw_error(e);
+        transaction.close();
+      }
+    });
   }
 
   function show_new(key, view) {
@@ -1415,7 +1479,17 @@ function mod_jobs(jq_commandset) {
       field[name] = control.entity.data[name];
       field[name].push({});
       view = map_data(control.append(field), null, $F);
+
+      jq('input.fform.date', jq_view[0]).each(function () {
+        jq(this).datepicker('destroy');
+      });
+
       render(tpl_name, view[tpl_name]);
+
+      jq('input.fform.date', jq_view[0]).each(function () {
+        jq(this).datepicker({onSelect: validate_date});
+      });
+
       return false;
     });
 
