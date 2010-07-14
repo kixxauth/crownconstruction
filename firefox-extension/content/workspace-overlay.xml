@@ -930,7 +930,7 @@ Application overlay HTML snippet.
 <div id="customer-search" class="search-panel content-panel">
   <h4 class="search-header">
     Customer Search
-    <a href="search/none" class="bbq panel-close">x</a>
+    <a id="customer-search-close-icon" href="search/none" class="bbq panel-close">x</a>
   </h4>
   <form id="customer-search-form">
     <label class="customer-search-form">

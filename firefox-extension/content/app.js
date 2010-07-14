@@ -779,6 +779,8 @@ function mod_search(jq_commandset) {
     ;
 
   jq.commandControl.bind('search', function (ev, command, params) {
+    log.trace('Search panel command "'+ command +'".');
+    log.trace('Search panel current state is "'+ state +'".');
     if (command === 'customers' || command === 'jobs') {
       if (state) {
         panels[state].hide();
@@ -788,6 +790,18 @@ function mod_search(jq_commandset) {
           jq_customer_results.html('');
         }
         customer_search_mode = params.mode;
+      }
+      if (customer_search_mode === 'newjob') {
+       jq('#customer-search-close-icon')
+         .removeClass('bbq')
+         .addClass('cmd')
+         ;
+      }
+      else {
+       jq('#customer-search-close-icon')
+         .removeClass('cmd')
+         .addClass('bbq')
+         ;
       }
       panels[command].show();
       state = command;
@@ -1564,6 +1578,16 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
   mod_personnel(commandset);
   set_commands(jq_workspace[0]);
 
+  events.addListener('db.state', function (db) {
+    logging.checkpoint(db.id +' is in state '+ db.state +'.');
+  });
+  events.addListener('db.committing', function (db) {
+    logging.checkpoint(db.id +' is committing.');
+  });
+  events.addListener('db.committed', function (db) {
+    logging.checkpoint(db.id +' committed in state '+ db.state +'.');
+  });
+
   autosave.start();
   main_deck('workspace');
   jq(window)
@@ -1572,19 +1596,6 @@ jq('#workspace').load(WORKSPACE_OVERLAY, function (jq_workspace) {
     .trigger('hashchange')
     ;
 });
-
-// TODO Watch and notify db status.
-/*
-events.addListener('db.state', function (db) {
-  logging.checkpoint(db.id +' is in state '+ db.state +'.');
-});
-events.addListener('db.committing', function (db) {
-  logging.checkpoint(db.id +' is committing.');
-});
-events.addListener('db.committed', function (db) {
-  logging.checkpoint(db.id +' committed in state '+ db.state +'.');
-});
-*/
 };
 
 INIT(jQuery);
