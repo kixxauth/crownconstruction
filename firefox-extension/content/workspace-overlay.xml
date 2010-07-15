@@ -18,7 +18,9 @@ Application overlay HTML snippet.
 ## Side bar
 -->
 <div id="sidebar">
-  <img id="sidebar-logo" class="navigation" src="weblogo.png" width="80%" />
+  <div id="sidebar-topper">
+    <img id="sidebar-logo" class="navigation" src="weblogo.png" width="80%" />
+  </div>
   <ul id="navigation">
     <li class="navigation section">
       <a href="panels/default" class="bbq navigation panels default"

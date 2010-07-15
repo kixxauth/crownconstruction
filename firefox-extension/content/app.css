@@ -134,6 +134,7 @@ Common classes.
 
 body {
   font-family: "Droid Sans";
+  background: #000 url(./shared/wooden_plank_bg.jpg) repeat-x;
 }
 
 a {
@@ -233,8 +234,16 @@ Workspace Sidebar.
   width: @sidewidth;
 }
 
+#sidebar-topper {
+  margin: 1em 0 0;
+  border: @border_width solid @panel_border;
+  #rounded > .three;
+  background: #fff;
+  opacity: 0.8;
+}
+
 #sidebar-logo {
-  margin: 1em 0 0 1em;
+  margin: 1em;
 }
 
 
