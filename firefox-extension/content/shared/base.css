@@ -26,6 +26,20 @@
   src: local('DejaVu Mono'), url('./shared/DejaVuSansMono-BoldOblique.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Droid Sans';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Droid Sans'), url('./shared/DroidSans.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Droid Sans';
+  font-style: normal;
+  font-weight: bold;
+  src: local('Droid Sans'), url('./shared/DroidSans-Bold.ttf') format('truetype');
+}
+
 @typeface: "DejaVu Mono";
 
 body {

@@ -3,6 +3,7 @@ Styles and branding for Crown Construction.
 ===========================================
 */
 
+
 /*
 LESS CSS constants.
 ------------------
@@ -130,6 +131,10 @@ LESS CSS classes.
 Common classes.
 ---------------
 */
+
+body {
+  font-family: "Droid Sans";
+}
 
 a {
   color: @link;
