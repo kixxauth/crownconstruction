@@ -201,6 +201,14 @@ a.panel-close:hover {
   background-color: @icon_bg_hover;
 }
 
+div.col.left {
+  float: left;
+}
+
+div.col.right {
+  float: right;
+}
+
 .content-panel {
   color: @ink;
   background-color: @panel_bg;
@@ -385,6 +393,43 @@ li.panel-navigation.first a.panel-navigation {
   background: transparent url(./panel_bg.png);
 }
 
+/* Panel content. */
+
+@panel_content_width: ((@fullcol * 6) * @tabscof) + ((@fullgutter * 5) * @tabscof);
+div.panel.home.content {
+  width: @panel_content_width;
+  margin-left: ((@fullcol * 1) * @tabscof) + ((@fullgutter * 1) * @tabscof);
+  color: #fff;
+  padding-top: 3em;
+}
+h1.panel.header {
+  font-weight: bold;
+  font-size: 200%;
+}
+
+p.panel.home.intro {
+  font-size: 150%;
+  margin-top: 1em;
+}
+
+ul.panel.home.content {
+  margin-top: 2em;
+}
+
+li.panel.home.content {
+  margin-top: 1em;
+  font-size: 120%;
+}
+
+a.panel.home.content {
+  color: @link + #202020;
+}
+
+em.panel.home.content {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
 /*
 ### Forms.
 */
@@ -458,6 +503,58 @@ a.append.fform.button:hover {
 }
 
 /* Default panel */
+
+/* Home */
+h1.default.panel.header {
+  font-size: 180%;
+  color: #fff;
+  margin-top: 1em;
+  text-align: center;
+}
+div.col.panel.home {
+  width: @cardwidth - ((@fullgutter * @tabscof) * 2);
+  margin-top: 2em;
+  margin-bottom: 5em;
+}
+div.col.panel.home.left {
+  margin-left: 2em;
+}
+div.col.panel.home.right {
+  margin-right: 2em;
+}
+p.default.panel.home {
+  padding: 0 1em 1em 1em;
+  color: #fff;
+  font-size: 110%;
+}
+
+#home-fireworks {
+  margin: 0 (@fullgutter * @tabscof);
+  border: @border_width solid @panel_border;
+  #rounded > .five;
+  background: #fff;
+  color: #555;
+  clear: both;
+  overflow: hidden;
+}
+#fireworks-project-logo {
+  margin: 20px 30px 20px 20px;
+  float: left;
+}
+#fireworks-tagline {
+  font-size: 100px;
+  margin: 30px 30px 20px 314px;
+  line-height: 1;
+  padding-left: 30px;
+  border-left: 4px solid #f90;
+  color: #ccc;
+}
+#fireworks-project-intro {
+  font-size: 24px;
+  margin: 30px 2em;
+}
+
+/* Controls */
 #default-controls-content-panel {
   margin: 2em (@fullcol * @tabscof);
   #rounded > .three;

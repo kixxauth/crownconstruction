@@ -92,7 +92,51 @@ Application overlay HTML snippet.
     </ul>
     <!-- #### Default home widget -->
     <div id="default-home" class="inner-tab-panel">
-      <p>Default home.</p>
+      <div id="default-home-content-panel" class="default panel home">
+        <h1 class="default panel header">Enterprise Resource Management</h1>
+        <div class="left col default panel home">
+          <p class="default panel home">
+            The purpose of an enterprise resource management system is to reduce
+            the complexity of operating your organization, allowing you to focus
+            on the quality and efficiency of your operations without losing track
+            of the details.
+          </p>
+          <p class="default panel home">
+            This is version 0.1 of your system, and it has been custom assembled
+            specifically for Crown Construction. As a sort of first draft, it
+            contains only the minimal features needed to create, find, and edit
+            customer, job, and personnel data entries.
+          </p>
+        </div>
+        <div class="right col default panel home">
+          <p class="default panel home">
+            Of course, the system is designed to include many more features.
+            Some of them are already planned, and others have not even been
+            thought of yet. We need to hear your ideas to know how the software
+            can work harder for you.
+          </p>
+          <p class="default panel home">
+            In this early version you may also notice some annoyances that need
+            to be fixed.  Some of these we already know about, but many we are
+            not aware of and need your feedback to find and fix.
+          </p>
+          <p class="default panel home">
+            It is our goal to keep this software simple and easy to use. It
+            should allow you to be more efficient, worry less, and sleep more
+            soundly. Life is too short for bad software.
+          </p>
+        </div>
+        <div id="home-fireworks">
+          <img id="fireworks-project-logo" src="./shared/the_fireworks_project_logo.gif" />
+          <h2 id="fireworks-tagline">
+            Dream big.
+          </h2>
+          <p id="fireworks-project-intro">
+            It's time to think differently about your information systems.
+            Dream big and we'll build it.
+          </p>
+        </div>
+      </div>
     </div>
     <!-- #### Default controls widget -->
     <div id="default-controls" class="inner-tab-panel">
@@ -132,7 +176,27 @@ Application overlay HTML snippet.
     </ul>
     <!-- #### Customer home widget -->
     <div id="customers-home" class="inner-tab-panel">
-      <p>Customers home.</p>
+      <div id="customers-home-content-panel" class="panel home content">
+        <h1 class="panel header">Customers</h1>
+        <p class="panel home intro">
+          The customers panel contains tools used to find, create, and
+          edit customer information.
+        </p>
+        <ul class="panel home content">
+          <li class="panel home content">
+            To find and view a customer entry, use the
+            <em class="panel home content">Find</em>
+            tab.
+            You can also navigate directly to the customer search panel using the
+            navigation links to the left.
+          </li>
+          <li class="panel home content">
+            To create a new customer, use the
+            <em class="panel home content">Create</em>
+            tab.
+          </li>
+        </ul>
+      </div>
     </div>
     <!-- #### Customer view widget -->
     <form id="customers-view" class="fform inner-tab-panel">
@@ -325,7 +389,35 @@ Application overlay HTML snippet.
     </ul>
     <!-- #### Jobs home widget -->
     <div id="jobs-home" class="inner-tab-panel">
-      <p>Jobs home.</p>
+      <div id="jobs-home-content-panel" class="panel home content">
+        <h1 class="panel header">Jobs</h1>
+        <p class="panel home intro">
+          The jobs panel contains tools used to find, create, and
+          edit job information.
+        </p>
+        <ul class="panel home content">
+          <li class="panel home content">
+            Currently, the only way to find a job entry is to find the customer first.
+            Each customer entry contains a list of every related job entry.
+          </li>
+          <li class="panel home content">
+            To search for customers by last name, navigate to the customer search panel,
+            or use this
+            <a href="search/customers" class="bbq panel home content">
+              shortcut link
+            </a>.
+          </li>
+          <li class="panel home content">
+            To create a new job, use the
+            <em class="panel home content">Create</em>
+            tab.
+            You will be directed to the customer search panel to find and
+            choose the customer related to your new job entry.
+            It is not possible to create a job entry without attaching
+            it to a related customer.
+          </li>
+        </ul>
+      </div>
     </div>
     <!-- #### Job view widget -->
     <form id="jobs-view" class="fform inner-tab-panel">
@@ -755,7 +847,27 @@ Application overlay HTML snippet.
     </ul>
     <!-- #### Personnel home widget -->
     <div id="personnel-home" class="inner-tab-panel">
-      <p>Personnel home.</p>
+      <div id="personnel-home-content-panel" class="panel home content">
+        <h1 class="panel header">Personnel</h1>
+        <p class="panel home intro">
+          The personnel panel contains tools used to find, create, and
+          edit employee information.
+        </p>
+        <ul class="panel home content">
+          <li class="panel home content">
+            To find and view an employee, use the
+            <em class="panel home content">Directory</em>
+            tab.
+            In the directory, employees are listed by the groups they belong to
+            and should be easy to find.
+          </li>
+          <li class="panel home content">
+            To create a new employee, use the
+            <em class="panel home content">Create</em>
+            tab.
+          </li>
+        </ul>
+      </div>
     </div>
     <!-- #### Personnel directory widget -->
     <div id="personnel-directory" class="personnel-panel inner-tab-panel">
