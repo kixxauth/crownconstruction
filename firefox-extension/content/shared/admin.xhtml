@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<title>Fireworks System Administration</title>
+
+<!-- Default base styles -->
+<link rel="stylesheet" href="./reset.css" type="text/css" media="screen, projection" />
+<link rel="stylesheet/less" href="./base.css" type="text/css" media="screen, projection" />
+
+<!-- Application styles -->
+<link rel="stylesheet/less" href="./admin.css" type="text/css" media="screen, projection" />
+
+<!-- no dependencies -->
+<script src="./jquery-1.4.2.js" type="application/x-javascript"></script>
+<script src="./underscore.js" type="application/x-javascript"></script>
+<script src="./less.js" type="application/x-javascript"></script>
+
+<!-- depends on jQuery -->
+<script src="./jquery.fireworks-deck.js" type="application/x-javascript"></script>
+<script src="./jquery.ba-bbq.js" type="application/x-javascript"></script>
+
+<!-- depends on jQuery and jQuery.ba-bbq plugin -->
+<script src="./jquery.fireworks-commandcontrol.js" type="application/x-javascript"></script>
+
+<!-- depends on jQuery and underscore.js -->
+<script src="./jquery.fireworks-template.js" type="application/x-javascript"></script>
+
+</head>
+<body id="main">
+  <ul id="commandset" style="display:none">
+    <li id="cmd-panels"></li><!-- authuser, console -->
+  </ul>
+
+  <form id="credentials">
+    <fieldset>
+      <label for="username">Username:</label>
+      <input id="username" type="text" />
+      <label for="passkey">Passkey:</label>
+      <input id="passkey" type="password" />
+    </fieldset>
+    <fieldset>
+      <button id="authenticate">Authenticate</button>
+    </fieldset>
+  </form>
+
+  <ul id="panel-navigation">
+    <li class="panel-navigation first authuser">
+      <a href="panels/authuser" class="bbq panel-navigation">Account</a>
+    </li>
+    <li class="panel-navigation first createuser">
+      <a href="panels/createdb" class="bbq panel-navigation">Create Database</a>
+    </li>
+    <li class="panel-navigation first createuser">
+      <a href="panels/viewdb" class="bbq panel-navigation">Edit Database</a>
+    </li>
+    <li class="panel-navigation first createuser">
+      <a href="panels/createuser" class="bbq panel-navigation">Create User</a>
+    </li>
+    <li class="panel-navigation first viewuser">
+      <a href="panels/viewuser" class="bbq panel-navigation">Edit User</a>
+    </li>
+    <li class="panel-navigation console">
+      <a href="panels/console" class="bbq panel-navigation">Console</a>
+    </li>
+  </ul>
+  <div id="application-panels">
+    <div id="authuser">
+      <h2>Account info.</h2>
+      <div id="authuser-content">
+      </div>
+      <template id="user-template"><![CDATA[
+        <p>
+          Username: <%= username %>
+        </p>
+        <h3>Groups</h3>
+        <ul>
+        <%
+        for (var i = 0; i < groups.length; i += 1) { %>
+          <li><%= groups[i] %></li>
+        <% } %>
+        </ul>
+      ]]></template>
+    </div>
+    <div id="createuser">
+      <form id="create-new-user">
+        <fieldset>
+          <input id="new-username" type="text" />
+        </fieldset>
+        <fieldset>
+          <button id="create-user">Create</button>
+        </fieldset>
+      </form>
+      <div id="createuser-content">
+      </div>
+    </div>
+    <div id="viewuser">
+      <h2>User info.</h2>
+      <form id="get-existing-user">
+        <fieldset>
+          <input id="existing-username" type="text" />
+        </fieldset>
+        <fieldset>
+          <button id="get-user">Get</button>
+        </fieldset>
+      </form>
+      <form id="edit-user">
+        <fieldset id="viewuser-content">
+        </fieldset>
+        <fieldset>
+          <button id="update-user">Update</button>
+        </fieldset>
+      </form>
+      <template id="edituser-template"><![CDATA[
+        <p>
+        Username: <span id="view-username"><%= username %></span>
+        </p>
+        <input id="user-groups" type="text"
+          value="<%= groups.join(' ') %>" />
+      ]]></template>
+      <p id="user-update-message"></p>
+    </div>
+    <div id="createdb">
+      <form id="create-new-db">
+        <fieldset>
+          <input id="new-dbname" type="text" />
+        </fieldset>
+        <fieldset>
+          <button id="create-db">Create</button>
+        </fieldset>
+      </form>
+      <p id="createdb-content">
+      </p>
+    </div>
+    <div id="viewdb">
+      <form id="get-existing-db">
+        <fieldset>
+          <input id="existing-dbname" type="text" />
+        </fieldset>
+        <fieldset>
+          <button id="get-db">Get</button>
+        </fieldset>
+      </form>
+      <form id="edit-db">
+        <fieldset id="viewdb-content">
+        </fieldset>
+        <template id="editdb-template"><![CDATA[
+          <p>
+          DB Name: <span id="view-dbname"><%= name || 'not found' %></span>
+          </p>
+          <label>owner_acl</label>
+          <input id="owner-acl" type="text"
+            value="<%= owner_acl.join(' ') %>" />
+          <label>manager_acl</label>
+          <input id="manager-acl" type="text"
+            value="<%= manager_acl.join(' ') %>" />
+          <label>user_acl</label>
+          <input id="user-acl" type="text"
+            value="<%= user_acl.join(' ') %>" />
+        ]]></template>
+        <fieldset>
+          <button id="update-db">Update</button>
+        </fieldset>
+      </form>
+      <p id="db-update-message"></p>
+    </div>
+    <div id="console">
+      <h2>Console.</h2>
+      <code id="console-content">
+      </code>
+    </div>
+  </div><!-- application-panels -->
+
+  <script src="./admin.js" type="application/x-javascript"></script>
+</body>
+</html>
+
+

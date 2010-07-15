@@ -233,6 +233,43 @@ exports.userExists = function (username) {
 	});
 };
 
+exports.createUser = function (username) {
+  log.trace('createUser() function called.');
+	return Promise(function (fulfill, except, progress) {
+    try {
+			session.request({
+					timeout: 7000
+        , method: 'put'
+				, url: domain +'/users/'+ username
+				},
+        function (response) {
+          var err;
+          if (response.head.status === 201) {
+            fulfill(true);
+          }
+          else if (response.head.status === 200 ||
+                   response.head.status === 401) {
+            fulfill(false);
+          }
+					else {
+            err = ".createUser(); Received response status: "+
+							response.head.status;
+						log.debug(logging.formatError(err));
+						except(DCubeError(new Error(err)));
+					}
+        },
+        function (exception) {
+					log.debug(exception);
+					except(DCubeError(new Error('.createUser(); '+ exception)));
+        });
+    }
+    catch (e) {
+			log.debug(logging.formatError(e));
+			except(DCubeError(new Error('.createUser(); '+ e)));
+    }
+  });
+};
+
 function session_request(transaction, spec, cb) {
   spec.timeout = 7000;
   try {

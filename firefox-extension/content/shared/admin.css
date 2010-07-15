@@ -1,0 +1,15 @@
+/*
+Styles and branding for Fireworks system admin panel.
+=====================================================
+*/
+
+/*
+LESS CSS constants.
+------------------
+*/
+
+/* Grid layout. */
+@fullcol: 7.25%;
+@fullgutter: 1%;
+@fullpixel: 0.078125;
+

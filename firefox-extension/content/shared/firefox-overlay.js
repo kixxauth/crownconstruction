@@ -47,5 +47,10 @@
     else {
       install_toolbar_button();
     }
+
+    document.getElementById('menuitem-fireworks-sysadmin')
+      .addEventListener('command', function (command) {
+      gBrowser.selectedTab = gBrowser.addTab('chrome://fireworks/content/shared/admin.xhtml');
+      }, false);
   }, false);
 }());

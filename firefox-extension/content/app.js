@@ -713,7 +713,10 @@ function mod_tabset() {
     , current
     ;
 
-  jq.commandControl.bind('panels', function (ev, panel) { deck(panel); });
+  jq.commandControl.bind('panels', function (ev, panel) {
+    deck(panel);
+    current = panel;
+  });
 
   self.show = function (panel_id) {
     if (panel_id !== current && un.indexOf(panels, panel_id) !== -1) {
