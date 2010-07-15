@@ -1,0 +1,8 @@
+
+#fireworks-launcher-toolstrip {
+  list-style-image: url("chrome://fireworks/content/shared/firefox_toolbar_24.png");
+}
+
+toolbar[iconsize="small"] #fireworks-launcher-toolstrip {
+  list-style-image: url("chrome://fireworks/content/shared/firefox_toolbar_16.png");
+}

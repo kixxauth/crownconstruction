@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?xml-stylesheet href="chrome://fireworks/content/shared/toolbar-button.css" type="text/css"?>
+
+<overlay id="fireworks-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://fireworks/content/shared/firefox-overlay.js" type="application/x-javascript" />
+
+  <toolbarpalette id="BrowserToolbarPalette">
+    <toolbarbutton id="fireworks-launcher-toolstrip" class="toolbarbutton-1"
+      label="Fireworks System" tooltiptext="Fireworks System" />
+    <!-- toolbarbutton.oncommand is set in JavaScript -->
+  </toolbarpalette>
+
+  <menupopup id="menu_ToolsPopup">
+    <menuitem
+      label="Fireworks System Admin" id="menuitem-fireworks-sysadmin"
+      insertafter="devToolsSeparator" class="menuitem-iconic"
+      accesskey="K"/>
+  </menupopup>
+
+</overlay>
+
