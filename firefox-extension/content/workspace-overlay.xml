@@ -113,9 +113,9 @@ Application overlay HTML snippet.
         <div class="right col default panel home">
           <p class="default panel home">
             Of course, the system is designed to include many more features.
-            Some of them are already planned, and others have not even been
-            thought of yet. We need to hear your ideas to know how the software
-            can work harder for you.
+            Some of them are already planned, but others have not even been
+            thought of yet. So, we need your ideas to make the software work
+            harder for you.
           </p>
           <p class="default panel home">
             In this early version you may also notice some annoyances that need
@@ -462,13 +462,13 @@ Application overlay HTML snippet.
       </div>
       <div class="fform section">
         <fieldset id="jobs-checkpoints" class="fform content-panel">
-          <h4 class="fform section-header">Handoff and Walkthrough</h4>
+          <h4 class="fform section-header">Hand off and Walk through</h4>
         </fieldset>
         <template id="jobs_checkpoints-template"><![CDATA[
-          <h4 class="fform section-header">Handoff and Walkthrough</h4>
+          <h4 class="fform section-header">Hand off and Walk through</h4>
           <div class="fform input-section">
             <div class="line">
-              <h5 class="fform section-label">Handoff</h5>
+              <h5 class="fform section-label">Hand off</h5>
               <p class="input-float"><label class="live-label">Scheduled:</label>
                 <input class="clean-text-input fform date" type="text"
                   name="<%= handoff.scheduled.path %>" value="<%= handoff.scheduled.value %>" />
@@ -479,7 +479,7 @@ Application overlay HTML snippet.
               </p>
             </div>
             <div class="line">
-              <h5 class="fform section-label">Walkthrough</h5>
+              <h5 class="fform section-label">Walk through</h5>
               <p class="input-float"><label class="live-label">Scheduled:</label>
                 <input class="clean-text-input fform date" type="text"
                   name="<%= walkthrough.scheduled.path %>" value="<%= walkthrough.scheduled.value %>" />
@@ -933,7 +933,7 @@ Application overlay HTML snippet.
           <div class="fform input-section">
             <div class="line">
               <p class="input-float">
-                <label class="live-label">groups:</label>
+                <label class="live-label">groups: (separate group names with commas)</label>
                 <input class="clean-text-input fform groups" type="text"
                   name="<%= groups.path %>" value="<%= groups.value %>" />
               </p>
@@ -1070,7 +1070,7 @@ Application overlay HTML snippet.
         </span>
         <span class="customer search-result address">
           <%= customer.addresses[0].street || 'address unknown' %>,
-          <%= customer.addresses[0].city || 'city unkown' %>
+          <%= customer.addresses[0].city || 'city unknown' %>
         </span>
       </a>
     </li>

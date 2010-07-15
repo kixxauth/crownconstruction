@@ -29,6 +29,8 @@ var INIT
   , LOGIN_OVERLAY = 'login-overlay.xml'
   , CONNECTIONS_OVERLAY = 'connections-overlay.xml'
   , WORKSPACE_OVERLAY = 'workspace-overlay.xml'
+  , DBNAME = 'Crown_Construction'
+  , SANDBOXDB = 'crown_construction_sandbox'
   ;
 
 INIT = function (jq) {
@@ -52,20 +54,26 @@ start = events.Aggregate(function (require, jq) {
     , platform = require('platform')
     , logging = require('logging')
     , log = logging.get(env.LOG_NAME || 'Fireworks_App')
+    , really_start
     ;
 
   log.info('Module system bootstrapped.');
-  platform.pref('dev', function (dev_pref) {
+
+  really_start = events.Aggregate(function (dev_pref, dbname_pref) {
     if (dev_pref.value()) {
       jq('#underlay').load(DEV_OVERLAY);
     }
     LOGIN(require, log, jq, {
         db: require('db')
+      , dbname: dbname_pref.value()
       , deck: deck
       , logging: logging
       , platform: platform
     });
-  }, false);
+  });
+
+  platform.pref('dev', really_start(), false);
+  platform.pref('dbname', really_start(), DBNAME);
 });
 
 require.ensure(['environ', 'platform', 'logging', 'db'], start());
@@ -77,6 +85,7 @@ var db = spec.db
   , util = require('util')
   , deck = spec.deck
   , platform = spec.platform
+  , dbname = spec.dbname
   , handle_login_cmd
   , username_keyup, passkey_keyup
   , check_username, check_passkey
@@ -200,8 +209,8 @@ function dispatch_passkey_warning(message) {
 }
 
 function show_login_warning(message) {
-  var target = jq('p.login.submit')
-    , height = target.height() * 1.3
+  var target = jq('#login-button')
+    , height = target.height() * 2.2
     ;
   target.popover({
       container: '#login-warning-box'
@@ -231,6 +240,12 @@ function dispatch_login_warning(message) {
         ;
     }, 0);
     break;
+  case 'Database could not be found.':
+    show_login_warning(message);
+    break;
+  case 'Database is restricted.':
+    show_login_warning(message);
+    break;
   case 'DCubeError: Request error.':
     // TODO: This should be a dialog.
     show_login_warning('Lost network connection.');
@@ -252,8 +267,10 @@ function try_login(username, passkey) {
     .eq('user', username)
     ;
 
-  // TODO: Get dbname from login form.
-  promise = db.connect('crown_construction_sandbox'
+  if (jq('#use-fake-db')[0].checked) {
+    dbname = SANDBOXDB;
+  }
+  promise = db.connect(dbname
                      , MODELS
                      , username
                      , passkey
@@ -1260,18 +1277,29 @@ function mod_jobs(jq_commandset) {
       return;
     }
 
-    var parts = this.value.split('/')
-      , month, day, year, timestamp, offset
-      ;
+    var parts = this.value.split('/');
 
     if (parts.length !== 3) {
       return;
     }
 
-    month = parts[0]; day = parts[1]; year = parts[2];
-    timestamp = new Date(year, month -1, day);
-    offset = timestamp.getTimezoneOffset() * 60 * 1000;
-    control.update(this.name, (timestamp - offset));
+    parts = [parts[2], parts[0], parts[1]].join('');
+    if (parts.length !== 8 || isNaN(parts)) {
+      return;
+    }
+    logging.checkpoint('updating date element', this);
+    logging.checkpoint('updating date path', this.getAttribute('name'));
+    logging.checkpoint('updating date value', +parts);
+    control.update(this.name, +parts);
+  }
+
+  function convert_date(timestamp) {
+    timestamp = timestamp +'';
+    var year = timestamp.slice(0, 4)
+      , month = timestamp.slice(4, 6)
+      , day = timestamp.slice(6, 8)
+      ;
+    return [(month || '0'), (day || '0'), (year || '0')].join('/');
   }
 
   // Job ID
@@ -1375,22 +1403,39 @@ function mod_jobs(jq_commandset) {
     var rv = {};
     customer = customer('entity');
 
-    rv.header = {
-      strname: view.strname
-    , customer_name: customer.names[0].last +', '+ customer.names[0].first
-    , sale_by: view.sale_by
-    , production_by: view.production_by
-    , description: view.description
-    };
+    if (customer) {
+      rv.header = {
+        strname: view.strname
+      , customer_name: customer.names[0].last +', '+ customer.names[0].first
+      , sale_by: view.sale_by
+      , production_by: view.production_by
+      , description: view.description
+      };
+    }
 
     rv.checkpoints = {handoff: view.handoff, walkthrough: view.walkthrough};
 
     rv.dates = {
-      contractdate: view.contractdate
-    , est_startdate: view.est_startdate
-    , startdate: view.startdate
-    , est_completedate: view.est_completedate
-    , completedate: view.completedate
+      contractdate: {
+        path: view.contractdate.path
+      , value: convert_date(view.contractdate.value)
+      }
+    , est_startdate: {
+        path: view.est_startdate.path
+      , value: convert_date(view.est_startdate.value)
+      }
+    , startdate: {
+        path: view.startdate.path
+      , value: convert_date(view.startdate.value)
+      }
+    , est_completedate: {
+        path: view.est_completedate.path
+      , value: convert_date(view.est_completedate.value)
+      }
+    , completedate: {
+        path: view.completedate.path
+      , value: convert_date(view.completedate.value)
+      }
     };
 
     rv.payments = {
@@ -1406,7 +1451,10 @@ function mod_jobs(jq_commandset) {
 
     rv.estimate = {
       estimate_by: view.estimate_by
-    , estimate_date: view.estimate_date
+    , estimate_date: {
+        path: view.estimate_date.path
+      , value: convert_date(view.estimate_date.value)
+      }
     , roundtrip_miles: view.roundtrip_miles
     , allotted_miles: view.allotted_miles
     };
@@ -1484,7 +1532,6 @@ function mod_jobs(jq_commandset) {
       validate[parts[1]].apply(this, parts);
     });
 
-  // TODO: Appending may also need modification and data mapping.
   jq('a.fform.append', jq_view[0])
     .live('click', function (ev) {
       var field = {}
