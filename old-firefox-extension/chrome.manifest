@@ -1,4 +1,0 @@
-resource crownconstruction ./
-content crownconstruction content/
-overlay chrome://browser/content/browser.xul chrome://crownconstruction/content/overlay.xul
-

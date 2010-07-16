@@ -1,3 +1,15 @@
+/*
+
+License
+-------
+
+All source code in this directory is licensed under the MIT license unless
+otherwise noted in the source file itself.
+
+See MIT-LICENSE in this directory for details.
+
+*/
+
 /*jslint
 onevar: true,
 undef: true,
@@ -16,8 +28,6 @@ Components: false
 */
 
 "use strict";
-
-dump(' ... dcube.js\n');
 
 var EXPORTED_SYMBOLS = ['exports', 'load']
 

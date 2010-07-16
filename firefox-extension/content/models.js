@@ -1,3 +1,9 @@
+/*
+
+Copright (c) 2010 Kris Walker / The Fireworks Project. ALL RIGHTS RESERVED.
+
+*/
+
 /*jslint
 onevar: true,
 undef: true,
